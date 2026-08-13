@@ -1,0 +1,574 @@
+{
+  "admins": [
+    {
+      "username": "admin1234",
+      "password_hash": "$2b$10$CaKTqvZIJAh3rTstQmfnKO2KNZu../A.YSS5aJ3CHtKmuG9BZfqZi"
+    }
+  ],
+  "cellTypes": {
+    "START": {
+      "icon": "🏁",
+      "color": "#C9A227",
+      "label": "เริ่มต้น"
+    },
+    "PROPERTY": {
+      "icon": "🏠",
+      "color": "#3F7D53",
+      "label": "ทรัพย์สิน"
+    },
+    "EVENT": {
+      "icon": "❓",
+      "color": "#2C5F82",
+      "label": "เหตุการณ์"
+    },
+    "TAX": {
+      "icon": "💸",
+      "color": "#B23A2E",
+      "label": "ภาษี"
+    },
+    "PENALTY": {
+      "icon": "⚠️",
+      "color": "#B23A2E",
+      "label": "บทลงโทษ"
+    },
+    "BONUS": {
+      "icon": "🎁",
+      "color": "#C9A227",
+      "label": "โบนัส"
+    },
+    "JAIL": {
+      "icon": "🔒",
+      "color": "#6B4226",
+      "label": "คุก"
+    },
+    "BANK": {
+      "icon": "🏦",
+      "color": "#2C5F82",
+      "label": "ธนาคาร"
+    },
+    "INVESTMENT": {
+      "icon": "📈",
+      "color": "#3F7D53",
+      "label": "ลงทุน"
+    },
+    "TELEPORT": {
+      "icon": "🌀",
+      "color": "#2C5F82",
+      "label": "วาร์ป"
+    },
+    "FORWARD": {
+      "icon": "⏩",
+      "color": "#C9A227",
+      "label": "เดินหน้า"
+    },
+    "BACKWARD": {
+      "icon": "⏪",
+      "color": "#B23A2E",
+      "label": "ถอยหลัง"
+    },
+    "SPECIAL": {
+      "icon": "🅿️",
+      "color": "#6B4226",
+      "label": "พิเศษ"
+    }
+  },
+  "cells": [
+    {
+      "id": "cell-1",
+      "board_id": "default",
+      "position": 1,
+      "row": 0,
+      "column": 0,
+      "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQG2OfQH0wtmg-P6yvQZunpvOEOuvST3-EpBMVyDetp1w&s=10",
+      "model_3d_url": "",
+      "updated_at": "2026-08-10T16:16:02.502Z",
+      "type": "START",
+      "name": "เริ่มต้นทัวร์ร้อยเอ็ด",
+      "description": "จุดเริ่มต้นการเดินทางสำรวจ 20 อำเภอของจังหวัดร้อยเอ็ด",
+      "price": null,
+      "rent_base": null,
+      "effect_value": null,
+      "effect_steps": null,
+      "attractions": [
+        "จุดเริ่มต้นการเดินทางสำรวจ 20 อำเภอของจังหวัดร้อยเอ็ด"
+      ]
+    },
+    {
+      "id": "cell-2",
+      "board_id": "default",
+      "position": 2,
+      "row": 0,
+      "column": 1,
+      "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQThrHcvvttrsV-MhJRw_S5aqT03F_4y1oHLriu1kzncw&s=10",
+      "model_3d_url": "",
+      "updated_at": "2026-08-10T16:16:08.213Z",
+      "type": "PROPERTY",
+      "name": "อำเภอเมืองร้อยเอ็ด",
+      "description": "บึงพลาญชัย, วัดบูรพาภิราม (พระพุทธรัตนมงคลมหามุนี), หอโหวด 101, พิพิธภัณฑสถานแห่งชาติร้อยเอ็ด",
+      "price": 800,
+      "rent_base": 120,
+      "effect_value": null,
+      "effect_steps": null,
+      "attractions": [
+        "บึงพลาญชัย",
+        "วัดบูรพาภิราม (พระพุทธรัตนมงคลมหามุนี)",
+        "หอโหวด 101",
+        "พิพิธภัณฑสถานแห่งชาติร้อยเอ็ด"
+      ]
+    },
+    {
+      "id": "cell-3",
+      "board_id": "default",
+      "position": 3,
+      "row": 0,
+      "column": 2,
+      "image_url": "",
+      "model_3d_url": "",
+      "updated_at": "2026-08-10T10:41:50.603Z",
+      "type": "PROPERTY",
+      "name": "อำเภอเกษตรวิสัย",
+      "description": "กู่กาโดน, กู่กาสิงห์ (โบราณสถานขอม)",
+      "price": 850,
+      "rent_base": 128,
+      "effect_value": null,
+      "effect_steps": null,
+      "attractions": [
+        "กู่กาโดน",
+        "กู่กาสิงห์ (โบราณสถานขอม)"
+      ]
+    },
+    {
+      "id": "cell-4",
+      "board_id": "default",
+      "position": 4,
+      "row": 0,
+      "column": 3,
+      "image_url": "",
+      "model_3d_url": "",
+      "updated_at": "2026-08-10T10:41:50.603Z",
+      "type": "PROPERTY",
+      "name": "อำเภอปทุมรัตต์",
+      "description": "ทุ่งกุลาร้องไห้ ผืนนาข้าวหอมมะลิ, ลำน้ำเตา",
+      "price": 900,
+      "rent_base": 135,
+      "effect_value": null,
+      "effect_steps": null,
+      "attractions": [
+        "ทุ่งกุลาร้องไห้ ผืนนาข้าวหอมมะลิ",
+        "ลำน้ำเตา"
+      ]
+    },
+    {
+      "id": "cell-5",
+      "board_id": "default",
+      "position": 5,
+      "row": 0,
+      "column": 4,
+      "image_url": "",
+      "model_3d_url": "",
+      "updated_at": "2026-08-10T10:41:50.603Z",
+      "type": "PROPERTY",
+      "name": "อำเภอจตุรพักตรพิมาน",
+      "description": "ปราสาทหนองกู่ (โบราณสถานขอมโบราณ)",
+      "price": 950,
+      "rent_base": 143,
+      "effect_value": null,
+      "effect_steps": null,
+      "attractions": [
+        "ปราสาทหนองกู่ (โบราณสถานขอมโบราณ)"
+      ]
+    },
+    {
+      "id": "cell-6",
+      "board_id": "default",
+      "position": 6,
+      "row": 0,
+      "column": 5,
+      "image_url": "",
+      "model_3d_url": "",
+      "updated_at": "2026-08-10T10:41:50.603Z",
+      "type": "PROPERTY",
+      "name": "อำเภอธวัชบุรี",
+      "description": "ปรางค์กู่, ศูนย์วิทยาศาสตร์และวัฒนธรรมเพื่อการศึกษาร้อยเอ็ด",
+      "price": 1000,
+      "rent_base": 150,
+      "effect_value": null,
+      "effect_steps": null,
+      "attractions": [
+        "ปรางค์กู่",
+        "ศูนย์วิทยาศาสตร์และวัฒนธรรมเพื่อการศึกษาร้อยเอ็ด"
+      ]
+    },
+    {
+      "id": "cell-7",
+      "board_id": "default",
+      "position": 7,
+      "row": 0,
+      "column": 6,
+      "image_url": "",
+      "model_3d_url": "",
+      "updated_at": "2026-08-10T16:15:33.039Z",
+      "type": "TAX",
+      "name": "ด่านเก็บค่าผ่านทาง",
+      "description": "จ่ายค่าธรรมเนียมผ่านทางระหว่างการเดินทาง",
+      "price": null,
+      "rent_base": null,
+      "effect_value": -500,
+      "effect_steps": null,
+      "attractions": [
+        "จ่ายค่าธรรมเนียมผ่านทางระหว่างการเดินทาง"
+      ]
+    },
+    {
+      "id": "cell-8",
+      "board_id": "default",
+      "position": 8,
+      "row": 1,
+      "column": 6,
+      "image_url": "",
+      "model_3d_url": "",
+      "updated_at": "2026-08-10T10:41:50.603Z",
+      "type": "PROPERTY",
+      "name": "อำเภอพนมไพร",
+      "description": "ประเพณีบุญบั้งไฟแสน, วัดสระทอง",
+      "price": 1050,
+      "rent_base": 158,
+      "effect_value": null,
+      "effect_steps": null,
+      "attractions": [
+        "ประเพณีบุญบั้งไฟแสน",
+        "วัดสระทอง"
+      ]
+    },
+    {
+      "id": "cell-9",
+      "board_id": "default",
+      "position": 9,
+      "row": 2,
+      "column": 6,
+      "image_url": "",
+      "model_3d_url": "",
+      "updated_at": "2026-08-10T10:41:50.603Z",
+      "type": "PROPERTY",
+      "name": "อำเภอโพนทอง",
+      "description": "วัดบ้านโนนสวรรค์, สวนน้ำอาจนคร วอเตอร์ปาร์ค แอนด์ รีสอร์ท",
+      "price": 1100,
+      "rent_base": 165,
+      "effect_value": null,
+      "effect_steps": null,
+      "attractions": [
+        "วัดบ้านโนนสวรรค์",
+        "สวนน้ำอาจนคร วอเตอร์ปาร์ค แอนด์ รีสอร์ท"
+      ]
+    },
+    {
+      "id": "cell-10",
+      "board_id": "default",
+      "position": 10,
+      "row": 3,
+      "column": 6,
+      "image_url": "",
+      "model_3d_url": "",
+      "updated_at": "2026-08-10T10:41:50.603Z",
+      "type": "PROPERTY",
+      "name": "อำเภอโพธิ์ชัย",
+      "description": "พื้นที่ป่าเทือกเขาภูพาน แหล่งเกษตรกรรมและวิถีชุมชน",
+      "price": 1150,
+      "rent_base": 173,
+      "effect_value": null,
+      "effect_steps": null,
+      "attractions": [
+        "พื้นที่ป่าเทือกเขาภูพาน แหล่งเกษตรกรรมและวิถีชุมชน"
+      ]
+    },
+    {
+      "id": "cell-11",
+      "board_id": "default",
+      "position": 11,
+      "row": 4,
+      "column": 6,
+      "image_url": "",
+      "model_3d_url": "",
+      "updated_at": "2026-08-10T10:41:50.603Z",
+      "type": "PROPERTY",
+      "name": "อำเภอหนองพอก",
+      "description": "วนอุทยานผาน้ำย้อย, ผาหมอกมิวาย, พระมหาเจดีย์ชัยมงคล (วัดผาน้ำทิพย์)",
+      "price": 1200,
+      "rent_base": 180,
+      "effect_value": null,
+      "effect_steps": null,
+      "attractions": [
+        "วนอุทยานผาน้ำย้อย",
+        "ผาหมอกมิวาย",
+        "พระมหาเจดีย์ชัยมงคล (วัดผาน้ำทิพย์)"
+      ]
+    },
+    {
+      "id": "cell-12",
+      "board_id": "default",
+      "position": 12,
+      "row": 5,
+      "column": 6,
+      "image_url": "",
+      "model_3d_url": "",
+      "updated_at": "2026-08-10T10:41:50.603Z",
+      "type": "PROPERTY",
+      "name": "อำเภอเสลภูมิ",
+      "description": "บึงเกลือ พื้นที่ชุ่มน้ำและแหล่งพักผ่อน",
+      "price": 1250,
+      "rent_base": 188,
+      "effect_value": null,
+      "effect_steps": null,
+      "attractions": [
+        "บึงเกลือ พื้นที่ชุ่มน้ำและแหล่งพักผ่อน"
+      ]
+    },
+    {
+      "id": "cell-13",
+      "board_id": "default",
+      "position": 13,
+      "row": 6,
+      "column": 6,
+      "image_url": "",
+      "model_3d_url": "",
+      "updated_at": "2026-08-10T10:41:50.604Z",
+      "type": "BANK",
+      "name": "ธนาคารเพื่อการท่องเที่ยว",
+      "description": "แวะพักแลกเงิน ฝาก-ถอนได้ที่นี่",
+      "price": null,
+      "rent_base": null,
+      "effect_value": null,
+      "effect_steps": null
+    },
+    {
+      "id": "cell-14",
+      "board_id": "default",
+      "position": 14,
+      "row": 6,
+      "column": 5,
+      "image_url": "",
+      "model_3d_url": "",
+      "updated_at": "2026-08-10T10:41:50.604Z",
+      "type": "PROPERTY",
+      "name": "อำเภอสุวรรณภูมิ",
+      "description": "กู่พระโกนา, บ่อพันขัน, วัดไตรภูมิ (พระสังกัจจายน์)",
+      "price": 1300,
+      "rent_base": 195,
+      "effect_value": null,
+      "effect_steps": null,
+      "attractions": [
+        "กู่พระโกนา",
+        "บ่อพันขัน",
+        "วัดไตรภูมิ (พระสังกัจจายน์)"
+      ]
+    },
+    {
+      "id": "cell-15",
+      "board_id": "default",
+      "position": 15,
+      "row": 6,
+      "column": 4,
+      "image_url": "/uploads/1786590721891-2990e5aa0b3be3fd.png",
+      "model_3d_url": "",
+      "updated_at": "2026-08-13T03:12:04.283Z",
+      "type": "PROPERTY",
+      "name": "อำเภอเมืองสรวง",
+      "description": "วิถีเกษตรกรรมและชุมชนอีสานดั้งเดิม",
+      "price": 1350,
+      "rent_base": 203,
+      "effect_value": null,
+      "effect_steps": null,
+      "attractions": [
+        "วิถีเกษตรกรรมและชุมชนอีสานดั้งเดิม"
+      ]
+    },
+    {
+      "id": "cell-16",
+      "board_id": "default",
+      "position": 16,
+      "row": 6,
+      "column": 3,
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/7/7c/Kooprakhona.jpg?utm_source=th.wikipedia.org&utm_campaign=index&utm_content=original",
+      "model_3d_url": "",
+      "updated_at": "2026-08-11T08:04:51.798Z",
+      "type": "PROPERTY",
+      "name": "อำเภอโพนทราย",
+      "description": "อำเภอโพนทราย จังหวัดร้อยเอ็ด เริ่มต้นจากการอพยพตั้งถิ่นฐานของชุมชนโบราณตั้งแต่สมัยอยุธยาตอนปลาย (ประมาณ พ.ศ. 2264) โดยมีปู่สุขาและย่าแน่นเป็นผู้นำกลุ่มแรกที่มาตั้งบ้านเรือนบริเวณ \"โนนทราย\" ซึ่งมีสภาพภูมิประเทศเป็นเนินทราย จนต่อมาได้รับการยกฐานะขึ้นเป็นกิ่งอำเภอในเดือนธันวาคม พ.ศ. 2519",
+      "price": 1400,
+      "rent_base": 210,
+      "effect_value": null,
+      "effect_steps": null,
+      "attractions": [
+        "วัดกู่คันธนาม",
+        "ท่าหาดยาว",
+        "ทุ่งดอกหญ้าโนนแก่นหล่อน",
+        "กุดจงอาง"
+      ]
+    },
+    {
+      "id": "cell-17",
+      "board_id": "default",
+      "position": 17,
+      "row": 6,
+      "column": 2,
+      "image_url": "/uploads/1786433591197-b6d9890d43c0ab89.jpg",
+      "model_3d_url": "",
+      "updated_at": "2026-08-11T07:54:50.993Z",
+      "type": "PROPERTY",
+      "name": "อำเภออาจสามารถ",
+      "description": "อำเภออาจสามารถ จังหวัดร้อยเอ็ด มีจุดกำเนิดเมื่อ พ.ศ. 2440 ในรัชสมัยพระบาทสมเด็จพระจุลจอมเกล้าเจ้าอยู่หัว (รัชกาลที่ 5) โดยเดิมมีชื่อว่า \"อำเภอสระบุศย์\" ตามชื่อหนองน้ำที่มีดอกบัวแดงขึ้นเต็ม ก่อนจะเปลี่ยนชื่อเป็นอำเภออาจสามารถในภายหลัง",
+      "price": 1450,
+      "rent_base": 218,
+      "effect_value": null,
+      "effect_steps": null,
+      "attractions": [
+        "วัดบ้านสนามชัย (ตำบลโพนเมือง)",
+        "สวนน้ำอาจนคร วอเตอร์ปาร์ค แอนด์ รีสอร์ท",
+        "จุดชมวิวอุโมงค์ต้นไม้ (ตำบลโหรา)"
+      ]
+    },
+    {
+      "id": "cell-18",
+      "board_id": "default",
+      "position": 18,
+      "row": 6,
+      "column": 1,
+      "image_url": "/uploads/1786433335301-3f1b90988848f771.jpg",
+      "model_3d_url": "",
+      "updated_at": "2026-08-11T07:29:51.689Z",
+      "type": "PROPERTY",
+      "name": "อำเภอเมยวดี",
+      "description": "ป่าเทือกเขาภูพาน ธรรมชาติยังอุดมสมบูรณ์",
+      "price": 1500,
+      "rent_base": 225,
+      "effect_value": null,
+      "effect_steps": null,
+      "attractions": [
+        "วัดพระธรรมจักรนาคาวนาราม (วัดป่าบ้านโป่ง)",
+        "ศูนย์แสดงศิลปวัฒนธรรมประเพณีภูไท (ตำบลบุ่งเลิศ)",
+        "ถ้ำโสดา",
+        "วัดศรีสันติธรรม และ วัดศรีมงคล"
+      ]
+    },
+    {
+      "id": "cell-19",
+      "board_id": "default",
+      "position": 19,
+      "row": 6,
+      "column": 0,
+      "image_url": "",
+      "model_3d_url": "",
+      "updated_at": "2026-08-10T16:16:50.182Z",
+      "type": "EVENT",
+      "name": "เหตุการณ์ระหว่างทาง",
+      "description": "สุ่มเหตุการณ์ไม่คาดฝันระหว่างทริป",
+      "price": null,
+      "rent_base": null,
+      "effect_value": null,
+      "effect_steps": null,
+      "attractions": [
+        "สุ่มเหตุการณ์ไม่คาดฝันระหว่างทริป"
+      ]
+    },
+    {
+      "id": "cell-20",
+      "board_id": "default",
+      "position": 20,
+      "row": 5,
+      "column": 0,
+      "image_url": "",
+      "model_3d_url": "",
+      "updated_at": "2026-08-10T10:41:50.604Z",
+      "type": "PROPERTY",
+      "name": "อำเภอศรีสมเด็จ",
+      "description": "เจดีย์หินทราย วัดป่ากุง",
+      "price": 1550,
+      "rent_base": 233,
+      "effect_value": null,
+      "effect_steps": null,
+      "attractions": [
+        "เจดีย์หินทราย วัดป่ากุง"
+      ]
+    },
+    {
+      "id": "cell-21",
+      "board_id": "default",
+      "position": 21,
+      "row": 4,
+      "column": 0,
+      "image_url": "",
+      "model_3d_url": "",
+      "updated_at": "2026-08-10T10:41:50.604Z",
+      "type": "PROPERTY",
+      "name": "อำเภอจังหาร",
+      "description": "วิถีชุมชนลุ่มน้ำชี",
+      "price": 1600,
+      "rent_base": 240,
+      "effect_value": null,
+      "effect_steps": null,
+      "attractions": [
+        "วิถีชุมชนลุ่มน้ำชี"
+      ]
+    },
+    {
+      "id": "cell-22",
+      "board_id": "default",
+      "position": 22,
+      "row": 3,
+      "column": 0,
+      "image_url": "",
+      "model_3d_url": "",
+      "updated_at": "2026-08-10T10:41:50.604Z",
+      "type": "PROPERTY",
+      "name": "อำเภอเชียงขวัญ",
+      "description": "เขื่อนร้อยเอ็ด บ้านดอนวิเวก",
+      "price": 1650,
+      "rent_base": 248,
+      "effect_value": null,
+      "effect_steps": null,
+      "attractions": [
+        "เขื่อนร้อยเอ็ด บ้านดอนวิเวก"
+      ]
+    },
+    {
+      "id": "cell-23",
+      "board_id": "default",
+      "position": 23,
+      "row": 2,
+      "column": 0,
+      "image_url": "",
+      "model_3d_url": "",
+      "updated_at": "2026-08-10T10:41:50.604Z",
+      "type": "PROPERTY",
+      "name": "อำเภอหนองฮี",
+      "description": "แหล่งเกษตรกรรมและชุมชนชนบท",
+      "price": 1700,
+      "rent_base": 255,
+      "effect_value": null,
+      "effect_steps": null,
+      "attractions": [
+        "แหล่งเกษตรกรรมและชุมชนชนบท"
+      ]
+    },
+    {
+      "id": "cell-24",
+      "board_id": "default",
+      "position": 24,
+      "row": 1,
+      "column": 0,
+      "image_url": "",
+      "model_3d_url": "",
+      "updated_at": "2026-08-10T10:41:50.604Z",
+      "type": "PROPERTY",
+      "name": "อำเภอทุ่งเขาหลวง",
+      "description": "วิถีชุมชนอีสาน ท้องนาและงานหัตถกรรมพื้นบ้าน",
+      "price": 1750,
+      "rent_base": 263,
+      "effect_value": null,
+      "effect_steps": null,
+      "attractions": [
+        "วิถีชุมชนอีสาน ท้องนาและงานหัตถกรรมพื้นบ้าน"
+      ]
+    }
+  ]
+}

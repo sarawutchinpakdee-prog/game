@@ -1,0 +1,651 @@
+{
+  "province": "ร้อยเอ็ด",
+  "updatedAt": "2026-08-12",
+  "districts": [
+    {
+      "district": "อำเภอเมืองร้อยเอ็ด",
+      "position": 2,
+      "cellId": "cell-2",
+      "category": "เมืองและแลนด์มาร์ก",
+      "summary": "ศูนย์กลางเมืองและแหล่งเรียนรู้สำคัญของจังหวัด เหมาะกับการเที่ยวแบบครอบครัวและชมแลนด์มาร์กเมือง",
+      "highlights": [
+        "หอโหวด 101",
+        "บึงพลาญชัย",
+        "วัดบูรพาภิราม",
+        "พิพิธภัณฑสถานแห่งชาติร้อยเอ็ด"
+      ],
+      "attractions": [
+        {
+          "name": "บึงพลาญชัย",
+          "category": "เมืองและแลนด์มาร์ก",
+          "description": "แหล่งท่องเที่ยวในอำเภอเมืองร้อยเอ็ด",
+          "image_url": "",
+          "image_query": "บึงพลาญชัย อำเภอเมืองร้อยเอ็ด ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        },
+        {
+          "name": "วัดบูรพาภิราม (พระพุทธรัตนมงคลมหามุนี)",
+          "category": "เมืองและแลนด์มาร์ก",
+          "description": "แหล่งท่องเที่ยวในอำเภอเมืองร้อยเอ็ด",
+          "image_url": "",
+          "image_query": "วัดบูรพาภิราม (พระพุทธรัตนมงคลมหามุนี) อำเภอเมืองร้อยเอ็ด ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        },
+        {
+          "name": "หอโหวด 101",
+          "category": "เมืองและแลนด์มาร์ก",
+          "description": "แหล่งท่องเที่ยวในอำเภอเมืองร้อยเอ็ด",
+          "image_url": "",
+          "image_query": "หอโหวด 101 อำเภอเมืองร้อยเอ็ด ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        },
+        {
+          "name": "พิพิธภัณฑสถานแห่งชาติร้อยเอ็ด",
+          "category": "เมืองและแลนด์มาร์ก",
+          "description": "แหล่งท่องเที่ยวในอำเภอเมืองร้อยเอ็ด",
+          "image_url": "",
+          "image_query": "พิพิธภัณฑสถานแห่งชาติร้อยเอ็ด อำเภอเมืองร้อยเอ็ด ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        }
+      ],
+      "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQThrHcvvttrsV-MhJRw_S5aqT03F_4y1oHLriu1kzncw&s=10",
+      "photo_source": "TAT Open Data / Admin upload",
+      "image_query": "อำเภอเมืองร้อยเอ็ด ร้อยเอ็ด สถานที่ท่องเที่ยว"
+    },
+    {
+      "district": "อำเภอเกษตรวิสัย",
+      "position": 3,
+      "cellId": "cell-3",
+      "category": "ประวัติศาสตร์และโบราณสถาน",
+      "summary": "เด่นด้านโบราณสถานและร่องรอยอารยธรรมขอม เหมาะกับการเรียนรู้ประวัติศาสตร์ท้องถิ่น",
+      "highlights": [
+        "กู่กาสิงห์",
+        "กู่กาโดน"
+      ],
+      "attractions": [
+        {
+          "name": "กู่กาโดน",
+          "category": "ประวัติศาสตร์และโบราณสถาน",
+          "description": "แหล่งท่องเที่ยวในอำเภอเกษตรวิสัย",
+          "image_url": "",
+          "image_query": "กู่กาโดน อำเภอเกษตรวิสัย ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        },
+        {
+          "name": "กู่กาสิงห์ (โบราณสถานขอม)",
+          "category": "ประวัติศาสตร์และโบราณสถาน",
+          "description": "แหล่งท่องเที่ยวในอำเภอเกษตรวิสัย",
+          "image_url": "",
+          "image_query": "กู่กาสิงห์ (โบราณสถานขอม) อำเภอเกษตรวิสัย ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        }
+      ],
+      "image_url": "",
+      "photo_source": "TAT Open Data / Admin upload",
+      "image_query": "อำเภอเกษตรวิสัย ร้อยเอ็ด สถานที่ท่องเที่ยว"
+    },
+    {
+      "district": "อำเภอปทุมรัตต์",
+      "position": 4,
+      "cellId": "cell-4",
+      "category": "ธรรมชาติและวิถีเกษตร",
+      "summary": "พื้นที่เกษตรกรรมสำคัญของร้อยเอ็ดและภูมิทัศน์ทุ่งนา เหมาะกับการเรียนรู้วิถีชุมชน",
+      "highlights": [
+        "ทุ่งกุลาร้องไห้",
+        "ลำน้ำเตา"
+      ],
+      "attractions": [
+        {
+          "name": "ทุ่งกุลาร้องไห้ ผืนนาข้าวหอมมะลิ",
+          "category": "ธรรมชาติและวิถีเกษตร",
+          "description": "แหล่งท่องเที่ยวในอำเภอปทุมรัตต์",
+          "image_url": "",
+          "image_query": "ทุ่งกุลาร้องไห้ ผืนนาข้าวหอมมะลิ อำเภอปทุมรัตต์ ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        },
+        {
+          "name": "ลำน้ำเตา",
+          "category": "ธรรมชาติและวิถีเกษตร",
+          "description": "แหล่งท่องเที่ยวในอำเภอปทุมรัตต์",
+          "image_url": "",
+          "image_query": "ลำน้ำเตา อำเภอปทุมรัตต์ ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        }
+      ],
+      "image_url": "",
+      "photo_source": "TAT Open Data / Admin upload",
+      "image_query": "อำเภอปทุมรัตต์ ร้อยเอ็ด สถานที่ท่องเที่ยว"
+    },
+    {
+      "district": "อำเภอจตุรพักตรพิมาน",
+      "position": 5,
+      "cellId": "cell-5",
+      "category": "ประวัติศาสตร์และโบราณสถาน",
+      "summary": "แหล่งโบราณสถานที่สะท้อนอิทธิพลอารยธรรมขอมในพื้นที่",
+      "highlights": [
+        "ปราสาทหนองกู่"
+      ],
+      "attractions": [
+        {
+          "name": "ปราสาทหนองกู่ (โบราณสถานขอมโบราณ)",
+          "category": "ประวัติศาสตร์และโบราณสถาน",
+          "description": "แหล่งท่องเที่ยวในอำเภอจตุรพักตรพิมาน",
+          "image_url": "",
+          "image_query": "ปราสาทหนองกู่ (โบราณสถานขอมโบราณ) อำเภอจตุรพักตรพิมาน ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        }
+      ],
+      "image_url": "",
+      "photo_source": "TAT Open Data / Admin upload",
+      "image_query": "อำเภอจตุรพักตรพิมาน ร้อยเอ็ด สถานที่ท่องเที่ยว"
+    },
+    {
+      "district": "อำเภอธวัชบุรี",
+      "position": 6,
+      "cellId": "cell-6",
+      "category": "ประวัติศาสตร์และการเรียนรู้",
+      "summary": "มีทั้งโบราณสถานและแหล่งเรียนรู้ เหมาะสำหรับทริปครอบครัวและนักเรียน",
+      "highlights": [
+        "ปรางค์กู่",
+        "ศูนย์วิทยาศาสตร์และวัฒนธรรมเพื่อการศึกษาร้อยเอ็ด"
+      ],
+      "attractions": [
+        {
+          "name": "ปรางค์กู่",
+          "category": "ประวัติศาสตร์และการเรียนรู้",
+          "description": "แหล่งท่องเที่ยวในอำเภอธวัชบุรี",
+          "image_url": "",
+          "image_query": "ปรางค์กู่ อำเภอธวัชบุรี ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        },
+        {
+          "name": "ศูนย์วิทยาศาสตร์และวัฒนธรรมเพื่อการศึกษาร้อยเอ็ด",
+          "category": "ประวัติศาสตร์และการเรียนรู้",
+          "description": "แหล่งท่องเที่ยวในอำเภอธวัชบุรี",
+          "image_url": "",
+          "image_query": "ศูนย์วิทยาศาสตร์และวัฒนธรรมเพื่อการศึกษาร้อยเอ็ด อำเภอธวัชบุรี ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        }
+      ],
+      "image_url": "",
+      "photo_source": "TAT Open Data / Admin upload",
+      "image_query": "อำเภอธวัชบุรี ร้อยเอ็ด สถานที่ท่องเที่ยว"
+    },
+    {
+      "district": "อำเภอพนมไพร",
+      "position": 8,
+      "cellId": "cell-8",
+      "category": "วัฒนธรรมและประเพณี",
+      "summary": "โดดเด่นด้านประเพณีอีสานและวิถีศรัทธาชุมชน",
+      "highlights": [
+        "ประเพณีบุญบั้งไฟแสน",
+        "วัดสระทอง"
+      ],
+      "attractions": [
+        {
+          "name": "ประเพณีบุญบั้งไฟแสน",
+          "category": "วัฒนธรรมและประเพณี",
+          "description": "แหล่งท่องเที่ยวในอำเภอพนมไพร",
+          "image_url": "",
+          "image_query": "ประเพณีบุญบั้งไฟแสน อำเภอพนมไพร ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        },
+        {
+          "name": "วัดสระทอง",
+          "category": "วัฒนธรรมและประเพณี",
+          "description": "แหล่งท่องเที่ยวในอำเภอพนมไพร",
+          "image_url": "",
+          "image_query": "วัดสระทอง อำเภอพนมไพร ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        }
+      ],
+      "image_url": "",
+      "photo_source": "TAT Open Data / Admin upload",
+      "image_query": "อำเภอพนมไพร ร้อยเอ็ด สถานที่ท่องเที่ยว"
+    },
+    {
+      "district": "อำเภอโพนทอง",
+      "position": 9,
+      "cellId": "cell-9",
+      "category": "ชุมชนและนันทนาการ",
+      "summary": "มีทั้งวัดและแหล่งพักผ่อน เหมาะกับการท่องเที่ยวแบบครอบครัว",
+      "highlights": [
+        "วัดบ้านโนนสวรรค์",
+        "สวนน้ำอาจนคร วอเตอร์ปาร์ค แอนด์ รีสอร์ท"
+      ],
+      "attractions": [
+        {
+          "name": "วัดบ้านโนนสวรรค์",
+          "category": "ชุมชนและนันทนาการ",
+          "description": "แหล่งท่องเที่ยวในอำเภอโพนทอง",
+          "image_url": "",
+          "image_query": "วัดบ้านโนนสวรรค์ อำเภอโพนทอง ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        },
+        {
+          "name": "สวนน้ำอาจนคร วอเตอร์ปาร์ค แอนด์ รีสอร์ท",
+          "category": "ชุมชนและนันทนาการ",
+          "description": "แหล่งท่องเที่ยวในอำเภอโพนทอง",
+          "image_url": "",
+          "image_query": "สวนน้ำอาจนคร วอเตอร์ปาร์ค แอนด์ รีสอร์ท อำเภอโพนทอง ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        }
+      ],
+      "image_url": "",
+      "photo_source": "TAT Open Data / Admin upload",
+      "image_query": "อำเภอโพนทอง ร้อยเอ็ด สถานที่ท่องเที่ยว"
+    },
+    {
+      "district": "อำเภอโพธิ์ชัย",
+      "position": 10,
+      "cellId": "cell-10",
+      "category": "ธรรมชาติและชุมชน",
+      "summary": "เหมาะกับการสัมผัสธรรมชาติและวิถีชุมชนในพื้นที่",
+      "highlights": [
+        "พื้นที่ป่าเทือกเขาภูพาน",
+        "วิถีเกษตรกรรมและชุมชน"
+      ],
+      "attractions": [
+        {
+          "name": "พื้นที่ป่าเทือกเขาภูพาน แหล่งเกษตรกรรมและวิถีชุมชน",
+          "category": "ธรรมชาติและชุมชน",
+          "description": "แหล่งท่องเที่ยวในอำเภอโพธิ์ชัย",
+          "image_url": "",
+          "image_query": "พื้นที่ป่าเทือกเขาภูพาน แหล่งเกษตรกรรมและวิถีชุมชน อำเภอโพธิ์ชัย ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        }
+      ],
+      "image_url": "",
+      "photo_source": "TAT Open Data / Admin upload",
+      "image_query": "อำเภอโพธิ์ชัย ร้อยเอ็ด สถานที่ท่องเที่ยว"
+    },
+    {
+      "district": "อำเภอหนองพอก",
+      "position": 11,
+      "cellId": "cell-11",
+      "category": "ธรรมชาติและศาสนา",
+      "summary": "หนึ่งในพื้นที่เด่นด้านภูมิประเทศและแหล่งศรัทธาของร้อยเอ็ด",
+      "highlights": [
+        "วนอุทยานผาน้ำย้อย",
+        "ผาหมอกมิวาย",
+        "พระมหาเจดีย์ชัยมงคล"
+      ],
+      "attractions": [
+        {
+          "name": "วนอุทยานผาน้ำย้อย",
+          "category": "ธรรมชาติและศาสนา",
+          "description": "แหล่งท่องเที่ยวในอำเภอหนองพอก",
+          "image_url": "",
+          "image_query": "วนอุทยานผาน้ำย้อย อำเภอหนองพอก ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        },
+        {
+          "name": "ผาหมอกมิวาย",
+          "category": "ธรรมชาติและศาสนา",
+          "description": "แหล่งท่องเที่ยวในอำเภอหนองพอก",
+          "image_url": "",
+          "image_query": "ผาหมอกมิวาย อำเภอหนองพอก ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        },
+        {
+          "name": "พระมหาเจดีย์ชัยมงคล (วัดผาน้ำทิพย์)",
+          "category": "ธรรมชาติและศาสนา",
+          "description": "แหล่งท่องเที่ยวในอำเภอหนองพอก",
+          "image_url": "",
+          "image_query": "พระมหาเจดีย์ชัยมงคล (วัดผาน้ำทิพย์) อำเภอหนองพอก ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        }
+      ],
+      "image_url": "",
+      "photo_source": "TAT Open Data / Admin upload",
+      "image_query": "อำเภอหนองพอก ร้อยเอ็ด สถานที่ท่องเที่ยว"
+    },
+    {
+      "district": "อำเภอเสลภูมิ",
+      "position": 12,
+      "cellId": "cell-12",
+      "category": "ธรรมชาติและนันทนาการ",
+      "summary": "แหล่งน้ำและพื้นที่พักผ่อนที่รู้จักในชื่อทะเลอีสาน",
+      "highlights": [
+        "บึงเกลือ"
+      ],
+      "attractions": [
+        {
+          "name": "บึงเกลือ พื้นที่ชุ่มน้ำและแหล่งพักผ่อน",
+          "category": "ธรรมชาติและนันทนาการ",
+          "description": "แหล่งท่องเที่ยวในอำเภอเสลภูมิ",
+          "image_url": "",
+          "image_query": "บึงเกลือ พื้นที่ชุ่มน้ำและแหล่งพักผ่อน อำเภอเสลภูมิ ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        }
+      ],
+      "image_url": "",
+      "photo_source": "TAT Open Data / Admin upload",
+      "image_query": "อำเภอเสลภูมิ ร้อยเอ็ด สถานที่ท่องเที่ยว"
+    },
+    {
+      "district": "อำเภอสุวรรณภูมิ",
+      "position": 14,
+      "cellId": "cell-14",
+      "category": "ประวัติศาสตร์และศาสนา",
+      "summary": "มีโบราณสถานและแหล่งวัฒนธรรมที่สะท้อนประวัติศาสตร์ชุมชน",
+      "highlights": [
+        "กู่พระโกนา",
+        "บ่อพันขัน",
+        "วัดไตรภูมิ"
+      ],
+      "attractions": [
+        {
+          "name": "กู่พระโกนา",
+          "category": "ประวัติศาสตร์และศาสนา",
+          "description": "แหล่งท่องเที่ยวในอำเภอสุวรรณภูมิ",
+          "image_url": "https://upload.wikimedia.org/wikipedia/commons/7/7c/Kooprakhona.jpg",
+          "image_query": "กู่พระโกนา อำเภอสุวรรณภูมิ ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        },
+        {
+          "name": "บ่อพันขัน",
+          "category": "ประวัติศาสตร์และศาสนา",
+          "description": "แหล่งท่องเที่ยวในอำเภอสุวรรณภูมิ",
+          "image_url": "",
+          "image_query": "บ่อพันขัน อำเภอสุวรรณภูมิ ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        },
+        {
+          "name": "วัดไตรภูมิ (พระสังกัจจายน์)",
+          "category": "ประวัติศาสตร์และศาสนา",
+          "description": "แหล่งท่องเที่ยวในอำเภอสุวรรณภูมิ",
+          "image_url": "",
+          "image_query": "วัดไตรภูมิ (พระสังกัจจายน์) อำเภอสุวรรณภูมิ ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        }
+      ],
+      "image_url": "",
+      "photo_source": "TAT Open Data / Admin upload",
+      "image_query": "อำเภอสุวรรณภูมิ ร้อยเอ็ด สถานที่ท่องเที่ยว"
+    },
+    {
+      "district": "อำเภอเมืองสรวง",
+      "position": 15,
+      "cellId": "cell-15",
+      "category": "วิถีชุมชนและเกษตร",
+      "summary": "เหมาะกับการเรียนรู้ชีวิตชนบทและวัฒนธรรมชุมชนอีสาน",
+      "highlights": [
+        "วิถีเกษตรกรรมและชุมชนอีสานดั้งเดิม"
+      ],
+      "attractions": [
+        {
+          "name": "วิถีเกษตรกรรมและชุมชนอีสานดั้งเดิม",
+          "category": "วิถีชุมชนและเกษตร",
+          "description": "แหล่งท่องเที่ยวในอำเภอเมืองสรวง",
+          "image_url": "",
+          "image_query": "วิถีเกษตรกรรมและชุมชนอีสานดั้งเดิม อำเภอเมืองสรวง ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        }
+      ],
+      "image_url": "",
+      "photo_source": "TAT Open Data / Admin upload",
+      "image_query": "อำเภอเมืองสรวง ร้อยเอ็ด สถานที่ท่องเที่ยว"
+    },
+    {
+      "district": "อำเภอโพนทราย",
+      "position": 16,
+      "cellId": "cell-16",
+      "category": "ธรรมชาติและชุมชน",
+      "summary": "มีทั้งแหล่งวัฒนธรรมและภูมิทัศน์ธรรมชาติ เหมาะกับการเที่ยวแบบชุมชน",
+      "highlights": [
+        "วัดกู่คันธนาม",
+        "ท่าหาดยาว",
+        "ทุ่งดอกหญ้าโนนแก่นหล่อน",
+        "กุดจงอาง"
+      ],
+      "attractions": [
+        {
+          "name": "วัดกู่คันธนาม",
+          "category": "ธรรมชาติและชุมชน",
+          "description": "แหล่งท่องเที่ยวในอำเภอโพนทราย",
+          "image_url": "",
+          "image_query": "วัดกู่คันธนาม อำเภอโพนทราย ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        },
+        {
+          "name": "ท่าหาดยาว",
+          "category": "ธรรมชาติและชุมชน",
+          "description": "แหล่งท่องเที่ยวในอำเภอโพนทราย",
+          "image_url": "",
+          "image_query": "ท่าหาดยาว อำเภอโพนทราย ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        },
+        {
+          "name": "ทุ่งดอกหญ้าโนนแก่นหล่อน",
+          "category": "ธรรมชาติและชุมชน",
+          "description": "แหล่งท่องเที่ยวในอำเภอโพนทราย",
+          "image_url": "",
+          "image_query": "ทุ่งดอกหญ้าโนนแก่นหล่อน อำเภอโพนทราย ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        },
+        {
+          "name": "กุดจงอาง",
+          "category": "ธรรมชาติและชุมชน",
+          "description": "แหล่งท่องเที่ยวในอำเภอโพนทราย",
+          "image_url": "",
+          "image_query": "กุดจงอาง อำเภอโพนทราย ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        }
+      ],
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/7/7c/Kooprakhona.jpg?utm_source=th.wikipedia.org&utm_campaign=index&utm_content=original",
+      "photo_source": "TAT Open Data / Admin upload",
+      "image_query": "อำเภอโพนทราย ร้อยเอ็ด สถานที่ท่องเที่ยว"
+    },
+    {
+      "district": "อำเภออาจสามารถ",
+      "position": 17,
+      "cellId": "cell-17",
+      "category": "ชุมชนและนันทนาการ",
+      "summary": "มีทั้งวัด แหล่งพักผ่อน และจุดชมวิว เหมาะกับครอบครัว",
+      "highlights": [
+        "วัดบ้านสนามชัย",
+        "สวนน้ำอาจนคร วอเตอร์ปาร์ค แอนด์ รีสอร์ท",
+        "จุดชมวิวอุโมงค์ต้นไม้"
+      ],
+      "attractions": [
+        {
+          "name": "วัดบ้านสนามชัย (ตำบลโพนเมือง)",
+          "category": "ชุมชนและนันทนาการ",
+          "description": "แหล่งท่องเที่ยวในอำเภออาจสามารถ",
+          "image_url": "",
+          "image_query": "วัดบ้านสนามชัย (ตำบลโพนเมือง) อำเภออาจสามารถ ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        },
+        {
+          "name": "สวนน้ำอาจนคร วอเตอร์ปาร์ค แอนด์ รีสอร์ท",
+          "category": "ชุมชนและนันทนาการ",
+          "description": "แหล่งท่องเที่ยวในอำเภออาจสามารถ",
+          "image_url": "",
+          "image_query": "สวนน้ำอาจนคร วอเตอร์ปาร์ค แอนด์ รีสอร์ท อำเภออาจสามารถ ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        },
+        {
+          "name": "จุดชมวิวอุโมงค์ต้นไม้ (ตำบลโหรา)",
+          "category": "ชุมชนและนันทนาการ",
+          "description": "แหล่งท่องเที่ยวในอำเภออาจสามารถ",
+          "image_url": "",
+          "image_query": "จุดชมวิวอุโมงค์ต้นไม้ (ตำบลโหรา) อำเภออาจสามารถ ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        }
+      ],
+      "image_url": "/uploads/1786433591197-b6d9890d43c0ab89.jpg",
+      "photo_source": "TAT Open Data / Admin upload",
+      "image_query": "อำเภออาจสามารถ ร้อยเอ็ด สถานที่ท่องเที่ยว"
+    },
+    {
+      "district": "อำเภอเมยวดี",
+      "position": 18,
+      "cellId": "cell-18",
+      "category": "ธรรมชาติและวัฒนธรรม",
+      "summary": "เด่นด้านภูมิประเทศ ธรรมชาติ และวัฒนธรรมภูไท",
+      "highlights": [
+        "ถ้ำโสดา",
+        "ศูนย์แสดงศิลปวัฒนธรรมประเพณีภูไท",
+        "วัดพระธรรมจักรนาคาวนาราม"
+      ],
+      "attractions": [
+        {
+          "name": "วัดพระธรรมจักรนาคาวนาราม (วัดป่าบ้านโป่ง)",
+          "category": "ธรรมชาติและวัฒนธรรม",
+          "description": "แหล่งท่องเที่ยวในอำเภอเมยวดี",
+          "image_url": "",
+          "image_query": "วัดพระธรรมจักรนาคาวนาราม (วัดป่าบ้านโป่ง) อำเภอเมยวดี ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        },
+        {
+          "name": "ศูนย์แสดงศิลปวัฒนธรรมประเพณีภูไท (ตำบลบุ่งเลิศ)",
+          "category": "ธรรมชาติและวัฒนธรรม",
+          "description": "แหล่งท่องเที่ยวในอำเภอเมยวดี",
+          "image_url": "",
+          "image_query": "ศูนย์แสดงศิลปวัฒนธรรมประเพณีภูไท (ตำบลบุ่งเลิศ) อำเภอเมยวดี ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        },
+        {
+          "name": "ถ้ำโสดา",
+          "category": "ธรรมชาติและวัฒนธรรม",
+          "description": "แหล่งท่องเที่ยวในอำเภอเมยวดี",
+          "image_url": "",
+          "image_query": "ถ้ำโสดา อำเภอเมยวดี ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        },
+        {
+          "name": "วัดศรีสันติธรรม และ วัดศรีมงคล",
+          "category": "ธรรมชาติและวัฒนธรรม",
+          "description": "แหล่งท่องเที่ยวในอำเภอเมยวดี",
+          "image_url": "",
+          "image_query": "วัดศรีสันติธรรม และ วัดศรีมงคล อำเภอเมยวดี ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        }
+      ],
+      "image_url": "/uploads/1786433335301-3f1b90988848f771.jpg",
+      "photo_source": "TAT Open Data / Admin upload",
+      "image_query": "อำเภอเมยวดี ร้อยเอ็ด สถานที่ท่องเที่ยว"
+    },
+    {
+      "district": "อำเภอศรีสมเด็จ",
+      "position": 20,
+      "cellId": "cell-20",
+      "category": "ศาสนาและสถาปัตยกรรม",
+      "summary": "แหล่งศรัทธาและสถาปัตยกรรมหินทรายที่โดดเด่น",
+      "highlights": [
+        "เจดีย์หินทราย วัดป่ากุง"
+      ],
+      "attractions": [
+        {
+          "name": "เจดีย์หินทราย วัดป่ากุง",
+          "category": "ศาสนาและสถาปัตยกรรม",
+          "description": "แหล่งท่องเที่ยวในอำเภอศรีสมเด็จ",
+          "image_url": "",
+          "image_query": "เจดีย์หินทราย วัดป่ากุง อำเภอศรีสมเด็จ ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        }
+      ],
+      "image_url": "",
+      "photo_source": "TAT Open Data / Admin upload",
+      "image_query": "อำเภอศรีสมเด็จ ร้อยเอ็ด สถานที่ท่องเที่ยว"
+    },
+    {
+      "district": "อำเภอจังหาร",
+      "position": 21,
+      "cellId": "cell-21",
+      "category": "วิถีชุมชนและลุ่มน้ำ",
+      "summary": "เหมาะกับการสัมผัสวิถีชุมชนริมลุ่มน้ำชีและภูมิทัศน์ท้องถิ่น",
+      "highlights": [
+        "วิถีชุมชนลุ่มน้ำชี"
+      ],
+      "attractions": [
+        {
+          "name": "วิถีชุมชนลุ่มน้ำชี",
+          "category": "วิถีชุมชนและลุ่มน้ำ",
+          "description": "แหล่งท่องเที่ยวในอำเภอจังหาร",
+          "image_url": "",
+          "image_query": "วิถีชุมชนลุ่มน้ำชี อำเภอจังหาร ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        }
+      ],
+      "image_url": "",
+      "photo_source": "TAT Open Data / Admin upload",
+      "image_query": "อำเภอจังหาร ร้อยเอ็ด สถานที่ท่องเที่ยว"
+    },
+    {
+      "district": "อำเภอเชียงขวัญ",
+      "position": 22,
+      "cellId": "cell-22",
+      "category": "ธรรมชาติและชุมชน",
+      "summary": "พื้นที่ริมลำน้ำและชุมชน เหมาะกับการพักผ่อนและชมภูมิทัศน์",
+      "highlights": [
+        "เขื่อนร้อยเอ็ด บ้านดอนวิเวก"
+      ],
+      "attractions": [
+        {
+          "name": "เขื่อนร้อยเอ็ด บ้านดอนวิเวก",
+          "category": "ธรรมชาติและชุมชน",
+          "description": "แหล่งท่องเที่ยวในอำเภอเชียงขวัญ",
+          "image_url": "",
+          "image_query": "เขื่อนร้อยเอ็ด บ้านดอนวิเวก อำเภอเชียงขวัญ ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        }
+      ],
+      "image_url": "",
+      "photo_source": "TAT Open Data / Admin upload",
+      "image_query": "อำเภอเชียงขวัญ ร้อยเอ็ด สถานที่ท่องเที่ยว"
+    },
+    {
+      "district": "อำเภอหนองฮี",
+      "position": 23,
+      "cellId": "cell-23",
+      "category": "วิถีเกษตรและชุมชน",
+      "summary": "เหมาะกับการเรียนรู้วิถีเกษตรและชีวิตชุมชน",
+      "highlights": [
+        "แหล่งเกษตรกรรมและชุมชนชนบท"
+      ],
+      "attractions": [
+        {
+          "name": "แหล่งเกษตรกรรมและชุมชนชนบท",
+          "category": "วิถีเกษตรและชุมชน",
+          "description": "แหล่งท่องเที่ยวในอำเภอหนองฮี",
+          "image_url": "",
+          "image_query": "แหล่งเกษตรกรรมและชุมชนชนบท อำเภอหนองฮี ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        }
+      ],
+      "image_url": "",
+      "photo_source": "TAT Open Data / Admin upload",
+      "image_query": "อำเภอหนองฮี ร้อยเอ็ด สถานที่ท่องเที่ยว"
+    },
+    {
+      "district": "อำเภอทุ่งเขาหลวง",
+      "position": 24,
+      "cellId": "cell-24",
+      "category": "วิถีชุมชนและหัตถกรรม",
+      "summary": "เด่นด้านวิถีอีสาน ท้องนา และภูมิปัญญางานหัตถกรรมพื้นบ้าน",
+      "highlights": [
+        "ท้องนาและงานหัตถกรรมพื้นบ้าน"
+      ],
+      "attractions": [
+        {
+          "name": "วิถีชุมชนอีสาน ท้องนาและงานหัตถกรรมพื้นบ้าน",
+          "category": "วิถีชุมชนและหัตถกรรม",
+          "description": "แหล่งท่องเที่ยวในอำเภอทุ่งเขาหลวง",
+          "image_url": "",
+          "image_query": "วิถีชุมชนอีสาน ท้องนาและงานหัตถกรรมพื้นบ้าน อำเภอทุ่งเขาหลวง ร้อยเอ็ด",
+          "photo_source": "TAT Open Data / Admin upload"
+        }
+      ],
+      "image_url": "",
+      "photo_source": "TAT Open Data / Admin upload",
+      "image_query": "อำเภอทุ่งเขาหลวง ร้อยเอ็ด สถานที่ท่องเที่ยว"
+    }
+  ],
+  "photoPolicy": {
+    "description": "รูปที่ไม่มีแหล่งที่มาชัดเจนจะไม่ถูกนำมาใช้แทนแบบสุ่ม ผู้ดูแลระบบสามารถอัปโหลดรูปจริงของสถานที่ได้",
+    "source": "การท่องเที่ยวแห่งประเทศไทย (TAT) Open Data",
+    "license_note": "ข้อมูลแหล่งท่องเที่ยวของ TAT ระบุเป็นข้อมูลสาธารณะและ Open Data Common"
+  }
+}

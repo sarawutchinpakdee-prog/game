@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Firebase Admin — เกมเศษฐี101</title>
+<style>
+body{font-family:Arial,sans-serif;background:#0f3d2e;color:#f3e9d6;margin:0;padding:20px}
+.wrap{max-width:1000px;margin:auto}.card{background:#3e2716;border:1px solid #c9a227;border-radius:14px;padding:18px;margin:12px 0}
+input,textarea,button{font:inherit;border-radius:8px;padding:10px}input,textarea{width:100%;box-sizing:border-box;margin:5px 0 10px}button{border:0;background:#e9cd6a;color:#211b12;font-weight:700;cursor:pointer;margin:4px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}.item{background:#16543f;padding:14px;border-radius:12px}.status{min-height:24px}.muted{opacity:.8;font-size:13px}img{max-width:100%;max-height:180px;border-radius:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>👑 Firebase Admin — เกมเศษฐี101</h1>
+<div class="card">
+  <div class="muted">หน้านี้ใช้ Firestore เท่านั้น ไม่ใช้ Firebase Storage รูปให้ใส่เป็น URL จากเว็บหรือ Firebase Hosting</div>
+  <input id="email" type="email" placeholder="อีเมล Admin Firebase">
+  <input id="password" type="password" placeholder="รหัสผ่าน Admin Firebase">
+  <button id="login">เข้าสู่ระบบ Firebase</button>
+  <button id="seed">นำเข้าข้อมูล 20 อำเภอ</button>
+  <button id="refresh">โหลดข้อมูลจาก Firestore</button>
+  <button id="logout">ออกจากระบบ</button>
+  <div id="status" class="status"></div>
+</div>
+<div id="list" class="grid"></div>
+</div>
+<script src="/firebase-config.js"></script>
+<script src="/firebase-sync.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+function status(t,ok=false){$('status').textContent=t;$('status').style.color=ok?'#9fe3ad':'#ffd6a0'}
+async function login(){
+  try{const u=await FirebaseTourism.signIn($('email').value.trim(),$('password').value);status('เข้าสู่ระบบแล้ว: '+u.email,true);await refresh()}
+  catch(e){status('เข้าสู่ระบบไม่สำเร็จ: '+e.message)}
+}
+async function seed(){
+  try{
+    const res=await fetch('/data/tourism.json',{cache:'no-store'});
+    const data=await res.json();
+    const n=await FirebaseTourism.seedTourism(data);
+    status('นำเข้าข้อมูลสำเร็จ '+n+' อำเภอ ✓',true);await refresh()
+  }catch(e){status('นำเข้าไม่สำเร็จ: '+e.message)}
+}
+async function refresh(){
+  try{
+    const ds=await FirebaseTourism.getDistricts();
+    $('list').innerHTML='';
+    ds.forEach(d=>{
+      const el=document.createElement('div');el.className='item';
+      const img=d.image_url?'<img src="'+String(d.image_url).replace(/"/g,'&quot;')+'">':'';
+      el.innerHTML='<h3>'+esc(d.district)+'</h3>'+img+
+      '<label>รูปภาพ URL</label><input data-k="image_url" value="'+escAttr(d.image_url||'')+'">'+
+      '<label>คำอธิบาย</label><textarea data-k="summary">'+esc(d.summary||'')+'</textarea>'+
+      '<label>สถานที่ (1 บรรทัด/รายการ)</label><textarea data-k="attractions">'+(d.attractions||[]).map(x=>typeof x==='string'?x:x.name).map(esc).join('\n')+'</textarea>'+
+      '<button data-save>บันทึกอำเภอนี้</button><span class="muted" data-msg></span>';
+      el.querySelector('[data-save]').onclick=async()=>{
+        try{
+          const updated={...d,image_url:el.querySelector('[data-k="image_url"]').value.trim(),summary:el.querySelector('[data-k="summary"]').value.trim(),
+          attractions:el.querySelector('[data-k="attractions"]').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean)};
+          await FirebaseTourism.ready();
+          const {db,fsMod}=await (async()=>{return window._firebaseInternals||{} })();
+          // Public bridge intentionally exposes save via a dedicated helper below.
+          await saveDistrict(updated);
+          el.querySelector('[data-msg]').textContent=' ✓ บันทึกแล้ว';el.querySelector('[data-msg]').style.color='#9fe3ad';
+        }catch(e){el.querySelector('[data-msg]').textContent=' ✕ '+e.message}
+      };
+      $('list').appendChild(el);
+    });
+    status('โหลด '+ds.length+' อำเภอจาก Firestore แล้ว',true);
+  }catch(e){status('โหลดไม่สำเร็จ: '+e.message)}
+}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function escAttr(s){return esc(s)}
+// saveDistrict is added by firebase-sync.js in the next line through a safe wrapper.
+async function saveDistrict(d){await window.FirebaseTourism.saveDistrict(d)}
+$('login').onclick=login;$('seed').onclick=seed;$('refresh').onclick=refresh;
+$('logout').onclick=async()=>{await FirebaseTourism.signOut();status('ออกจากระบบแล้ว')};
+</script>
+</body></html>

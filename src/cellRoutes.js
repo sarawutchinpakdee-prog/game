@@ -1,0 +1,129 @@
+const express = require('express');
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+const { getCells, getCellById, updateCell, getCellTypes, EDITABLE_FIELDS } = require('./store');
+const tourism = require('../data/tourism.json');
+const { requireAuth } = require('./auth');
+
+const router = express.Router();
+
+const UPLOAD_DIR = path.join(__dirname, '..', 'public', 'uploads');
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const ALLOWED_IMAGES = {
+  'image/png': { ext: '.png', signature: buf => buf.length >= 8 && buf.subarray(0, 8).equals(Buffer.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a])) },
+  'image/jpeg': { ext: '.jpg', signature: buf => buf.length >= 3 && buf.subarray(0, 3).equals(Buffer.from([0xff,0xd8,0xff])) },
+  'image/webp': { ext: '.webp', signature: buf => buf.length >= 12 && buf.subarray(0, 4).toString('ascii') === 'RIFF' && buf.subarray(8, 12).toString('ascii') === 'WEBP' },
+};
+
+function ensureUploadDir() {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+}
+
+// POST /api/upload-image -> อัปโหลดรูปภาพสำหรับช่อง (เฉพาะแอดมิน)
+router.post('/upload-image', requireAuth, express.raw({
+  type: Object.keys(ALLOWED_IMAGES),
+  limit: MAX_IMAGE_BYTES,
+}), (req, res) => {
+  const contentType = req.headers['content-type'];
+  const rule = ALLOWED_IMAGES[contentType];
+  if (!rule) {
+    return res.status(415).json({ error: 'รองรับเฉพาะ PNG, JPG/JPEG และ WebP' });
+  }
+  if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
+    return res.status(400).json({ error: 'ไม่พบไฟล์รูปภาพ' });
+  }
+  if (req.body.length > MAX_IMAGE_BYTES) {
+    return res.status(413).json({ error: 'ไฟล์รูปภาพใหญ่เกิน 5 MB' });
+  }
+  if (!rule.signature(req.body)) {
+    return res.status(400).json({ error: 'ไฟล์ไม่ตรงกับชนิดรูปภาพที่ส่งมา' });
+  }
+
+  try {
+    ensureUploadDir();
+    const filename = `${Date.now()}-${crypto.randomBytes(8).toString('hex')}${rule.ext}`;
+    fs.writeFileSync(path.join(UPLOAD_DIR, filename), req.body);
+    return res.status(201).json({
+      url: `/uploads/${filename}`,
+      filename,
+      size: req.body.length,
+    });
+  } catch (err) {
+    console.error('Image upload failed:', err);
+    return res.status(500).json({ error: 'ไม่สามารถบันทึกรูปภาพได้' });
+  }
+});
+
+// GET /api/tourism -> ข้อมูลท่องเที่ยวครบ 20 อำเภอ
+router.get('/tourism', (req, res) => {
+  const q = String(req.query.q || '').trim().toLowerCase();
+  const category = String(req.query.category || '').trim();
+  let districts = tourism.districts;
+  if (category) districts = districts.filter(d => d.category === category);
+  if (q) districts = districts.filter(d => [d.district, d.category, d.summary, ...d.attractions].join(' ').toLowerCase().includes(q));
+  res.json({ province: tourism.province, updatedAt: tourism.updatedAt, total: districts.length, categories: [...new Set(tourism.districts.map(d => d.category))], districts });
+});
+
+// GET /api/cell-types -> lookup ประเภทช่อง (สำหรับ dropdown ในหน้าแอดมิน)
+router.get('/cell-types', (req, res) => {
+  res.json(getCellTypes());
+});
+
+// GET /api/board/:boardId/cells -> รายการช่องทั้งหมดของบอร์ด (ใช้ render กระดาน)
+router.get('/board/:boardId/cells', (req, res) => {
+  res.json(getCells(req.params.boardId));
+});
+
+// GET /api/cells/:id -> รายละเอียดช่องเดียว (แสดงเมื่อคลิกที่ช่อง)
+router.get('/cells/:id', (req, res) => {
+  const cell = getCellById(req.params.id);
+  if (!cell) return res.status(404).json({ error: 'ไม่พบช่องนี้' });
+  res.json(cell);
+});
+
+// PUT /api/cells/:id -> แก้ไขช่อง (เฉพาะแอดมินที่ล็อกอินแล้วเท่านั้น)
+router.put('/cells/:id', requireAuth, (req, res) => {
+  const existing = getCellById(req.params.id);
+  if (!existing) return res.status(404).json({ error: 'ไม่พบช่องนี้' });
+
+  const patch = req.body || {};
+  const unknownKeys = Object.keys(patch).filter(k => !EDITABLE_FIELDS.includes(k));
+  if (unknownKeys.length) {
+    return res.status(400).json({ error: `ไม่อนุญาตให้แก้ไขฟิลด์: ${unknownKeys.join(', ')}` });
+  }
+
+  if (patch.type != null && !Object.prototype.hasOwnProperty.call(getCellTypes(), patch.type)) {
+    return res.status(400).json({ error: 'ประเภทช่องไม่ถูกต้อง' });
+  }
+  for (const field of ['price', 'rent_base']) {
+    if (patch[field] != null && (!Number.isFinite(Number(patch[field])) || Number(patch[field]) < 0)) {
+      return res.status(400).json({ error: `${field === 'price' ? 'ราคา' : 'ค่าเช่า'}ต้องเป็นตัวเลขไม่ติดลบ` });
+    }
+  }
+  if (patch.effect_value != null && !Number.isFinite(Number(patch.effect_value))) {
+    return res.status(400).json({ error: 'ค่าผลกระทบต้องเป็นตัวเลข' });
+  }
+  if (patch.effect_steps != null && (!Number.isInteger(Number(patch.effect_steps)) || Math.abs(Number(patch.effect_steps)) > 24)) {
+    return res.status(400).json({ error: 'จำนวนช่องเดินต้องเป็นจำนวนเต็ม และไม่เกิน 24 ช่อง' });
+  }
+  if (patch.attractions != null) {
+    if (!Array.isArray(patch.attractions)) return res.status(400).json({ error: 'สถานที่ท่องเที่ยวต้องเป็นรายการ (array)' });
+    if (patch.attractions.length > 20) return res.status(400).json({ error: 'สถานที่ท่องเที่ยวมีได้ไม่เกิน 20 รายการ' });
+    if (patch.attractions.some(item => typeof item !== 'string' || item.trim().length === 0 || item.trim().length > 200)) {
+      return res.status(400).json({ error: 'ชื่อสถานที่ท่องเที่ยวต้องเป็นข้อความ 1-200 ตัวอักษร' });
+    }
+  }
+  if (patch.image_url != null) {
+    const imageUrl = String(patch.image_url).trim();
+    if (imageUrl && !(/^https?:\/\//i.test(imageUrl) || imageUrl.startsWith('/uploads/'))) {
+      return res.status(400).json({ error: 'URL รูปภาพต้องเป็น http/https หรือไฟล์ที่อัปโหลดใน /uploads/' });
+    }
+    if (imageUrl.length > 1000) return res.status(400).json({ error: 'URL รูปภาพยาวเกินไป' });
+  }
+
+  const updated = updateCell(req.params.id, patch);
+  res.json(updated);
+});
+
+module.exports = router;

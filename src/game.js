@@ -1,0 +1,798 @@
+const { getCells, getCellTypes } = require('./store');
+
+const BOARD_ID = 'default';
+const PLAYER_COLORS = ['#3B82F6', '#EF4444', '#22C55E', '#F5B841', '#A855F7', '#EC4899'];
+const START_MONEY = 20000;
+const START_BONUS = 20000;
+const STEP_DELAY_MS = 300;
+const MAX_CELL_CHAIN = 24;
+
+// sessionId -> session state (ทั้งหมดอยู่ใน memory — เหมาะกับโต๊ะเกมสั้นๆ)
+const sessions = new Map();
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function getSession(sessionId) {
+  return sessions.get(sessionId);
+}
+
+function createSession(sessionId) {
+  if (!sessions.has(sessionId)) {
+    sessions.set(sessionId, {
+      id: sessionId,
+      boardId: BOARD_ID,
+      // { playerKey, socketId, name, color, money, pos, connected }
+      players: [],
+      turnIndex: 0,
+      isMoving: false,
+      logs: [],
+      // cellId -> playerKey ของเจ้าของที่ดินในห้องนี้
+      properties: {},
+      propertyUpgrades: {},
+      pendingPurchase: null,
+      pendingQuestion: null,
+      gameStarted: false,
+      winnerKey: null,
+      winnerName: null,
+      gameOver: false,
+      mode: 'human',
+      aiCount: 0,
+      aiRunning: false,
+    });
+  }
+  return sessions.get(sessionId);
+}
+
+function getOrCreateSession(sessionId) {
+  return getSession(sessionId) || createSession(sessionId);
+}
+
+function listSessions() {
+  return Array.from(sessions.values());
+}
+
+function publicState(session) {
+  const turn = currentPlayer(session);
+  return {
+    sessionId: session.id,
+    boardId: session.boardId,
+    players: session.players.map(p => ({
+      id: p.socketId,
+      playerKey: p.playerKey,
+      name: p.name,
+      color: p.color,
+      money: p.money,
+      pos: p.pos,
+      connected: p.connected,
+      bankrupt: !!p.bankrupt,
+      properties: Object.entries(session.properties)
+        .filter(([, ownerKey]) => ownerKey === p.playerKey)
+        .map(([cellId]) => cellId),
+    })),
+    turnPlayerId: turn ? turn.socketId : null,
+    isMoving: session.isMoving,
+    gameOver: session.gameOver,
+    winnerId: session.winnerKey ? (session.players.find(p => p.playerKey === session.winnerKey)?.socketId || null) : null,
+    winnerName: session.winnerName,
+
+    pendingPurchase: session.pendingPurchase ? (() => {
+      const cell = getCells(session.boardId).find(c => c.id === session.pendingPurchase.cellId);
+      const buyer = session.players.find(p => p.playerKey === session.pendingPurchase.playerKey);
+      if (!cell || !buyer) return null;
+      return {
+        cellId: cell.id,
+        position: cell.position,
+        name: cell.name,
+        price: Number(cell.price) || 0,
+        rent: Number(cell.rent_base) || 0,
+        playerId: buyer.socketId,
+      };
+    })() : null,
+    currentQuestion: session.pendingQuestion ? {
+      id: session.pendingQuestion.id,
+      question: session.pendingQuestion.question,
+      choices: session.pendingQuestion.choices,
+      playerId: session.players.find(p => p.playerKey === session.pendingQuestion.playerKey)?.socketId || null,
+      penalty: session.pendingQuestion.penalty,
+    } : null,
+    properties: Object.entries(session.properties).map(([cellId, ownerKey]) => {
+      const owner = session.players.find(p => p.playerKey === ownerKey);
+      const cell = getCells(session.boardId).find(c => c.id === cellId);
+      const level = Math.max(0, Math.min(3, Number(session.propertyUpgrades[cellId]) || 0));
+      const baseRent = cell ? Math.max(0, Number(cell.rent_base) || 0) : 0;
+      const rentMultiplier = [1, 1.5, 2.25, 3][level];
+      return {
+        cellId,
+        position: cell ? cell.position : null,
+        name: cell ? cell.name : null,
+        price: cell ? Number(cell.price) || 0 : 0,
+        baseRent,
+        rent: Math.round(baseRent * rentMultiplier),
+        level,
+        maxLevel: 3,
+        upgradeCost: level < 3 && cell ? Math.floor((Number(cell.price) || 0) * [0.5, 0.75, 1][level]) : 0,
+        ownerId: owner ? owner.socketId : null,
+        ownerName: owner ? owner.name : null
+      };
+    }),
+    logs: session.logs.slice(0, 20),
+  };
+}
+
+function addLog(session, text) {
+  session.logs.unshift({ text, at: Date.now() });
+  session.logs = session.logs.slice(0, 30);
+}
+
+function addPlayer(session, socketId, name, playerKey) {
+  // Join ซ้ำจาก socket เดิม: อย่าสร้างผู้เล่นเพิ่ม
+  const sameSocket = session.players.find(p => p.socketId === socketId);
+  if (sameSocket) {
+    sameSocket.connected = true;
+    if (name && name.trim()) sameSocket.name = name.trim().slice(0, 20);
+    return sameSocket;
+  }
+
+  // Reconnect: ใช้ playerKey เดิมเพื่อเอาสถานะเดิมกลับมา ไม่สร้างผู้เล่นซ้ำ
+  if (playerKey) {
+    const existing = session.players.find(p => p.playerKey === playerKey);
+    if (existing) {
+      existing.socketId = socketId;
+      existing.connected = true;
+      if (name && name.trim()) existing.name = name.trim().slice(0, 20);
+      return existing;
+    }
+  }
+
+  const color = PLAYER_COLORS[session.players.length % PLAYER_COLORS.length];
+  const player = {
+    playerKey: playerKey || `player-${socketId}`,
+    socketId,
+    name: (name || `ผู้เล่น ${session.players.length + 1}`).trim().slice(0, 20),
+    color,
+    money: START_MONEY,
+    pos: 1,
+    connected: true,
+    bankrupt: false,
+  };
+  session.players.push(player);
+  return player;
+}
+
+function addBot(session, name) {
+  const botIndex = session.players.filter(p => p.isBot).length + 1;
+  const color = PLAYER_COLORS[session.players.length % PLAYER_COLORS.length];
+  const player = {
+    playerKey: `bot-${session.id}-${botIndex}`,
+    socketId: `bot-${session.id}-${botIndex}`,
+    name: name || `AI ${botIndex}`,
+    color,
+    money: START_MONEY,
+    pos: 1,
+    connected: true,
+    bankrupt: false,
+    isBot: true,
+  };
+  session.players.push(player);
+  session.aiCount = session.players.filter(p => p.isBot).length;
+  return player;
+}
+
+function isBotPlayer(player) {
+  return !!player?.isBot;
+}
+
+function chooseBotPurchase(session, player) {
+  const pending = session.pendingPurchase;
+  if (!pending || pending.playerKey !== player.playerKey) return false;
+  const cell = getCells(session.boardId).find(c => c.id === pending.cellId);
+  if (!cell) return false;
+  const price = Math.max(0, Number(cell.price) || 0);
+  // AI ซื้อเมื่อยังเหลือเงินอย่างน้อย 25% ของเงินตั้งต้นหลังซื้อ
+  return price > 0 && player.money - price >= START_MONEY * 0.25;
+}
+
+function botShouldPlay(session) {
+  const p = currentPlayer(session);
+  return !!(p && p.isBot && !session.gameOver && !session.isMoving);
+}
+
+function removePlayerBySocket(session, socketId) {
+  const index = session.players.findIndex(pl => pl.socketId === socketId);
+  if (index === -1) return null;
+
+  const p = session.players[index];
+  p.connected = false;
+
+  if (session.pendingPurchase && session.pendingPurchase.playerKey === p.playerKey) {
+    session.pendingPurchase = null;
+  }
+  if (session.pendingQuestion && session.pendingQuestion.playerKey === p.playerKey) {
+    session.pendingQuestion = null;
+  }
+
+  // ถ้าคนที่หลุดเป็นเจ้าของเทิร์น ให้ข้ามไปหาคนที่ยังออนไลน์ทันที
+  if (session.turnIndex === index && !session.isMoving && !session.gameOver) {
+    advanceTurn(session);
+  }
+  return p;
+}
+
+function currentPlayer(session) {
+  if (!session.players.length) return null;
+  const indexed = session.players[session.turnIndex];
+  if (indexed && indexed.connected && !indexed.bankrupt) return indexed;
+
+  const activeIndex = session.players.findIndex(p => p.connected && !p.bankrupt);
+  if (activeIndex === -1) return null;
+  session.turnIndex = activeIndex;
+  return session.players[activeIndex];
+}
+
+function advanceTurn(session) {
+  if (!session.players.length) return;
+  let next = session.turnIndex;
+  for (let i = 0; i < session.players.length; i++) {
+    next = (next + 1) % session.players.length;
+    if (session.players[next].connected && !session.players[next].bankrupt) {
+      session.turnIndex = next;
+      return;
+    }
+  }
+  // ไม่มีผู้เล่นที่ยังออนไลน์และยังเล่นอยู่: คง index เดิมไว้
+}
+
+function getPropertyOwner(session, cellId) {
+  const ownerKey = session.properties[cellId];
+  return ownerKey ? session.players.find(p => p.playerKey === ownerKey) || null : null;
+}
+
+function endTurn(session) {
+  session.pendingPurchase = null;
+  advanceTurn(session);
+}
+
+
+function getActivePlayers(session) {
+  return session.players.filter(p => p.connected && !p.bankrupt);
+}
+
+function checkWinCondition(io, session) {
+  if (session.gameOver) return true;
+  const active = getActivePlayers(session);
+  // การ Disconnect เพียงอย่างเดียวไม่ทำให้เกมจบทันที
+  // ต้องเหลือผู้เล่นที่ยังเล่นอยู่ 1 คน และผู้เล่นคนอื่นต้องล้มละลายทั้งหมด
+  if (session.players.length < 2 || active.length !== 1) return false;
+
+  const winner = active[0];
+  const eliminated = session.players.filter(p => p.playerKey !== winner.playerKey);
+  if (!eliminated.every(p => p.bankrupt)) return false;
+  session.gameOver = true;
+  session.winnerKey = winner.playerKey;
+  session.winnerName = winner.name;
+  session.pendingPurchase = null;
+  addLog(session, `🏆 ${winner.name} ชนะเกม! ผู้เล่นคนอื่นล้มละลายหรือออกจากเกมหมดแล้ว`);
+  io.to(session.id).emit('game_over', {
+    winnerId: winner.socketId,
+    winnerName: winner.name,
+    reason: 'last_player_standing'
+  });
+  io.to(session.id).emit('gm_log', session.logs[0]);
+  return true;
+}
+
+function declareBankrupt(io, session, player, reason) {
+  if (!player || player.bankrupt) return false;
+  player.bankrupt = true;
+  player.money = 0;
+
+  // ทรัพย์สินกลับเป็นของธนาคาร
+  const released = Object.entries(session.properties)
+    .filter(([, ownerKey]) => ownerKey === player.playerKey)
+    .map(([cellId]) => cellId);
+  released.forEach(cellId => {
+    delete session.properties[cellId];
+    delete session.propertyUpgrades[cellId];
+  });
+
+  if (session.pendingPurchase?.playerKey === player.playerKey) {
+    session.pendingPurchase = null;
+  }
+
+  addLog(session, `💥 ${player.name} ล้มละลาย${reason ? ` — ${reason}` : ''} ทรัพย์สินทั้งหมดกลับสู่ธนาคาร`);
+  io.to(session.id).emit('bankruptcy', {
+    playerId: player.socketId,
+    playerName: player.name,
+    releasedProperties: released
+  });
+
+  if (currentPlayer(session)?.playerKey === player.playerKey) {
+    advanceTurn(session);
+  }
+  checkWinCondition(io, session);
+  return true;
+}
+
+function checkBankruptcy(io, session, player, reason) {
+  if (player && player.money <= 0) {
+    return declareBankrupt(io, session, player, reason);
+  }
+  return false;
+}
+
+function sellProperty(io, session, socketId, cellId) {
+  if (session.gameOver) return { error: 'เกมจบแล้ว' };
+  const player = session.players.find(p => p.socketId === socketId);
+  if (!player || player.bankrupt) return { error: 'ไม่พบผู้เล่นที่ยังเล่นอยู่' };
+
+  const cell = getCells(session.boardId).find(c => c.id === cellId && c.type === 'PROPERTY');
+  if (!cell) return { error: 'ไม่พบทรัพย์สินนี้' };
+  if (session.properties[cell.id] !== player.playerKey) return { error: 'ทรัพย์สินนี้ไม่ใช่ของคุณ' };
+
+  const originalPrice = Math.max(0, Number(cell.price) || 0);
+  const sellPrice = Math.floor(originalPrice * 0.5);
+  delete session.properties[cell.id];
+  delete session.propertyUpgrades[cell.id];
+  player.money += sellPrice;
+
+  addLog(session, `🏷️ ${player.name} ขาย "${cell.name}" คืนธนาคาร ได้เงิน ${sellPrice.toLocaleString()} บาท`);
+  io.to(session.id).emit('gm_log', session.logs[0]);
+  io.to(session.id).emit('state_update', publicState(session));
+  return { ok: true, amount: sellPrice };
+}
+
+function upgradeProperty(io, session, socketId, cellId) {
+  if (session.gameOver) return { error: 'เกมจบแล้ว' };
+  const player = session.players.find(p => p.socketId === socketId);
+  if (!player || player.bankrupt) return { error: 'ไม่พบผู้เล่นที่ยังเล่นอยู่' };
+
+  const cell = getCells(session.boardId).find(c => c.id === cellId && c.type === 'PROPERTY');
+  if (!cell) return { error: 'ไม่พบทรัพย์สินนี้' };
+  if (session.properties[cell.id] !== player.playerKey) return { error: 'ทรัพย์สินนี้ไม่ใช่ของคุณ' };
+
+  const currentLevel = Math.max(0, Math.min(3, Number(session.propertyUpgrades[cell.id]) || 0));
+  if (currentLevel >= 3) return { error: 'ทรัพย์สินนี้อัปเกรดถึงระดับสูงสุดแล้ว' };
+
+  const basePrice = Math.max(0, Number(cell.price) || 0);
+  const cost = Math.floor(basePrice * [0.5, 0.75, 1][currentLevel]);
+  if (player.money < cost) return { error: `เงินไม่พออัปเกรด ต้องใช้ ${cost.toLocaleString()} บาท` };
+
+  const nextLevel = currentLevel + 1;
+  player.money -= cost;
+  session.propertyUpgrades[cell.id] = nextLevel;
+  const baseRent = Math.max(0, Number(cell.rent_base) || 0);
+  const rent = Math.round(baseRent * [1, 1.5, 2.25, 3][nextLevel]);
+
+  addLog(session, `🏗️ ${player.name} อัปเกรด "${cell.name}" เป็น Lv.${nextLevel} ค่าใช้จ่าย ${cost.toLocaleString()} บาท — ค่าเช่าใหม่ ${rent.toLocaleString()} บาท`);
+  io.to(session.id).emit('property_upgraded', {
+    playerId: player.socketId,
+    playerName: player.name,
+    cellId: cell.id,
+    level: nextLevel,
+    cost,
+    rent,
+  });
+  io.to(session.id).emit('gm_log', session.logs[0]);
+  io.to(session.id).emit('state_update', publicState(session));
+  return { ok: true, level: nextLevel, cost, rent };
+}
+
+function transferProperty(io, session, socketId, cellId, targetSocketId) {
+  if (session.gameOver) return { error: 'เกมจบแล้ว' };
+  const player = session.players.find(p => p.socketId === socketId);
+  const target = session.players.find(p => p.socketId === targetSocketId);
+  if (!player || player.bankrupt) return { error: 'ไม่พบผู้โอนหรือผู้โอนล้มละลายแล้ว' };
+  if (!target || target.bankrupt || !target.connected) return { error: 'ผู้รับต้องเป็นผู้เล่นที่ยังออนไลน์และไม่ล้มละลาย' };
+  if (player.playerKey === target.playerKey) return { error: 'ไม่สามารถโอนให้ตัวเองได้' };
+
+  const cell = getCells(session.boardId).find(c => c.id === cellId && c.type === 'PROPERTY');
+  if (!cell) return { error: 'ไม่พบทรัพย์สินนี้' };
+  if (session.properties[cell.id] !== player.playerKey) return { error: 'ทรัพย์สินนี้ไม่ใช่ของคุณ' };
+
+  session.properties[cell.id] = target.playerKey;
+  addLog(session, `🤝 ${player.name} โอน "${cell.name}" ให้ ${target.name} ฟรี`);
+  io.to(session.id).emit('gm_log', session.logs[0]);
+  io.to(session.id).emit('state_update', publicState(session));
+  return { ok: true };
+}
+
+function handlePropertyLanding(io, session, player, cell) {
+  const price = Math.max(0, Number(cell.price) || 0);
+  const baseRent = Math.max(0, Number(cell.rent_base) || 0);
+  const level = Math.max(0, Math.min(3, Number(session.propertyUpgrades[cell.id]) || 0));
+  const rentMultiplier = [1, 1.5, 2.25, 3][level];
+  const rent = Math.round(baseRent * rentMultiplier);
+  const owner = getPropertyOwner(session, cell.id);
+
+  if (owner && owner.playerKey === player.playerKey) {
+    addLog(session, `🏠 ${player.name} มาถึง "${cell.name}" — เป็นทรัพย์สินของคุณ`);
+    return { action: 'end' };
+  }
+
+  if (owner) {
+    const actualRent = Math.min(rent, Math.max(0, player.money));
+    player.money -= actualRent;
+    owner.money += actualRent;
+    addLog(session, `💸 ${player.name} จ่ายค่าเช่า ${actualRent.toLocaleString()} บาท ให้ ${owner.name} ที่ "${cell.name}"`);
+    if (player.money <= 0) {
+      checkBankruptcy(io, session, player, `ไม่มีเงินจ่ายค่าใช้จ่ายหลังตกที่ "${cell.name}"`);
+      return { action: 'bankrupt' };
+    }
+    return { action: 'end' };
+  }
+
+  if (price <= 0) {
+    addLog(session, `🏘️ "${cell.name}" ยังไม่มีราคา จึงซื้อไม่ได้`);
+    return { action: 'end' };
+  }
+
+  if (player.money < price) {
+    addLog(session, `💰 ${player.name} มีเงินไม่พอซื้อ "${cell.name}" (ต้องใช้ ${price.toLocaleString()} บาท)`);
+    return { action: 'end' };
+  }
+
+  session.pendingPurchase = { playerKey: player.playerKey, cellId: cell.id };
+  io.to(session.id).emit('property_offer', {
+    playerId: player.socketId,
+    cellId: cell.id,
+    position: cell.position,
+    name: cell.name,
+    price,
+    rent,
+  });
+  addLog(session, `🏠 ${player.name} มาถึง "${cell.name}" — เลือกว่าจะซื้อในราคา ${price.toLocaleString()} บาทหรือไม่`);
+  return { action: 'pending' };
+}
+
+function buyProperty(io, session, socketId) {
+  const pending = session.pendingPurchase;
+  if (!pending) return { error: 'ตอนนี้ไม่มีทรัพย์สินที่รอการซื้อ' };
+
+  const player = session.players.find(p => p.socketId === socketId && p.playerKey === pending.playerKey);
+  if (!player || !player.connected) return { error: 'ไม่พบผู้เล่นหรือผู้เล่นหลุดการเชื่อมต่อ' };
+  if (currentPlayer(session)?.socketId !== socketId) return { error: 'ยังไม่ถึงตาของคุณ' };
+
+  const cell = getCells(session.boardId).find(c => c.id === pending.cellId && c.type === 'PROPERTY');
+  if (!cell) {
+    session.pendingPurchase = null;
+    advanceTurn(session);
+    return { error: 'ไม่พบทรัพย์สินนี้' };
+  }
+
+  if (getPropertyOwner(session, cell.id)) {
+    session.pendingPurchase = null;
+    advanceTurn(session);
+    return { error: 'ทรัพย์สินนี้มีเจ้าของแล้ว' };
+  }
+
+  const price = Math.max(0, Number(cell.price) || 0);
+  if (player.money < price) return { error: 'เงินของคุณไม่พอซื้อทรัพย์สินนี้' };
+
+  player.money -= price;
+  session.properties[cell.id] = player.playerKey;
+  session.pendingPurchase = null;
+  addLog(session, `🛒 ${player.name} ซื้อ "${cell.name}" สำเร็จในราคา ${price.toLocaleString()} บาท`);
+  advanceTurn(session);
+  io.to(session.id).emit('gm_log', session.logs[0]);
+  io.to(session.id).emit('state_update', publicState(session));
+  return { ok: true };
+}
+
+function skipPropertyPurchase(io, session, socketId) {
+  const pending = session.pendingPurchase;
+  if (!pending) return { error: 'ตอนนี้ไม่มีคำขอซื้อทรัพย์สิน' };
+  if (pending.playerKey !== session.players.find(p => p.socketId === socketId)?.playerKey) return { error: 'ไม่ใช่คำขอซื้อของคุณ' };
+
+  const player = session.players.find(p => p.socketId === socketId);
+  session.pendingPurchase = null;
+  addLog(session, `➡️ ${player.name} เลือกไม่ซื้อทรัพย์สิน`);
+  advanceTurn(session);
+  io.to(session.id).emit('gm_log', session.logs[0]);
+  io.to(session.id).emit('state_update', publicState(session));
+  return { ok: true };
+}
+
+const EVENT_LINES = [
+  { text: 'พบกระเป๋าเงินตกอยู่ริมทาง รับไป 500 บาท', amount: 500 },
+  { text: 'รถติดหนักมาก แต่ไม่มีผลอะไรเป็นพิเศษ', amount: 0 },
+  { text: 'ได้รับของขวัญวันเกิดจากเพื่อนบ้าน รับไป 1,200 บาท', amount: 1200 },
+  { text: 'ทำของหายระหว่างทาง เสียเงิน 600 บาท', amount: -600 },
+];
+
+// การ์ดทำโทษ: คำถามความรู้ทั่วไปเกี่ยวกับจังหวัดร้อยเอ็ด
+// คำถามระดับง่าย — ตอบผิดเสีย 500 บาท, ตอบถูกได้ 300 บาท
+
+// การ์ดนางฟ้า: รางวัลเล็ก ๆ เน้นความสนุก ไม่ทำให้เกมเสียสมดุล
+const ANGEL_CARDS = [
+  { title: 'พรแห่งโชค', text: 'นางฟ้ามอบเงินให้คุณ', money: 500, icon: '😇✨' },
+  { title: 'ปีกแห่งความเร็ว', text: 'คุณได้เดินเพิ่ม 2 ช่อง', steps: 2, icon: '🪽' },
+  { title: 'เกราะนางฟ้า', text: 'ครั้งนี้รับโบนัสเงินทันที', money: 800, icon: '🛡️' },
+  { title: 'โชคดีแห่งร้อยเอ็ด', text: 'ได้รับของขวัญจากชาวเมือง', money: 700, icon: '🌟' },
+  { title: 'ส่วนลดจากนางฟ้า', text: 'รับเงินช่วยเหลือสำหรับการเดินทาง', money: 400, icon: '💎' },
+  { title: 'ก้าวพิเศษ', text: 'นางฟ้าช่วยให้คุณขยับไปข้างหน้า 1 ช่อง', steps: 1, icon: '👼' },
+];
+
+const ROIET_QUIZ_CARDS = [
+  { q: 'จังหวัดร้อยเอ็ดอยู่ในภาคใดของประเทศไทย?', choices: ['ภาคเหนือ', 'ภาคตะวันออกเฉียงเหนือ', 'ภาคใต้', 'ภาคตะวันตก'], answer: 1 },
+  { q: 'จังหวัดร้อยเอ็ดมีทั้งหมดกี่อำเภอ?', choices: ['15 อำเภอ', '18 อำเภอ', '20 อำเภอ', '25 อำเภอ'], answer: 2 },
+  { q: 'หอโหวด 101 ตั้งอยู่ในอำเภอใด?', choices: ['อำเภอเมืองร้อยเอ็ด', 'อำเภอพนมไพร', 'อำเภอโพนทอง', 'อำเภอเสลภูมิ'], answer: 0 },
+  { q: 'บึงพลาญชัยเป็นสถานที่สำคัญของอำเภอใด?', choices: ['อำเภอเมยวดี', 'อำเภอเมืองร้อยเอ็ด', 'อำเภอหนองฮี', 'อำเภอจังหาร'], answer: 1 },
+  { q: 'พระมหาเจดีย์ชัยมงคลอยู่ในอำเภอใด?', choices: ['อำเภอหนองพอก', 'อำเภอเกษตรวิสัย', 'อำเภอเชียงขวัญ', 'อำเภอโพนทราย'], answer: 0 },
+  { q: 'ข้อใดเป็นสถานที่ท่องเที่ยวในจังหวัดร้อยเอ็ด?', choices: ['หอโหวด 101', 'ดอยอินทนนท์', 'สะพานมอญ', 'เกาะพีพี'], answer: 0 },
+  { q: 'อำเภอสุวรรณภูมิเป็นหนึ่งในอำเภอของจังหวัดใด?', choices: ['ร้อยเอ็ด', 'ขอนแก่น', 'อุบลราชธานี', 'บุรีรัมย์'], answer: 0 },
+  { q: 'ข้อใดเป็นชื่ออำเภอของจังหวัดร้อยเอ็ด?', choices: ['หนองพอก', 'ปาย', 'แม่สาย', 'หัวหิน'], answer: 0 },
+  { q: 'จังหวัดร้อยเอ็ดมีสถานที่ท่องเที่ยวชื่อ “หอโหวด 101” ใช่หรือไม่?', choices: ['ใช่', 'ไม่ใช่', 'มีเฉพาะในอดีต', 'ไม่แน่ใจ'], answer: 0 },
+  { q: 'อำเภอพนมไพรเป็นอำเภอหนึ่งของจังหวัดใด?', choices: ['ร้อยเอ็ด', 'นครราชสีมา', 'เลย', 'สุราษฎร์ธานี'], answer: 0 },
+  { q: 'ข้อใดไม่ใช่อำเภอในจังหวัดร้อยเอ็ด?', choices: ['โพธิ์ชัย', 'เมยวดี', 'หนองพอก', 'ปากช่อง'], answer: 3 },
+  { q: 'บึงพลาญชัยเป็นสถานที่ท่องเที่ยวในจังหวัดใด?', choices: ['ร้อยเอ็ด', 'เชียงใหม่', 'ภูเก็ต', 'เพชรบุรี'], answer: 0 },
+];
+
+/**
+ * เดินทีละช่อง — server เป็นผู้กำหนดตำแหน่งปลายทางทั้งหมด
+ * คืนค่า true เมื่อผ่าน START เพื่อป้องกันการให้โบนัสซ้ำใน resolveCell
+ */
+async function moveSteps(io, session, player, steps) {
+  const dir = steps > 0 ? 1 : -1;
+  const total = Math.abs(steps);
+  let passedStart = false;
+
+  for (let i = 0; i < total; i++) {
+    let next = player.pos + dir;
+    if (next > 24) {
+      next = 1;
+      passedStart = true;
+      player.money += START_BONUS;
+      addLog(session, `🎉 ${player.name} ผ่านจุด START! รับโบนัส ${START_BONUS.toLocaleString()} บาท`);
+    }
+    if (next < 1) {
+      next = 24;
+      passedStart = true;
+      player.money += START_BONUS;
+      addLog(session, `🎉 ${player.name} ผ่านจุด START ย้อนกลับ! รับโบนัส ${START_BONUS.toLocaleString()} บาท`);
+    }
+
+    player.pos = next;
+    io.to(session.id).emit('player_moving', { playerId: player.socketId, pos: player.pos });
+    io.to(session.id).emit('gm_log', session.logs[0] || null);
+    await sleep(STEP_DELAY_MS);
+  }
+  return passedStart;
+}
+
+async function resolveCell(io, session, player, context = {}) {
+  const cells = getCells(session.boardId);
+  const cellTypes = getCellTypes();
+  const visited = context.visited || new Set();
+  const chainDepth = context.chainDepth || 0;
+
+  if (chainDepth >= MAX_CELL_CHAIN) {
+    addLog(session, `⚠️ หยุดเอฟเฟกต์ต่อเนื่องของ ${player.name} เพื่อป้องกันเกมวนไม่จบ`);
+    io.to(session.id).emit('gm_log', session.logs[0]);
+    return;
+  }
+
+  const cell = cells.find(c => c.position === player.pos);
+  if (!cell) return;
+
+  // ป้องกัน FORWARD/BACKWARD/TELEPORT วนกลับมาที่ช่องเดิม
+  if (visited.has(cell.position)) {
+    addLog(session, `⚠️ เอฟเฟกต์ของช่อง "${cell.name}" วนซ้ำ จึงหยุดการประมวลผลเพื่อป้องกันเกมค้าง`);
+    io.to(session.id).emit('gm_log', session.logs[0]);
+    return;
+  }
+  visited.add(cell.position);
+
+  const meta = cellTypes[cell.type] || {};
+
+  switch (cell.type) {
+    case 'START':
+      // โบนัสถูกจ่ายใน moveSteps ตอนผ่านจาก 24 -> 1 แล้ว
+      // ไม่จ่ายซ้ำที่นี่อีก
+      addLog(session, `${player.name} หยุดที่ START`);
+      break;
+
+    case 'PROPERTY': {
+      const result = handlePropertyLanding(io, session, player, cell);
+      if (result.action === 'pending') {
+        io.to(session.id).emit('gm_log', session.logs[0]);
+        return;
+      }
+      break;
+    }
+
+    case 'EVENT': {
+      // ช่องเหตุการณ์สุ่มได้ทั้งการ์ดทำโทษและการ์ดนางฟ้า
+      const drawAngel = Math.random() < 0.5;
+      if (drawAngel) {
+        const card = ANGEL_CARDS[Math.floor(Math.random() * ANGEL_CARDS.length)];
+        player.money += Number(card.money || 0);
+        let moved = 0;
+        if (card.steps) {
+          moved = Math.abs(Number(card.steps) || 0);
+          await moveSteps(io, session, player, moved);
+        }
+        addLog(session, `😇 ${player.name} ได้การ์ดนางฟ้า “${card.title}” — ${card.text}${card.money ? ` รับเงิน ${Number(card.money).toLocaleString()} บาท` : ''}`);
+        io.to(session.id).emit('angel_card', {
+          playerId: player.socketId,
+          playerName: player.name,
+          title: card.title,
+          text: card.text,
+          icon: card.icon,
+          money: Number(card.money || 0),
+          steps: moved,
+        });
+      } else {
+        const card = ROIET_QUIZ_CARDS[Math.floor(Math.random() * ROIET_QUIZ_CARDS.length)];
+        session.pendingQuestion = {
+          id: `roiet-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          playerKey: player.playerKey,
+          question: card.q,
+          choices: card.choices,
+          answer: card.answer,
+          penalty: 500,
+        };
+        addLog(session, `🃏 ${player.name} จั่วการ์ดทำโทษ — ตอบคำถามเกี่ยวกับจังหวัดร้อยเอ็ดให้ถูก!`);
+        io.to(session.id).emit('quiz_card', {
+          id: session.pendingQuestion.id,
+          playerId: player.socketId,
+          playerName: player.name,
+          question: card.q,
+          choices: card.choices,
+          penalty: 500,
+        });
+      }
+      break;
+    }
+
+    case 'TAX':
+    case 'PENALTY':
+      player.money += (cell.effect_value || 0);
+      addLog(session, `${meta.icon || ''} ${player.name} ${cell.effect_value < 0 ? 'เสีย' : 'ได้'} ${Math.abs(cell.effect_value || 0).toLocaleString()} บาท ที่ "${cell.name}"`);
+      break;
+
+    case 'BONUS':
+      player.money += (cell.effect_value || 0);
+      addLog(session, `🎁 ${player.name} ได้รับโบนัส ${(cell.effect_value || 0).toLocaleString()} บาท`);
+      break;
+
+    case 'BANK':
+      addLog(session, `🏦 ${player.name} แวะธนาคาร "${cell.name}"`);
+      break;
+
+    case 'INVESTMENT':
+      addLog(session, `📈 ${player.name} ลงทุนที่ "${cell.name}"`);
+      break;
+
+    case 'JAIL':
+      addLog(session, `🔒 ${player.name} แวะเยี่ยมชมคุก (ไม่ถูกจับ)`);
+      break;
+
+    case 'SPECIAL':
+      addLog(session, `🅿️ ${player.name} จอดพักที่ "${cell.name}"`);
+      break;
+
+    case 'TELEPORT': {
+      const others = cells.filter(c => c.position !== player.pos);
+      if (!others.length) break;
+      const target = others[Math.floor(Math.random() * others.length)];
+      addLog(session, `🌀 ${player.name} วาร์ปจาก "${cell.name}" ไปยัง "${target.name}"!`);
+      player.pos = target.position;
+      io.to(session.id).emit('player_moving', { playerId: player.socketId, pos: player.pos });
+      io.to(session.id).emit('gm_log', session.logs[0]);
+      await sleep(STEP_DELAY_MS);
+      await resolveCell(io, session, player, { visited, chainDepth: chainDepth + 1 });
+      return;
+    }
+
+    case 'FORWARD':
+    case 'BACKWARD': {
+      const steps = Number(cell.effect_steps) || 0;
+      const label = cell.type === 'FORWARD' ? '⏩' : '⏪';
+      const description = cell.type === 'FORWARD'
+        ? `ได้เดินหน้าเพิ่ม ${Math.abs(steps)} ช่อง!`
+        : `ต้องถอยหลัง ${Math.abs(steps)} ช่อง`;
+      addLog(session, `${label} ${player.name} ${description}`);
+      io.to(session.id).emit('gm_log', session.logs[0]);
+      const passedStart = await moveSteps(io, session, player, cell.type === 'FORWARD' ? Math.abs(steps) : -Math.abs(steps));
+      await resolveCell(io, session, player, { visited, chainDepth: chainDepth + 1, passedStart });
+      return;
+    }
+  }
+  checkBankruptcy(io, session, player, `เงินคงเหลือหมดหลังเหตุการณ์ที่ "${cell.name}"`);
+  io.to(session.id).emit('gm_log', session.logs[0]);
+}
+
+function answerQuestion(io, session, socketId, choiceIndex) {
+  const pending = session.pendingQuestion;
+  if (!pending) return { error: 'ตอนนี้ไม่มีการ์ดคำถาม' };
+  const player = session.players.find(p => p.socketId === socketId && p.playerKey === pending.playerKey);
+  if (!player || !player.connected || player.bankrupt) return { error: 'ไม่พบผู้เล่นที่กำลังตอบคำถาม' };
+  if (currentPlayer(session)?.playerKey !== player.playerKey) return { error: 'ยังไม่ถึงตาของคุณ' };
+
+  const choice = Number(choiceIndex);
+  if (!Number.isInteger(choice) || choice < 0 || choice >= pending.choices.length) {
+    return { error: 'คำตอบไม่ถูกต้อง' };
+  }
+
+  const correct = choice === pending.answer;
+  if (correct) {
+    const reward = 300;
+    player.money += reward;
+    addLog(session, `🎓 ${player.name} ตอบถูก! ได้รับรางวัล ${reward.toLocaleString()} บาท`);
+  } else {
+    const penalty = Math.min(pending.penalty, Math.max(0, player.money));
+    player.money -= penalty;
+    addLog(session, `🃏 ${player.name} ตอบผิด — การ์ดทำโทษหักเงิน ${penalty.toLocaleString()} บาท`);
+  }
+
+  session.pendingQuestion = null;
+  io.to(session.id).emit('quiz_result', {
+    playerId: player.socketId,
+    playerName: player.name,
+    correct,
+    correctIndex: pending.answer,
+    reward: correct ? 300 : 0,
+    penalty: correct ? 0 : pending.penalty,
+  });
+
+  checkBankruptcy(io, session, player, 'ตอบการ์ดทำโทษผิดและเงินคงเหลือไม่พอ');
+  if (!session.gameOver && !player.bankrupt && currentPlayer(session)?.playerKey === player.playerKey) {
+    advanceTurn(session);
+  }
+  checkWinCondition(io, session);
+  io.to(session.id).emit('gm_log', session.logs[0]);
+  io.to(session.id).emit('state_update', publicState(session));
+  return { ok: true, correct };
+}
+
+async function handleRollDice(io, session, socketId) {
+  const player = currentPlayer(session);
+  if (!player) return { error: 'ยังไม่มีผู้เล่นในโต๊ะนี้' };
+  if (session.gameOver) return { error: 'เกมจบแล้ว' };
+  if (player.bankrupt) { advanceTurn(session); return { error: 'คุณล้มละลายแล้ว' }; }
+  if (player.money <= 0) {
+    declareBankrupt(io, session, player, 'เงินเริ่มต้น/คงเหลือเป็นศูนย์ก่อนเริ่มตา');
+    io.to(session.id).emit('state_update', publicState(session));
+    return { error: 'คุณล้มละลายแล้ว' };
+  }
+  if (!player.connected) {
+    advanceTurn(session);
+    return { error: 'ผู้เล่นเดิมหลุดการเชื่อมต่อ ระบบข้ามตาให้แล้ว' };
+  }
+  if (player.socketId !== socketId) return { error: 'ยังไม่ถึงตาของคุณ' };
+  if (session.isMoving) return { error: 'กำลังประมวลผลตาก่อนหน้าอยู่ กรุณารอสักครู่' };
+  if (session.pendingQuestion?.playerKey === player.playerKey) return { error: 'กรุณาตอบการ์ดคำถามก่อนจบตา' };
+  if (session.players.filter(p => p.connected).length < 1) return { error: 'ต้องมีผู้เล่นอย่างน้อย 1 คน' };
+
+  session.isMoving = true;
+  session.gameStarted = true;
+  try {
+    const result = 1 + Math.floor(Math.random() * 6);
+    io.to(session.id).emit('dice_result', { playerId: player.socketId, value: result });
+    addLog(session, `🎲 ${player.name} ทอยได้ ${result} แต้ม`);
+    io.to(session.id).emit('gm_log', session.logs[0]);
+    io.to(session.id).emit('state_update', publicState(session));
+
+    await sleep(250);
+    await moveSteps(io, session, player, result);
+    await resolveCell(io, session, player);
+
+    // PROPERTY ที่ยังรอการตัดสินใจซื้อจะค้างเทิร์นไว้จนกว่าจะซื้อ/ไม่ซื้อ
+    // ถ้าผู้เล่นล้มละลาย resolveCell/declareBankrupt จะเลื่อนเทิร์นให้แล้ว
+    // จึงเลื่อนเทิร์นซ้ำเฉพาะกรณีที่ผู้เล่นคนเดิมยังเป็นเจ้าของเทิร์นอยู่
+    if (!session.pendingPurchase && !session.gameOver && currentPlayer(session)?.playerKey === player.playerKey && !player.bankrupt) {
+      advanceTurn(session);
+    }
+    checkWinCondition(io, session);
+    return { ok: true };
+  } finally {
+    session.isMoving = false;
+    io.to(session.id).emit('state_update', publicState(session));
+  }
+}
+
+module.exports = {
+  getSession, createSession, getOrCreateSession, listSessions, publicState, addPlayer, removePlayerBySocket,
+  handleRollDice, answerQuestion, buyProperty, skipPropertyPurchase, sellProperty, upgradeProperty, transferProperty,
+  addLog, currentPlayer, advanceTurn, addBot, isBotPlayer, chooseBotPurchase, botShouldPlay,
+};

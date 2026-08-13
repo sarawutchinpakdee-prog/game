@@ -1,0 +1,929 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin — จัดการกระดานเกมเศษฐี101</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600..900&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --felt: #0f3d2e;
+        --felt-dark: #0a2b20;
+        --wood: #6b4226;
+        --wood-dark: #3e2716;
+        --brass: #c9a227;
+        --brass-light: #e9cd6a;
+        --ivory: #f3e9d6;
+        --ivory-dim: #e5d8bc;
+        --ink: #211b12;
+        --red: #b23a2e;
+        --blue: #2c5f82;
+        --green: #3f7d53;
+        --shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: radial-gradient(
+          ellipse at 50% -10%,
+          #1c5a44 0%,
+          var(--felt) 55%,
+          var(--felt-dark) 100%
+        );
+        font-family: "IBM Plex Sans Thai", sans-serif;
+        color: var(--ivory);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        overflow-x: hidden;
+      }
+      body::before,
+      body::after {
+        content: "";
+        position: fixed;
+        pointer-events: none;
+        z-index: -1;
+        filter: blur(50px);
+        opacity: 0.75;
+      }
+      body::before {
+        width: 280px;
+        height: 280px;
+        top: -70px;
+        left: -70px;
+        background: radial-gradient(circle, #3f7d53 0%, transparent 70%);
+      }
+      body::after {
+        width: 320px;
+        height: 320px;
+        bottom: -100px;
+        right: -90px;
+        background: radial-gradient(circle, #c9a227 0%, transparent 72%);
+      }
+
+      /* ---------- Login screen ---------- */
+      #loginScreen {
+        min-height: 100vh;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .login-card {
+        width: min(360px, 90vw);
+        background: linear-gradient(
+          145deg,
+          rgba(107, 66, 38, 0.98),
+          rgba(62, 39, 22, 0.98)
+        );
+        border-radius: 18px;
+        padding: 30px 26px;
+        box-shadow:
+          0 18px 46px rgba(0, 0, 0, 0.35),
+          inset 0 0 0 1px rgba(233, 205, 106, 0.25);
+        text-align: center;
+        border: 1px solid rgba(233, 205, 106, 0.28);
+        position: relative;
+        overflow: hidden;
+      }
+      .login-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          120deg,
+          rgba(255, 255, 255, 0.16),
+          transparent 40%,
+          rgba(255, 255, 255, 0.06)
+        );
+        pointer-events: none;
+      }
+      .login-card .badge {
+        font-size: 34px;
+        margin-bottom: 6px;
+      }
+      .login-card h1 {
+        font-family: "Fraunces", serif;
+        font-size: 22px;
+        margin: 0 0 4px;
+      }
+      .login-card p {
+        color: var(--ivory-dim);
+        font-size: 13px;
+        margin: 0 0 20px;
+      }
+      .field {
+        text-align: left;
+        margin-bottom: 12px;
+      }
+      .field label {
+        font-size: 12px;
+        color: var(--brass-light);
+        display: block;
+        margin-bottom: 4px;
+      }
+      .field input {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: none;
+        background: var(--ivory);
+        color: var(--ink);
+        font-size: 14px;
+      }
+      .primary-btn {
+        width: 100%;
+        padding: 11px;
+        border: none;
+        border-radius: 9px;
+        margin-top: 6px;
+        background: linear-gradient(180deg, var(--brass-light), var(--brass));
+        color: var(--ink);
+        font-weight: 700;
+        font-size: 14px;
+        cursor: pointer;
+        transition:
+          transform 0.18s ease,
+          box-shadow 0.18s ease,
+          filter 0.18s ease;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+      }
+      .primary-btn:hover {
+        filter: brightness(1.06);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.24);
+      }
+      .error-msg {
+        color: #ffb4a8;
+        font-size: 12.5px;
+        min-height: 16px;
+        margin-top: 8px;
+      }
+
+      /* ---------- Admin app ---------- */
+      #appScreen {
+        display: none;
+        width: 100%;
+        max-width: 1180px;
+        padding: 26px 16px 60px;
+      }
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 18px;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 16px 18px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(233, 205, 106, 0.2);
+        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.2);
+      }
+      .topbar h1 {
+        font-family: "Fraunces", serif;
+        font-size: 22px;
+        margin: 0;
+      }
+      .topbar .who {
+        font-size: 12.5px;
+        color: var(--ivory-dim);
+      }
+      .logout-btn {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(233, 205, 106, 0.3);
+        color: var(--ivory);
+        padding: 8px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 13px;
+      }
+      .logout-btn:hover {
+        background: rgba(255, 255, 255, 0.14);
+      }
+
+      .board-frame {
+        background: linear-gradient(
+          145deg,
+          rgba(107, 66, 38, 0.98),
+          rgba(62, 39, 22, 0.98)
+        );
+        border-radius: 18px;
+        padding: 16px;
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+        max-width: 780px;
+        margin: 0 auto;
+        border: 1px solid rgba(233, 205, 106, 0.28);
+        position: relative;
+        overflow: hidden;
+      }
+      .board-frame::before {
+        content: "";
+        position: absolute;
+        inset: 10px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        pointer-events: none;
+      }
+      .board {
+        position: relative;
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        grid-template-rows: repeat(7, 1fr);
+        aspect-ratio: 1/1;
+        gap: 4px;
+        background: var(--felt-dark);
+        border-radius: 10px;
+        padding: 4px;
+      }
+      .center-note {
+        grid-column: 2/7;
+        grid-row: 2/7;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: var(--ivory-dim);
+        font-size: 12.5px;
+        padding: 10px;
+        background: radial-gradient(
+          circle at 30% 20%,
+          #16543f 0%,
+          var(--felt) 60%
+        );
+        border-radius: 8px;
+      }
+      .cell {
+        position: relative;
+        background: var(--ivory);
+        color: var(--ink);
+        border-radius: 6px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 2px 3px;
+        cursor: pointer;
+        box-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
+        overflow: hidden;
+        transition:
+          transform 0.15s ease,
+          box-shadow 0.15s ease;
+      }
+      .cell:hover {
+        transform: translateY(-3px) scale(1.01);
+        box-shadow:
+          0 8px 16px rgba(0, 0, 0, 0.28),
+          0 0 0 2px rgba(233, 205, 106, 0.35);
+      }
+      .cell img.thumb {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.55;
+      }
+      .cell .icon {
+        font-size: clamp(11px, 1.6vw, 17px);
+        position: relative;
+        z-index: 1;
+      }
+      .cell .name {
+        font-size: clamp(6px, 0.95vw, 9px);
+        font-weight: 600;
+        position: relative;
+        z-index: 1;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .cell .type-tag {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        z-index: 1;
+      }
+
+      .hint {
+        text-align: center;
+        color: var(--ivory-dim);
+        font-size: 12.5px;
+        margin-top: 14px;
+      }
+
+      /* ---------- Edit modal ---------- */
+      .modal-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        align-items: center;
+        justify-content: center;
+        z-index: 50;
+        padding: 16px;
+      }
+      .modal-backdrop.open {
+        display: flex;
+      }
+      .modal {
+        width: min(440px, 100%);
+        max-height: 88vh;
+        overflow-y: auto;
+        background: var(--ivory);
+        color: var(--ink);
+        border-radius: 14px;
+        padding: 22px;
+        box-shadow: var(--shadow);
+      }
+      .modal h2 {
+        font-family: "Fraunces", serif;
+        font-size: 19px;
+        margin: 0 0 2px;
+      }
+      .modal .sub {
+        font-size: 12px;
+        color: #6b5f45;
+        margin-bottom: 16px;
+      }
+      .modal .field {
+        margin-bottom: 12px;
+      }
+      .modal .field label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #4a4232;
+        display: block;
+        margin-bottom: 4px;
+      }
+      .modal input,
+      .modal select,
+      .modal textarea {
+        width: 100%;
+        padding: 9px 10px;
+        border-radius: 7px;
+        border: 1px solid #cdbf9f;
+        background: #fff;
+        font-size: 13.5px;
+        font-family: inherit;
+      }
+      .modal textarea {
+        resize: vertical;
+        min-height: 60px;
+      }
+      .modal-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .preview-img {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-top: 6px;
+        background: #e6dcc4;
+        display: none;
+      }
+      .upload-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        align-items: center;
+        margin-top: 6px;
+      }
+      .file-input {
+        width: 100%;
+        font-size: 12px;
+        color: #4a4232;
+      }
+      .upload-btn {
+        border: 1px solid #b8a982;
+        background: #efe5cf;
+        color: #4a4232;
+        border-radius: 7px;
+        padding: 8px 10px;
+        font-weight: 700;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .upload-btn:hover {
+        background: #e5d8bc;
+      }
+      .upload-status {
+        min-height: 15px;
+        font-size: 11px;
+        color: #6b5f45;
+        margin-top: 4px;
+      }
+      .effect-help {
+        font-size: 11px;
+        color: #6b5f45;
+        margin-top: 3px;
+      }
+      .modal-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 18px;
+      }
+      .btn {
+        flex: 1;
+        padding: 10px;
+        border-radius: 8px;
+        border: none;
+        font-weight: 700;
+        font-size: 13.5px;
+        cursor: pointer;
+      }
+      .btn.save {
+        background: linear-gradient(180deg, var(--brass-light), var(--brass));
+        color: var(--ink);
+      }
+      .btn.cancel {
+        background: #e6dcc4;
+        color: #4a4232;
+      }
+      .save-status {
+        font-size: 12px;
+        text-align: center;
+        margin-top: 8px;
+        min-height: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ============ LOGIN ============ -->
+    <div id="loginScreen">
+      <div class="login-card">
+        <div class="badge">🔐</div>
+        <h1>เข้าสู่ระบบแอดมิน</h1>
+        <p>จัดการช่องบนกระดานเกมเศษฐี101</p>
+        <div class="field">
+          <label>ชื่อผู้ใช้</label>
+          <input
+            type="text"
+            id="username"
+            placeholder="admin"
+            autocomplete="username"
+          />
+        </div>
+        <div class="field">
+          <label>รหัสผ่าน</label>
+          <input
+            type="password"
+            id="password"
+            placeholder="••••••••"
+            autocomplete="current-password"
+          />
+        </div>
+        <button class="primary-btn" id="loginBtn">เข้าสู่ระบบ</button>
+        <div class="error-msg" id="loginError"></div>
+      </div>
+    </div>
+
+    <!-- ============ ADMIN APP ============ -->
+    <div id="appScreen">
+      <div class="topbar">
+        <div>
+          <h1>จัดการกระดานเกมเศษฐี101</h1>
+          <div class="who">เข้าสู่ระบบในชื่อ <b id="whoAmI"></b></div>
+        </div>
+        <button class="logout-btn" id="logoutBtn">ออกจากระบบ</button>
+      </div>
+
+      <div class="board-frame">
+        <div class="board" id="board">
+          <div class="center-note">
+            คลิกที่ช่องรอบกระดานเพื่อแก้ไขรูป / ชื่อ / รายละเอียด
+          </div>
+        </div>
+      </div>
+      <div class="hint">
+        แก้ไขได้เฉพาะตอนเข้าสู่ระบบแอดมินเท่านั้น —
+        การเปลี่ยนแปลงบันทึกทันทีที่กด "บันทึก"
+      </div>
+    </div>
+
+    <!-- ============ EDIT MODAL ============ -->
+    <div class="modal-backdrop" id="modalBackdrop">
+      <div class="modal">
+        <h2 id="modalTitle">แก้ไขช่อง</h2>
+        <div class="sub" id="modalSub"></div>
+
+        <div class="field">
+          <label>ชื่อช่อง</label>
+          <input type="text" id="f_name" />
+        </div>
+
+        <div class="field">
+          <label>ประเภทช่อง</label>
+          <select id="f_type"></select>
+        </div>
+
+        <div class="field">
+          <label>รูปภาพ</label>
+          <input
+            type="text"
+            id="f_image"
+            placeholder="https://... หรือ /uploads/..."
+          />
+          <div class="upload-row">
+            <input
+              class="file-input"
+              type="file"
+              id="f_imageFile"
+              accept="image/png,image/jpeg,image/webp"
+            />
+            <button type="button" class="upload-btn" id="uploadImageBtn">
+              ⬆️ อัปโหลด
+            </button>
+          </div>
+          <div class="upload-status" id="uploadStatus">
+            รองรับ PNG, JPG/JPEG, WebP ขนาดไม่เกิน 5 MB
+          </div>
+          <img id="f_imagePreview" class="preview-img" alt="ตัวอย่างรูปภาพ" />
+        </div>
+
+        <div class="field">
+          <label>คำอธิบาย</label>
+          <textarea
+            id="f_description"
+            placeholder="รายละเอียดของอำเภอ/ช่องนี้"
+          ></textarea>
+        </div>
+
+        <div class="field">
+          <label>📍 สถานที่ท่องเที่ยวในอำเภอ</label>
+          <textarea
+            id="f_attractions"
+            placeholder="ใส่ 1 สถานที่ต่อ 1 บรรทัด เช่น
+บึงพลาญชัย
+หอโหวด 101
+วัดบูรพาภิราม"
+          ></textarea>
+          <div class="effect-help">
+            ข้อมูลส่วนนี้จะถูกใช้โดย Popup ในหน้าเกมโดยตรง
+          </div>
+        </div>
+
+        <div class="modal-row">
+          <div class="field">
+            <label>ราคา (บาท)</label>
+            <input type="number" id="f_price" min="0" />
+          </div>
+          <div class="field">
+            <label>ค่าเช่า (บาท)</label>
+            <input type="number" id="f_rent" min="0" />
+          </div>
+        </div>
+
+        <div class="modal-row">
+          <div class="field">
+            <label>ค่าผลกระทบ (บาท)</label>
+            <input type="number" id="f_effectValue" step="1" />
+            <div class="effect-help">+ = รับเงิน, − = เสียเงิน</div>
+          </div>
+          <div class="field">
+            <label>จำนวนช่องเดิน</label>
+            <input
+              type="number"
+              id="f_effectSteps"
+              step="1"
+              min="-24"
+              max="24"
+            />
+            <div class="effect-help">ใช้กับ FORWARD / BACKWARD</div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn cancel" id="cancelBtn">ยกเลิก</button>
+          <button class="btn save" id="saveBtn">บันทึก</button>
+        </div>
+        <div class="save-status" id="saveStatus"></div>
+      </div>
+    </div>
+
+    <script>
+      const API = ""; // same-origin
+      let TOKEN = null;
+      let CELL_TYPES = {};
+      let ACTIVE_CELL = null;
+
+      /* ---------- helpers ---------- */
+      function api(path, opts = {}) {
+        const headers = Object.assign(
+          { "Content-Type": "application/json" },
+          opts.headers || {},
+        );
+        if (TOKEN) headers["Authorization"] = "Bearer " + TOKEN;
+        return fetch(API + path, Object.assign({}, opts, { headers })).then(
+          async (r) => {
+            const body = await r.json().catch(() => ({}));
+            if (!r.ok) throw new Error(body.error || "เกิดข้อผิดพลาด");
+            return body;
+          },
+        );
+      }
+
+      async function uploadImage(file) {
+        if (!file) throw new Error("กรุณาเลือกไฟล์รูปภาพ");
+        if (!/^(image\/(png|jpeg|webp))$/i.test(file.type)) {
+          throw new Error("รองรับเฉพาะ PNG, JPG/JPEG และ WebP");
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          throw new Error("ไฟล์รูปภาพต้องมีขนาดไม่เกิน 5 MB");
+        }
+        const headers = { "Content-Type": file.type };
+        if (TOKEN) headers["Authorization"] = "Bearer " + TOKEN;
+        const response = await fetch(API + "/api/upload-image", {
+          method: "POST",
+          headers,
+          body: file,
+        });
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(body.error || "อัปโหลดรูปไม่สำเร็จ");
+        return body;
+      }
+
+      function rowCol(pos) {
+        if (pos <= 7) return { row: 0, col: pos - 1 };
+        if (pos <= 12) return { row: pos - 7, col: 6 };
+        if (pos <= 19) return { row: 6, col: 19 - pos };
+        return { row: 25 - pos, col: 0 };
+      }
+
+      /* ---------- login ---------- */
+      document.getElementById("loginBtn").addEventListener("click", doLogin);
+      document.getElementById("password").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") doLogin();
+      });
+
+      async function doLogin() {
+        const username = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value;
+        const errEl = document.getElementById("loginError");
+        errEl.textContent = "";
+        try {
+          const res = await api("/api/auth/login", {
+            method: "POST",
+            body: JSON.stringify({ username, password }),
+          });
+          TOKEN = res.token;
+          sessionStorage.setItem("admin_token", TOKEN);
+          await enterApp(res.username);
+        } catch (e) {
+          errEl.textContent = e.message;
+        }
+      }
+
+      document.getElementById("logoutBtn").addEventListener("click", () => {
+        TOKEN = null;
+        sessionStorage.removeItem("admin_token");
+        document.getElementById("appScreen").style.display = "none";
+        document.getElementById("loginScreen").style.display = "flex";
+      });
+
+      async function enterApp(username) {
+        document.getElementById("whoAmI").textContent = username;
+        document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("appScreen").style.display = "block";
+        CELL_TYPES = await api("/api/cell-types");
+        populateTypeSelect();
+        await renderBoard();
+      }
+
+      /* ---------- auto-login if session token still valid ---------- */
+      (async function tryResume() {
+        const saved = sessionStorage.getItem("admin_token");
+        if (!saved) return;
+        TOKEN = saved;
+        try {
+          const me = await api("/api/auth/me");
+          await enterApp(me.username);
+        } catch (e) {
+          TOKEN = null;
+          sessionStorage.removeItem("admin_token");
+        }
+      })();
+
+      /* ---------- board render ---------- */
+      async function renderBoard() {
+        const board = document.getElementById("board");
+        document.querySelectorAll(".cell").forEach((c) => c.remove());
+
+        const cells = await api("/api/board/default/cells");
+        cells
+          .sort((a, b) => a.position - b.position)
+          .forEach((cell) => {
+            const { row, col } = rowCol(cell.position);
+            const meta = CELL_TYPES[cell.type] || {};
+            const div = document.createElement("div");
+            div.className = "cell";
+            div.style.gridRow = row + 1;
+            div.style.gridColumn = col + 1;
+            if (cell.image_url) {
+              const img = document.createElement("img");
+              img.className = "thumb";
+              img.src = cell.image_url;
+              img.alt = "";
+              img.addEventListener("error", () => img.remove());
+              div.appendChild(img);
+            }
+            const tag = document.createElement("span");
+            tag.className = "type-tag";
+            tag.style.background = meta.color || "#999";
+            div.appendChild(tag);
+            const icon = document.createElement("span");
+            icon.className = "icon";
+            icon.textContent = meta.icon || "❔";
+            div.appendChild(icon);
+            const name = document.createElement("span");
+            name.className = "name";
+            name.textContent = cell.name || "(ยังไม่ตั้งชื่อ)";
+            div.appendChild(name);
+            div.addEventListener("click", () => openEditModal(cell.id));
+            board.appendChild(div);
+          });
+      }
+
+      /* ---------- type select ---------- */
+      function populateTypeSelect() {
+        const sel = document.getElementById("f_type");
+        sel.innerHTML = Object.entries(CELL_TYPES)
+          .map(
+            ([code, m]) =>
+              `<option value="${code}">${m.icon} ${m.label} (${code})</option>`,
+          )
+          .join("");
+      }
+
+      /* ---------- edit modal ---------- */
+      const backdrop = document.getElementById("modalBackdrop");
+
+      async function openEditModal(cellId) {
+        const cell = await api("/api/cells/" + cellId); // admin-only detail endpoint
+        ACTIVE_CELL = cell;
+
+        document.getElementById("modalTitle").textContent =
+          `แก้ไขช่อง #${cell.position}`;
+        document.getElementById("modalSub").textContent =
+          `ตำแหน่ง row ${cell.row}, column ${cell.column}`;
+        document.getElementById("f_name").value = cell.name || "";
+        document.getElementById("f_type").value = cell.type;
+        document.getElementById("f_image").value = cell.image_url || "";
+        document.getElementById("f_description").value = cell.description || "";
+        document.getElementById("f_attractions").value = Array.isArray(
+          cell.attractions,
+        )
+          ? cell.attractions.join("\n")
+          : String(cell.description || "")
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean)
+              .join("\n");
+        document.getElementById("f_price").value = cell.price ?? "";
+        document.getElementById("f_rent").value = cell.rent_base ?? "";
+        document.getElementById("f_effectValue").value =
+          cell.effect_value ?? "";
+        document.getElementById("f_effectSteps").value =
+          cell.effect_steps ?? "";
+        document.getElementById("f_imageFile").value = "";
+        document.getElementById("uploadStatus").textContent =
+          "รองรับ PNG, JPG/JPEG, WebP ขนาดไม่เกิน 5 MB";
+        document.getElementById("uploadStatus").style.color = "#6b5f45";
+        updateImagePreview();
+        document.getElementById("saveStatus").textContent = "";
+        backdrop.classList.add("open");
+      }
+
+      document
+        .getElementById("f_image")
+        .addEventListener("input", updateImagePreview);
+      function updateImagePreview() {
+        const url = document.getElementById("f_image").value.trim();
+        const img = document.getElementById("f_imagePreview");
+        if (url) {
+          img.src = url;
+          img.style.display = "block";
+        } else {
+          img.style.display = "none";
+        }
+      }
+
+      document
+        .getElementById("uploadImageBtn")
+        .addEventListener("click", async () => {
+          const fileInput = document.getElementById("f_imageFile");
+          const status = document.getElementById("uploadStatus");
+          const btn = document.getElementById("uploadImageBtn");
+          if (!fileInput.files[0]) {
+            status.style.color = "#b23a2e";
+            status.textContent = "กรุณาเลือกไฟล์ก่อนอัปโหลด";
+            return;
+          }
+          btn.disabled = true;
+          btn.textContent = "กำลังอัปโหลด...";
+          status.style.color = "#6b5f45";
+          status.textContent = "กำลังอัปโหลดรูปภาพ...";
+          try {
+            const result = await uploadImage(fileInput.files[0]);
+            document.getElementById("f_image").value = result.url;
+            updateImagePreview();
+            status.style.color = "#3f7d53";
+            status.textContent =
+              "อัปโหลดสำเร็จ ✓ กด “บันทึก” เพื่อผูกภาพกับช่อง";
+            fileInput.value = "";
+          } catch (e) {
+            status.style.color = "#b23a2e";
+            status.textContent = e.message;
+          } finally {
+            btn.disabled = false;
+            btn.textContent = "⬆️ อัปโหลด";
+          }
+        });
+
+      document
+        .getElementById("cancelBtn")
+        .addEventListener("click", () => backdrop.classList.remove("open"));
+      backdrop.addEventListener("click", (e) => {
+        if (e.target === backdrop) backdrop.classList.remove("open");
+      });
+
+      document.getElementById("saveBtn").addEventListener("click", async () => {
+        const statusEl = document.getElementById("saveStatus");
+        const saveBtn = document.getElementById("saveBtn");
+        const selectedImage = document.getElementById("f_imageFile").files[0];
+        saveBtn.disabled = true;
+        saveBtn.textContent = "กำลังบันทึก...";
+        try {
+          // เลือกไฟล์แล้วกดบันทึกได้เลย ไม่จำเป็นต้องกดอัปโหลดแยก
+          if (selectedImage) {
+            statusEl.style.color = "#6b5f45";
+            statusEl.textContent = "กำลังอัปโหลดรูปภาพ...";
+            const uploaded = await uploadImage(selectedImage);
+            document.getElementById("f_image").value = uploaded.url;
+            document.getElementById("f_imageFile").value = "";
+            updateImagePreview();
+          }
+
+          const patch = {
+            name: document.getElementById("f_name").value.trim(),
+            type: document.getElementById("f_type").value,
+            image_url: document.getElementById("f_image").value.trim(),
+            description: document.getElementById("f_description").value.trim(),
+            attractions: document
+              .getElementById("f_attractions")
+              .value.split(/\r?\n/)
+              .map((s) => s.trim())
+              .filter(Boolean),
+            price:
+              document.getElementById("f_price").value === ""
+                ? null
+                : Number(document.getElementById("f_price").value),
+            rent_base:
+              document.getElementById("f_rent").value === ""
+                ? null
+                : Number(document.getElementById("f_rent").value),
+            effect_value:
+              document.getElementById("f_effectValue").value === ""
+                ? null
+                : Number(document.getElementById("f_effectValue").value),
+            effect_steps:
+              document.getElementById("f_effectSteps").value === ""
+                ? null
+                : Number(document.getElementById("f_effectSteps").value),
+          };
+          await api("/api/cells/" + ACTIVE_CELL.id, {
+            method: "PUT",
+            body: JSON.stringify(patch),
+          });
+          statusEl.style.color = "#3f7d53";
+          statusEl.textContent = "บันทึกแล้ว ✓ รูปภาพพร้อมใช้ในเกมแล้ว";
+          await renderBoard();
+          setTimeout(() => backdrop.classList.remove("open"), 700);
+        } catch (e) {
+          statusEl.style.color = "#b23a2e";
+          statusEl.textContent = e.message;
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.textContent = "บันทึก";
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,2958 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>เล่นเกมเศษฐี101 — Real-time</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600..900&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"
+      rel="stylesheet"
+    />
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/firebase-config.js"></script>
+    <script src="/firebase-sync.js"></script>
+    <style>
+      :root {
+        --felt: #0f3d2e;
+        --felt-dark: #0a2b20;
+        --wood: #6b4226;
+        --wood-dark: #3e2716;
+        --brass: #c9a227;
+        --brass-light: #e9cd6a;
+        --ivory: #f3e9d6;
+        --ivory-dim: #e5d8bc;
+        --ink: #211b12;
+        --red: #b23a2e;
+        --blue: #2c5f82;
+        --green: #3f7d53;
+        --shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: radial-gradient(
+          ellipse at 50% -10%,
+          #1c5a44 0%,
+          var(--felt) 55%,
+          var(--felt-dark) 100%
+        );
+        font-family: "IBM Plex Sans Thai", sans-serif;
+        color: var(--ivory);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 24px 14px 60px;
+        gap: 18px;
+      }
+      header {
+        text-align: center;
+      }
+      .eyebrow {
+        font-family: "IBM Plex Mono", monospace;
+        letter-spacing: 0.18em;
+        font-size: 11px;
+        color: var(--brass-light);
+        text-transform: uppercase;
+      }
+      h1 {
+        font-family: "Fraunces", serif;
+        font-weight: 800;
+        font-size: clamp(22px, 4vw, 32px);
+        margin: 4px 0;
+      }
+
+
+      /* floating player wallet */
+      .money-hud {
+        position: fixed;
+        top: max(12px, env(safe-area-inset-top));
+        left: max(12px, env(safe-area-inset-left));
+        z-index: 40;
+        display: none;
+        align-items: center;
+        gap: 9px;
+        min-width: 150px;
+        padding: 8px 12px 8px 9px;
+        border: 1px solid rgba(233, 205, 106, 0.55);
+        border-radius: 14px;
+        background: linear-gradient(145deg, rgba(62,39,22,.96), rgba(15,61,46,.96));
+        box-shadow: 0 8px 24px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.04);
+        backdrop-filter: blur(8px);
+        pointer-events: none;
+      }
+      .money-hud.on { display: flex; }
+      .money-icon {
+        width: 36px;
+        height: 36px;
+        display: grid;
+        place-items: center;
+        flex: 0 0 36px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 35% 30%, #fff2a8 0%, #e9cd6a 42%, #b88616 100%);
+        border: 2px solid #fff0a0;
+        color: #654600;
+        font-size: 20px;
+        box-shadow: 0 3px 8px rgba(0,0,0,.35);
+      }
+      .money-hud-label {
+        color: var(--ivory-dim);
+        font-size: 10px;
+        line-height: 1.1;
+      }
+      .money-hud-value {
+        margin-top: 2px;
+        color: var(--brass-light);
+        font-family: "IBM Plex Mono", monospace;
+        font-size: clamp(14px, 2vw, 18px);
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .money-hud.changed {
+        animation: moneyPulse .45s ease;
+      }
+      @keyframes moneyPulse {
+        0% { transform: scale(1); }
+        45% { transform: scale(1.08); }
+        100% { transform: scale(1); }
+      }
+      .money-hud-value.positive { animation: moneyUp .55s ease; }
+      .money-hud-value.negative { animation: moneyDown .55s ease; }
+      @keyframes moneyUp {
+        0% { transform: translateY(3px); opacity: .5; }
+        45% { transform: translateY(-2px); opacity: 1; }
+        100% { transform: translateY(0); }
+      }
+      @keyframes moneyDown {
+        0% { transform: translateY(-3px); opacity: .5; }
+        45% { transform: translateY(2px); opacity: 1; }
+        100% { transform: translateY(0); }
+      }
+      @media (max-width: 600px) {
+        .money-hud {
+          min-width: 132px;
+          padding: 6px 9px 6px 7px;
+          gap: 7px;
+          border-radius: 12px;
+        }
+        .money-icon {
+          width: 30px;
+          height: 30px;
+          flex-basis: 30px;
+          font-size: 16px;
+        }
+        .money-hud-label { font-size: 9px; }
+        .money-hud-value { font-size: 13px; }
+      }
+
+      /* join card */
+      .join-card {
+        width: min(340px, 90vw);
+        background: linear-gradient(
+          160deg,
+          var(--wood) 0%,
+          var(--wood-dark) 100%
+        );
+        border-radius: 14px;
+        padding: 22px;
+        box-shadow: var(--shadow);
+        text-align: center;
+      }
+      .join-card input {
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        border: none;
+        margin: 10px 0;
+        font-size: 14px;
+      }
+      .join-card button {
+        width: 100%;
+        padding: 11px;
+        border: none;
+        border-radius: 9px;
+        background: linear-gradient(180deg, var(--brass-light), var(--brass));
+        color: var(--ink);
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .stage {
+        width: 100%;
+        max-width: 1100px;
+        display: grid;
+        grid-template-columns: minmax(320px, 760px) 280px;
+        gap: 20px;
+        display: none;
+      }
+      .stage.on {
+        display: grid;
+      }
+      @media (max-width: 880px) {
+        .stage {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .board-wrapper {
+        perspective: 1400px;
+      }
+      .board-frame {
+        background: linear-gradient(
+          160deg,
+          var(--wood) 0%,
+          var(--wood-dark) 100%
+        );
+        border-radius: 18px;
+        padding: 14px;
+        box-shadow: var(--shadow);
+        transform: rotateX(26deg);
+        transform-style: preserve-3d;
+        transition: transform 0.4s ease;
+      }
+
+      .board {
+        position: relative;
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        grid-template-rows: repeat(7, 1fr);
+        aspect-ratio: 1/1;
+        gap: 4px;
+        background: var(--felt-dark);
+        border-radius: 10px;
+        padding: 4px;
+      }
+      .cell {
+        position: relative;
+        background: var(--ivory);
+        color: var(--ink);
+        border-radius: 6px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 2px 3px;
+        box-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
+        overflow: hidden;
+        transition:
+          transform 0.2s ease,
+          box-shadow 0.2s ease;
+      }
+      .cell .icon {
+        font-size: clamp(11px, 1.6vw, 16px);
+      }
+      .cell .name {
+        font-size: clamp(6px, 0.9vw, 8.5px);
+        font-weight: 600;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .cell .type-tag {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+      }
+      .owner-badge {
+        position: absolute;
+        right: 2px;
+        bottom: 2px;
+        max-width: 92%;
+        padding: 1px 4px;
+        border-radius: 5px;
+        background: rgba(15, 61, 46, 0.9);
+        color: #fff;
+        font-size: 6px;
+        font-weight: 700;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .cell.property-owned {
+        box-shadow:
+          inset 0 0 0 2px rgba(63, 125, 83, 0.75),
+          0 2px 0 rgba(0, 0, 0, 0.25);
+      }
+      .cell.active-cell {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow:
+          0 8px 14px rgba(0, 0, 0, 0.4),
+          0 0 0 2px var(--brass-light);
+        z-index: 3;
+      }
+      .player-token {
+        position: absolute;
+        width: 24%;
+        height: 30%;
+        min-width: 18px;
+        min-height: 20px;
+        display: grid;
+        place-items: end center;
+        z-index: 5;
+        pointer-events: none;
+        transition: left 0.25s ease, top 0.25s ease, transform 0.2s ease;
+        filter: drop-shadow(0 3px 3px rgba(0,0,0,.45));
+      }
+      .player-token .token-figure {
+        position: relative;
+        width: 70%;
+        height: 82%;
+        min-width: 12px;
+        border-radius: 46% 46% 30% 30%;
+        background: linear-gradient(180deg, rgba(255,255,255,.55) 0 12%, var(--token-color) 13% 78%, color-mix(in srgb, var(--token-color) 72%, #111) 79%);
+        border: 1.5px solid rgba(255,255,255,.72);
+        box-shadow: inset 0 0 0 1px rgba(0,0,0,.18), 0 1px 2px rgba(0,0,0,.4);
+      }
+      .player-token .token-head {
+        position: absolute;
+        width: 46%;
+        aspect-ratio: 1;
+        left: 27%;
+        top: -27%;
+        border-radius: 50%;
+        background: #f2c9a5;
+        border: 1px solid rgba(0,0,0,.35);
+        box-shadow: 0 1px 2px rgba(0,0,0,.35);
+      }
+      .player-token .token-hat {
+        position: absolute;
+        left: 17%;
+        top: -39%;
+        width: 66%;
+        height: 28%;
+        border-radius: 70% 70% 20% 20%;
+        background: var(--hat-color);
+        border: 1px solid rgba(0,0,0,.3);
+        box-shadow: 0 1px 1px rgba(0,0,0,.35);
+      }
+      .player-token .token-badge {
+        position: absolute;
+        left: 50%;
+        top: 48%;
+        transform: translate(-50%,-50%);
+        font-size: clamp(7px, 1vw, 11px);
+        line-height: 1;
+        filter: drop-shadow(0 1px 1px rgba(0,0,0,.5));
+      }
+      .player-token .token-base {
+        position: absolute;
+        left: 10%;
+        bottom: -8%;
+        width: 80%;
+        height: 16%;
+        border-radius: 50%;
+        background: rgba(0,0,0,.35);
+        border: 1px solid rgba(255,255,255,.3);
+      }
+      .player-token[data-style="1"] { --hat-color:#1d4ed8; }
+      .player-token[data-style="2"] { --hat-color:#b91c1c; }
+      .player-token[data-style="3"] { --hat-color:#15803d; }
+      .player-token[data-style="4"] { --hat-color:#a16207; }
+      .player-token[data-style="5"] { --hat-color:#7e22ce; }
+      .player-token[data-style="6"] { --hat-color:#be185d; }
+      .player-token[data-style="1"] .token-badge::before { content:"👑"; }
+      .player-token[data-style="2"] .token-badge::before { content:"🤠"; }
+      .player-token[data-style="3"] .token-badge::before { content:"🧙"; }
+      .player-token[data-style="4"] .token-badge::before { content:"🧑‍🌾"; }
+      .player-token[data-style="5"] .token-badge::before { content:"🥷"; }
+      .player-token[data-style="6"] .token-badge::before { content:"🦸"; }
+      .gm-panel {
+        grid-column: 2/7;
+        grid-row: 2/7;
+        border-radius: 8px;
+        background: radial-gradient(
+          circle at 30% 20%,
+          #16543f 0%,
+          var(--felt) 60%
+        );
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px;
+      }
+      .gm-avatar {
+        font-size: clamp(20px, 3vw, 30px);
+      }
+      .gm-bubble {
+        background: var(--ivory);
+        color: var(--ink);
+        border-radius: 9px;
+        padding: 7px 10px;
+        font-size: clamp(10px, 1.2vw, 13px);
+        text-align: center;
+        max-width: 88%;
+        min-height: 1.4em;
+      }
+      .dice {
+        width: clamp(32px, 5vw, 46px);
+        height: clamp(32px, 5vw, 46px);
+        background: var(--ivory);
+        border-radius: 8px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+        padding: 5px;
+        gap: 2px;
+      }
+      .dice.rolling {
+        animation: roll 0.5s linear;
+      }
+      @keyframes roll {
+        0% {
+          transform: rotate(0);
+        }
+        50% {
+          transform: rotate(180deg) scale(1.1);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      .pip {
+        border-radius: 50%;
+      }
+      .pip.active {
+        background: var(--ink);
+      }
+
+      .side {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .panel {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(233, 205, 106, 0.25);
+        border-radius: 12px;
+        padding: 14px 16px;
+      }
+      .panel h2 {
+        font-family: "Fraunces", serif;
+        font-size: 14px;
+        margin: 0 0 10px;
+        color: var(--brass-light);
+      }
+      .player-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 8px;
+        border-radius: 8px;
+        margin-bottom: 4px;
+        font-size: 12.5px;
+      }
+      .player-row.current {
+        background: rgba(233, 205, 106, 0.14);
+        box-shadow: inset 0 0 0 1px rgba(233, 205, 106, 0.4);
+      }
+      .player-row.offline {
+        opacity: 0.4;
+      }
+      .token-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .player-money {
+        font-family: "IBM Plex Mono", monospace;
+        color: var(--brass-light);
+        font-size: 11.5px;
+        margin-left: auto;
+      }
+      .roll-btn {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 9px;
+        background: linear-gradient(180deg, var(--brass-light), var(--brass));
+        color: var(--ink);
+        font-weight: 700;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      .roll-btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .log-feed {
+        max-height: 220px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        font-size: 12px;
+      }
+      .log-feed div {
+        background: rgba(0, 0, 0, 0.2);
+        border-left: 2px solid var(--brass);
+        padding: 5px 7px;
+        border-radius: 0 6px 6px 0;
+        color: var(--ivory-dim);
+      }
+      .err {
+        color: #ffb4a8;
+        font-size: 12px;
+        text-align: center;
+        min-height: 16px;
+      }
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.62);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 50;
+        padding: 16px;
+        transition:
+          opacity 0.22s ease,
+          visibility 0s linear 0.22s;
+      }
+      .modal-backdrop.on {
+        display: flex;
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transition: opacity 0.22s ease;
+      }
+      .purchase-modal {
+        width: min(420px, 94vw);
+        background: linear-gradient(
+          160deg,
+          var(--wood) 0%,
+          var(--wood-dark) 100%
+        );
+        border: 1px solid rgba(233, 205, 106, 0.45);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+        text-align: center;
+      }
+      .purchase-modal h2 {
+        margin: 0 0 8px;
+        font-family: "Fraunces", serif;
+        color: var(--brass-light);
+      }
+      .purchase-info {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+        padding: 12px;
+        margin: 12px 0;
+        line-height: 1.8;
+      }
+      .purchase-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 9px;
+      }
+      .purchase-actions button {
+        padding: 11px;
+        border: 0;
+        border-radius: 9px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      #buyBtn {
+        background: linear-gradient(180deg, var(--brass-light), var(--brass));
+        color: var(--ink);
+      }
+      #skipBtn {
+        background: #e8d9c1;
+        color: var(--ink);
+      }
+      .purchase-wait {
+        color: var(--ivory-dim);
+        font-size: 12px;
+        margin-top: 10px;
+      }
+      .property-panel {
+        max-height: 280px;
+        overflow: auto;
+      }
+      .property-item {
+        background: rgba(0, 0, 0, 0.18);
+        border-radius: 8px;
+        padding: 8px;
+        margin-bottom: 7px;
+        font-size: 11px;
+      }
+      .property-item strong {
+        display: block;
+        color: var(--ivory);
+        margin-bottom: 4px;
+      }
+
+      .property-level {
+        margin-top: 4px;
+        font-size: 12px;
+        color: var(--gold, #f5d76e);
+      }
+      .upgrade-btn {
+        background: linear-gradient(135deg, #c9a227, #f2d675);
+        color: #2b1a08;
+        font-weight: 800;
+      }
+      .upgrade-btn:disabled {
+        opacity: .45;
+        cursor: not-allowed;
+      }
+      .property-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 5px;
+        margin-top: 6px;
+      }
+      .property-actions button {
+        border: 0;
+        border-radius: 6px;
+        padding: 6px 5px;
+        font-size: 10px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .sell-btn {
+        background: #e8d9c1;
+        color: var(--ink);
+      }
+      .transfer-btn {
+        background: var(--brass-light);
+        color: var(--ink);
+      }
+      .property-item select {
+        width: 100%;
+        padding: 5px;
+        border-radius: 6px;
+        border: 0;
+        font-size: 10px;
+        margin-top: 4px;
+      }
+      .bankrupt-badge {
+        color: #ffb4a8;
+        font-size: 10px;
+        font-weight: 700;
+      }
+      .gameover-modal {
+        width: min(430px, 94vw);
+        background: linear-gradient(160deg, var(--wood), var(--wood-dark));
+        border: 1px solid rgba(233, 205, 106, 0.45);
+        border-radius: 16px;
+        padding: 24px;
+        text-align: center;
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+      }
+      .gameover-modal h2 {
+        color: var(--brass-light);
+        font-family: "Fraunces", serif;
+        font-size: 28px;
+        margin: 0 0 10px;
+      }
+      .gameover-modal button {
+        margin-top: 14px;
+        border: 0;
+        border-radius: 9px;
+        padding: 10px 18px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      /* Tourism popup */
+      .tourism-modal {
+        width: min(560px, 94vw);
+        max-height: min(86vh, 760px);
+        overflow: hidden;
+        transform: translateY(14px) scale(0.97);
+        opacity: 0.01;
+        transition:
+          transform 0.24s cubic-bezier(0.2, 0.75, 0.25, 1),
+          opacity 0.2s ease;
+        background: linear-gradient(160deg, #7b4a2a 0%, #3e2716 100%);
+        border: 1px solid rgba(233, 205, 106, 0.5);
+        border-radius: 18px;
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.58);
+        position: relative;
+        display: flex;
+        flex-direction: column;
+      }
+      .modal-backdrop.on .tourism-modal {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+      .tourism-close {
+        position: absolute;
+        right: 12px;
+        top: 12px;
+        z-index: 3;
+        width: 38px;
+        height: 38px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.45);
+        color: #fff;
+        font-size: 22px;
+        cursor: pointer;
+        line-height: 1;
+      }
+      .tourism-hero {
+        height: 210px;
+        background: linear-gradient(135deg, #1c5a44, #0a2b20);
+        position: relative;
+        overflow: hidden;
+      }
+      .tourism-hero img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .tourism-hero::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          180deg,
+          rgba(0, 0, 0, 0.04),
+          rgba(0, 0, 0, 0.68)
+        );
+        pointer-events: none;
+      }
+      .tourism-placeholder {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 68px;
+        background: radial-gradient(circle at 50% 20%, #2b7959, #0a2b20 75%);
+      }
+      .tourism-title {
+        position: absolute;
+        left: 20px;
+        right: 60px;
+        bottom: 16px;
+        z-index: 2;
+        color: #fff;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+      }
+      .tourism-title .eyebrow {
+        font-size: 10px;
+        color: var(--brass-light);
+      }
+      .tourism-title h2 {
+        margin: 2px 0 0;
+        font-family: "Fraunces", serif;
+        font-size: clamp(24px, 6vw, 34px);
+      }
+      .tourism-body {
+        padding: 18px 20px 20px;
+        overflow: auto;
+      }
+      .tourism-description {
+        color: var(--ivory-dim);
+        font-size: 13px;
+        line-height: 1.7;
+        margin: 0 0 14px;
+      }
+      .tourism-list {
+        display: grid;
+        gap: 9px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .tourism-list li {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        background: rgba(0, 0, 0, 0.18);
+        border: 1px solid rgba(233, 205, 106, 0.16);
+        padding: 10px 11px;
+        border-radius: 10px;
+        color: var(--ivory);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+      .tourism-list li::before {
+        content: "📍";
+        flex: none;
+      }
+      .tourism-footer {
+        display: flex;
+        gap: 9px;
+        margin-top: 16px;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .tourism-price {
+        font-family: "IBM Plex Mono", monospace;
+        color: var(--brass-light);
+        font-size: 12px;
+      }
+      .tourism-close-btn {
+        border: 0;
+        border-radius: 9px;
+        padding: 10px 18px;
+        background: linear-gradient(180deg, var(--brass-light), var(--brass));
+        color: var(--ink);
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .cell.property-cell {
+        cursor: default;
+      }
+      .cell .tourism-detail-btn {
+        margin-top: 4px;
+        width: 100%;
+        border: 0;
+        border-radius: 6px;
+        padding: 5px 4px;
+        font-size: 10px;
+        font-weight: 800;
+        line-height: 1.1;
+        cursor: pointer;
+        background: rgba(255, 255, 255, 0.92);
+        color: #2d2417;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+        touch-action: manipulation;
+      }
+      .cell .tourism-detail-btn:hover {
+        transform: translateY(-1px);
+      }
+      .cell .tourism-detail-btn:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 1px;
+      }
+      @media (max-width: 600px) {
+        .cell .tourism-detail-btn {
+          font-size: 9px;
+          padding: 4px 2px;
+          border-radius: 5px;
+        }
+      }
+
+      .cell.property-cell:focus-visible {
+        outline: 2px solid var(--brass-light);
+        outline-offset: 2px;
+      }
+      @media (max-width: 600px) {
+        .modal-backdrop {
+          padding: 8px;
+          align-items: flex-end;
+        }
+        .tourism-modal {
+          width: 100%;
+          max-height: 91vh;
+          border-radius: 18px 18px 10px 10px;
+        }
+        .tourism-hero {
+          height: 185px;
+        }
+        .tourism-body {
+          padding: 15px 15px 16px;
+        }
+        .tourism-list li {
+          font-size: 12.5px;
+        }
+        .tourism-footer {
+          position: sticky;
+          bottom: 0;
+          background: linear-gradient(180deg, rgba(62, 39, 22, 0), #3e2716 35%);
+          padding-top: 10px;
+        }
+      }
+
+      body::before,
+      body::after {
+        content: "";
+        position: fixed;
+        inset: auto;
+        pointer-events: none;
+        z-index: -1;
+        filter: blur(40px);
+        opacity: 0.7;
+      }
+      body::before {
+        width: 320px;
+        height: 320px;
+        top: -80px;
+        left: -80px;
+        background: radial-gradient(circle, #3f7d53 0%, transparent 70%);
+      }
+      body::after {
+        width: 360px;
+        height: 360px;
+        bottom: -120px;
+        right: -120px;
+        background: radial-gradient(circle, #c9a227 0%, transparent 72%);
+      }
+      body {
+        position: relative;
+        overflow-x: hidden;
+      }
+      header {
+        width: min(760px, 100%);
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(14px);
+        border: 1px solid rgba(233, 205, 106, 0.2);
+        border-radius: 24px;
+        padding: 18px 22px;
+        box-shadow: 0 14px 40px rgba(0, 0, 0, 0.25);
+      }
+      .eyebrow {
+        font-size: 11px;
+        letter-spacing: 0.24em;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+      }
+      h1 {
+        margin: 6px 0 0;
+        letter-spacing: 0.3px;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
+      }
+      .join-card {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(233, 205, 106, 0.3);
+        background: linear-gradient(
+          145deg,
+          rgba(107, 66, 38, 0.98),
+          rgba(62, 39, 22, 0.98)
+        );
+        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+      }
+      .join-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          120deg,
+          rgba(255, 255, 255, 0.16),
+          transparent 40%,
+          rgba(255, 255, 255, 0.06)
+        );
+        pointer-events: none;
+      }
+      .join-card input {
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+      .join-card button,
+      .roll-btn,
+      #buyBtn,
+      .tourism-close-btn,
+      .gameover-modal button {
+        position: relative;
+        overflow: hidden;
+        transition:
+          transform 0.18s ease,
+          box-shadow 0.18s ease,
+          filter 0.18s ease;
+      }
+      .join-card button:hover,
+      .roll-btn:hover,
+      #buyBtn:hover,
+      .tourism-close-btn:hover,
+      .gameover-modal button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.22);
+        filter: brightness(1.03);
+      }
+      .stage {
+        margin-top: 4px;
+        align-items: start;
+      }
+      .board-wrapper {
+        position: relative;
+      }
+      .board-frame {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(233, 205, 106, 0.3);
+        background: linear-gradient(
+          145deg,
+          rgba(107, 66, 38, 0.98),
+          rgba(62, 39, 22, 0.98)
+        );
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+      }
+      .board-frame::before {
+        content: "";
+        position: absolute;
+        inset: 12px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        pointer-events: none;
+      }
+      .board {
+        box-shadow: inset 0 4px 20px rgba(0, 0, 0, 0.35);
+      }
+      .cell {
+        border: 1px solid rgba(17, 41, 31, 0.06);
+      }
+      .cell:hover {
+        transform: translateY(-3px) scale(1.01);
+        box-shadow:
+          0 8px 16px rgba(0, 0, 0, 0.28),
+          0 0 0 2px rgba(233, 205, 106, 0.35);
+      }
+      .panel {
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(
+          150deg,
+          rgba(255, 255, 255, 0.08),
+          rgba(255, 255, 255, 0.04)
+        );
+        border: 1px solid rgba(233, 205, 106, 0.24);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+      }
+      .panel::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--brass-light),
+          transparent
+        );
+      }
+      .player-row {
+        transition:
+          transform 0.18s ease,
+          background-color 0.18s ease;
+      }
+      .player-row:hover {
+        transform: translateX(2px);
+        background: rgba(233, 205, 106, 0.14);
+      }
+      .token-dot {
+        box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18);
+      }
+      .property-item {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      }
+      .log-feed div {
+        background: rgba(0, 0, 0, 0.24);
+        border-left-width: 3px;
+      }
+      .purchase-modal,
+      .gameover-modal,
+      .tourism-modal {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(233, 205, 106, 0.35);
+        box-shadow: 0 20px 55px rgba(0, 0, 0, 0.4);
+      }
+      .purchase-modal::before,
+      .tourism-modal::before,
+      .gameover-modal::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          140deg,
+          rgba(255, 255, 255, 0.12),
+          transparent 36%,
+          rgba(255, 255, 255, 0.06)
+        );
+        pointer-events: none;
+      }
+      .modal-backdrop {
+        backdrop-filter: blur(10px);
+      }
+      .tourism-hero {
+        box-shadow: inset 0 -70px 70px rgba(0, 0, 0, 0.25);
+      }
+      .tourism-title {
+        padding: 10px 14px;
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.28);
+        left: 14px;
+        right: 14px;
+        bottom: 12px;
+      }
+      .tourism-list li {
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      }
+      *::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      *::-webkit-scrollbar-thumb {
+        background: rgba(233, 205, 106, 0.35);
+        border-radius: 999px;
+      }
+      *::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+      }
+    
+      /* ===== V1.3 visual skin — inspired by the supplied board screenshot ===== */
+      body {
+        background:
+          radial-gradient(circle at 50% 25%, rgba(112, 72, 35, .25), transparent 42%),
+          linear-gradient(135deg, #1b120b 0%, #0b0806 48%, #1d130b 100%);
+        padding: 18px 18px 48px;
+      }
+      body::before, body::after {
+        filter: blur(55px);
+        opacity: .32;
+      }
+      body.game-active header,
+      body.game-active .join-card {
+        display: none !important;
+      }
+      .game-topbar {
+        display: none;
+        position: fixed;
+        top: 14px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(610px, calc(100vw - 390px));
+        min-height: 76px;
+        z-index: 45;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        padding: 10px 82px 10px 18px;
+        border: 1px solid rgba(244, 188, 67, .55);
+        border-radius: 16px;
+        background: linear-gradient(145deg, rgba(20,15,11,.96), rgba(7,8,8,.96));
+        box-shadow: 0 12px 34px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.04);
+        backdrop-filter: blur(12px);
+      }
+      body.game-active .game-topbar { display: flex; }
+      .turn-status { text-align: center; line-height: 1.05; min-width: 250px; }
+      .turn-label {
+        font-size: 13px;
+        color: #f6eee0;
+        font-weight: 700;
+      }
+      .turn-player {
+        font-size: clamp(18px, 2.1vw, 26px);
+        font-weight: 900;
+        margin-top: 2px;
+        text-shadow: 0 0 14px currentColor;
+      }
+      .turn-message {
+        color: #f4eee3;
+        font-size: 12px;
+        margin-top: 5px;
+      }
+      .top-dice {
+        width: 50px;
+        height: 50px;
+        display: grid;
+        place-items: center;
+        border-radius: 12px;
+        background: linear-gradient(145deg, #fffdf7, #d7d0c4);
+        color: #18130d;
+        font-size: 37px;
+        box-shadow: 0 5px 15px rgba(0,0,0,.45), inset 0 1px 0 #fff;
+      }
+      .top-dice.spinning { animation: roll .5s linear infinite; }
+      .top-actions {
+        position: absolute;
+        left: calc(100% + 165px);
+        top: 0;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .top-actions button {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: 1px solid rgba(244,188,67,.65);
+        color: #f7e6bd;
+        background: radial-gradient(circle at 35% 25%, #3b2c1c, #0d0b09 70%);
+        box-shadow: 0 6px 18px rgba(0,0,0,.5), inset 0 0 0 2px rgba(255,255,255,.03);
+        font-size: 20px;
+        cursor: pointer;
+      }
+      .top-actions button:hover { transform: translateY(-2px); filter: brightness(1.15); }
+
+      .money-hud {
+        min-width: 350px;
+        min-height: 116px;
+        padding: 12px 20px 12px 13px;
+        border: 2px solid #e6a925;
+        border-radius: 18px;
+        background: linear-gradient(145deg, rgba(12,12,10,.98), rgba(5,7,6,.98));
+        box-shadow: 0 10px 30px rgba(0,0,0,.58), inset 0 0 0 1px rgba(255,222,130,.15);
+        gap: 16px;
+      }
+      .money-icon {
+        width: 92px;
+        height: 92px;
+        flex-basis: 92px;
+        background: transparent;
+        border: 0;
+        box-shadow: 0 3px 16px rgba(0,0,0,.4);
+      }
+      .money-icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+        filter: drop-shadow(0 4px 8px rgba(0,0,0,.45));
+      }
+      .money-hud-label {
+        color: #fff6df;
+        font-size: 18px;
+        font-weight: 800;
+      }
+      .money-hud-value {
+        color: #ffd21a;
+        font-size: clamp(25px, 3vw, 38px);
+        line-height: 1;
+        text-shadow: 0 2px 8px rgba(255,177,0,.3);
+      }
+
+      .stage {
+        max-width: 1500px;
+        grid-template-columns: 205px minmax(520px, 1fr) 275px;
+        gap: 16px;
+        padding-top: 92px;
+        align-items: start;
+      }
+      .player-rail {
+        grid-column: 1;
+        grid-row: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+        padding: 12px;
+        border: 1px solid rgba(244,188,67,.55);
+        border-radius: 15px;
+        background: linear-gradient(160deg, rgba(10,12,12,.97), rgba(19,13,9,.96));
+        box-shadow: 0 15px 34px rgba(0,0,0,.45);
+      }
+      .rail-title {
+        font-size: 16px;
+        font-weight: 900;
+        color: #f6cf68;
+        padding: 3px 4px 8px;
+        border-bottom: 1px solid rgba(244,188,67,.24);
+      }
+      .player-card {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        min-height: 74px;
+        padding: 9px 9px 9px 12px;
+        border: 2px solid var(--player-color);
+        border-radius: 13px;
+        background: linear-gradient(145deg, color-mix(in srgb, var(--player-color) 18%, #10100f), rgba(8,9,8,.98));
+        box-shadow: inset 0 0 18px rgba(255,255,255,.025), 0 0 0 1px rgba(0,0,0,.35), 0 6px 15px rgba(0,0,0,.3);
+        overflow: hidden;
+      }
+      .player-card::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 6px;
+        background: var(--player-color);
+        box-shadow: 0 0 12px color-mix(in srgb, var(--player-color) 65%, transparent);
+      }
+      .player-card.me {
+        box-shadow: 0 0 0 2px var(--player-color), 0 0 22px color-mix(in srgb, var(--player-color) 38%, transparent);
+      }
+      .player-card.turn { transform: translateX(3px); }
+      .player-card.offline { opacity: .45; }
+      .player-token-icon {
+        position: relative;
+        width: 30px;
+        height: 36px;
+        flex: 0 0 30px;
+        border-radius: 45% 45% 30% 30%;
+        background: linear-gradient(180deg, rgba(255,255,255,.48) 0 14%, var(--player-color) 15% 82%, color-mix(in srgb, var(--player-color) 70%, #111) 83%);
+        border: 2px solid color-mix(in srgb, var(--player-color) 80%, #fff);
+        box-shadow: 0 3px 7px rgba(0,0,0,.5), 0 0 10px color-mix(in srgb, var(--player-color) 35%, transparent), inset 0 0 0 2px rgba(255,255,255,.18);
+      }
+      .player-token-icon .mini-token-head {
+        position:absolute; width:11px; height:11px; border-radius:50%; left:8px; top:-5px;
+        background:#f2c9a5; border:1px solid rgba(0,0,0,.3);
+      }
+      .player-token-icon .mini-token-hat {
+        position:absolute; width:18px; height:7px; border-radius:70% 70% 20% 20%; left:5px; top:-9px;
+        background:var(--hat-color,#1d4ed8); border:1px solid rgba(0,0,0,.3);
+      }
+      .player-token-icon .mini-token-badge {
+        position:absolute; inset:0; display:grid; place-items:center; padding-top:7px; font-size:10px;
+      }
+      .player-token-icon[data-style="1"] { --hat-color:#1d4ed8; } .player-token-icon[data-style="1"] .mini-token-badge::before { content:"👑"; }
+      .player-token-icon[data-style="2"] { --hat-color:#b91c1c; } .player-token-icon[data-style="2"] .mini-token-badge::before { content:"🤠"; }
+      .player-token-icon[data-style="3"] { --hat-color:#15803d; } .player-token-icon[data-style="3"] .mini-token-badge::before { content:"🧙"; }
+      .player-token-icon[data-style="4"] { --hat-color:#a16207; } .player-token-icon[data-style="4"] .mini-token-badge::before { content:"🧑‍🌾"; }
+      .player-token-icon[data-style="5"] { --hat-color:#7e22ce; } .player-token-icon[data-style="5"] .mini-token-badge::before { content:"🥷"; }
+      .player-token-icon[data-style="6"] { --hat-color:#be185d; } .player-token-icon[data-style="6"] .mini-token-badge::before { content:"🦸"; }
+      .player-card-name {
+        color: var(--player-color);
+        font-size: 15px;
+        font-weight: 900;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .player-card-money {
+        margin-top: 4px;
+        color: var(--player-color);
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 13px;
+        font-weight: 800;
+        text-shadow: 0 0 8px color-mix(in srgb, var(--player-color) 28%, transparent);
+      }
+      .you-tag {
+        color: #ffe07a;
+        font-size: 9px;
+      }
+      .turn-dot { margin-left: auto; color: #ffd45d; text-shadow: 0 0 10px #ffd45d; }
+
+      .board-wrapper {
+        grid-column: 2;
+        grid-row: 1;
+        width: 100%;
+        perspective: none;
+      }
+      .board-frame {
+        transform: none;
+        padding: 13px;
+        border-radius: 24px;
+        background: linear-gradient(145deg, #4a2d18, #160e08);
+        border: 2px solid rgba(223,166,55,.65);
+        box-shadow: 0 22px 60px rgba(0,0,0,.65), inset 0 0 0 2px rgba(255,255,255,.05);
+      }
+      .board-frame::before {
+        inset: 9px;
+        border-radius: 17px;
+        border-color: rgba(255,212,112,.15);
+      }
+      .board {
+        gap: 5px;
+        padding: 5px;
+        background: #2b2115;
+        border: 2px solid rgba(231,183,73,.35);
+        border-radius: 16px;
+        box-shadow: inset 0 0 28px rgba(0,0,0,.75);
+      }
+      .cell {
+        min-width: 0;
+        border-radius: 9px;
+        border: 2px solid rgba(43,30,16,.35);
+        background: linear-gradient(145deg, #e6c97e, #a9813e);
+        padding: 5px 3px;
+        box-shadow: inset 0 2px 0 rgba(255,255,255,.2), 0 3px 7px rgba(0,0,0,.45);
+        cursor: pointer;
+      }
+      .cell::after {
+        content: "";
+        position: absolute;
+        inset: 2px;
+        border-radius: 7px;
+        border: 1px solid rgba(255,255,255,.18);
+        pointer-events: none;
+      }
+      .cell[data-type="PROPERTY"] { background: linear-gradient(145deg, #78a946, #3d692d); color: #fff9dc; }
+      .cell[data-type="EVENT"] { background: linear-gradient(145deg, #d9689b, #8c2f62); color: #fff; }
+      .cell[data-type="TAX"], .cell[data-type="PENALTY"] { background: linear-gradient(145deg, #c9c7bd, #696862); color: #16120e; }
+      .cell[data-type="BANK"] { background: linear-gradient(145deg, #2f92c4, #18517c); color: #fff; }
+      .cell[data-type="START"] { background: linear-gradient(145deg, #7fae4e, #3f6e2c); color: #fff; }
+      .cell[data-type="BONUS"] { background: linear-gradient(145deg, #e2b542, #a2670d); color: #fff; }
+      .cell[data-type="JAIL"], .cell[data-type="SPECIAL"] { background: linear-gradient(145deg, #9b7441, #55402a); color: #fff; }
+      .cell[data-type="PROPERTY"]:hover, .cell[data-type="EVENT"]:hover, .cell[data-type="TAX"]:hover,
+      .cell[data-type="BANK"]:hover, .cell[data-type="START"]:hover {
+        transform: translateY(-4px) scale(1.015);
+        box-shadow: 0 10px 18px rgba(0,0,0,.55), 0 0 0 2px rgba(255,211,92,.55);
+      }
+      .cell-number {
+        position: absolute;
+        top: 4px;
+        left: 5px;
+        font-size: clamp(12px, 1.25vw, 19px);
+        font-weight: 900;
+        text-shadow: 0 1px 2px rgba(0,0,0,.55);
+      }
+      .cell .icon { font-size: clamp(14px, 2vw, 23px); }
+      .cell .name {
+        font-size: clamp(8px, 1.05vw, 14px);
+        font-weight: 900;
+        white-space: normal;
+        line-height: 1.05;
+        text-shadow: 0 1px 2px rgba(0,0,0,.45);
+      }
+      .cell .tourism-detail-btn { display: none; }
+      .owner-badge {
+        font-size: 8px;
+        background: rgba(0,0,0,.65);
+        border: 1px solid rgba(255,255,255,.15);
+      }
+      .player-token {
+        width: 25%;
+        height: 31%;
+        min-width: 20px;
+        min-height: 22px;
+      }
+      .player-token .token-badge { font-size: clamp(7px, 1.15vw, 12px); }
+      .gm-panel {
+        background:
+          radial-gradient(circle at 50% 40%, rgba(39,84,55,.9), rgba(9,25,17,.98) 72%),
+          linear-gradient(145deg,#153f2d,#07140e);
+        border: 1px solid rgba(233,205,106,.18);
+        box-shadow: inset 0 0 30px rgba(0,0,0,.35);
+      }
+      .side {
+        grid-column: 3;
+        grid-row: 1;
+        min-width: 0;
+        gap: 10px;
+      }
+      .side .panel {
+        border-radius: 15px;
+        padding: 12px;
+        background: linear-gradient(160deg, rgba(13,15,15,.97), rgba(22,15,10,.96));
+        border: 1px solid rgba(244,188,67,.38);
+        box-shadow: 0 10px 26px rgba(0,0,0,.42);
+      }
+      .side .panel:first-child #playerList { display: none; }
+      .side .panel:first-child h2::before { content: "🎲 "; }
+      .side .panel:first-child h2 { color: #f4d06a; font-size: 16px; }
+      .roll-btn {
+        border-radius: 12px;
+        min-height: 52px;
+        background: linear-gradient(180deg, #f3c84e, #b87a13);
+        box-shadow: 0 7px 18px rgba(0,0,0,.45);
+        font-size: 16px;
+      }
+      .log-feed { max-height: 360px; }
+      .log-feed div {
+        background: rgba(0,0,0,.28);
+        border-left: 3px solid #e7b83e;
+        padding: 8px 9px;
+        border-radius: 0 8px 8px 0;
+      }
+
+      .tourism-modal {
+        width: min(720px, 94vw);
+        background: linear-gradient(145deg, #f7e8c6, #ead4a8);
+        border: 3px solid #b77716;
+        color: #2b1d10;
+        box-shadow: 0 28px 90px rgba(0,0,0,.75), 0 0 0 2px rgba(255,220,105,.2);
+      }
+      .tourism-title { left: 24px; bottom: 18px; }
+      .tourism-title h2 {
+        font-size: clamp(25px, 5vw, 38px);
+        color: #fff;
+      }
+      .tourism-body { color: #2b1d10; }
+      .tourism-description { color: #4e3b25; }
+      .tourism-list li {
+        background: rgba(255,255,255,.45);
+        border-color: rgba(159,111,37,.25);
+        color: #3b2916;
+      }
+      .tourism-price { color: #8d5b0b; font-weight: 900; }
+      .tourism-close-btn {
+        background: linear-gradient(180deg,#f4c94c,#b97810);
+      }
+
+      @media (max-width: 1180px) {
+        .top-actions { left: calc(100% + 35px); }
+        .top-actions button { width: 43px; height: 43px; }
+        .money-hud { min-width: 285px; }
+        .money-icon { width: 74px; height: 74px; flex-basis: 74px; }
+        .money-hud-label { font-size: 15px; }
+        .money-hud-value { font-size: 28px; }
+        .stage { grid-template-columns: 170px minmax(440px,1fr) 235px; gap: 10px; }
+      }
+      @media (max-width: 900px) {
+        .game-topbar {
+          width: calc(100vw - 30px);
+          left: 15px;
+          transform: none;
+          top: 10px;
+          padding-right: 16px;
+        }
+        .top-actions { display: none; }
+        .money-hud { top: 92px; min-width: 220px; min-height: 76px; }
+        .money-icon { width: 54px; height: 54px; flex-basis: 54px; }
+        .money-hud-label { font-size: 12px; }
+        .money-hud-value { font-size: 22px; }
+        .stage {
+          grid-template-columns: 1fr;
+          padding-top: 120px;
+        }
+        .board-wrapper, .player-rail, .side {
+          grid-column: 1;
+          grid-row: auto;
+        }
+        .player-rail { order: 2; }
+        .board-wrapper { order: 1; }
+        .side { order: 3; }
+        .player-rail { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); }
+        .rail-title { grid-column: 1/-1; }
+      }
+      @media (max-width: 600px) {
+        body { padding: 10px 8px 30px; }
+        .game-topbar { min-height: 62px; }
+        .turn-status { min-width: 0; }
+        .turn-label { font-size: 10px; }
+        .turn-player { font-size: 18px; }
+        .turn-message { font-size: 10px; }
+        .top-dice { width: 42px; height: 42px; font-size: 30px; }
+        .money-hud { left: 8px; top: 78px; min-width: 190px; padding: 6px 10px; }
+        .money-icon { width: 44px; height: 44px; flex-basis: 44px; }
+        .money-hud-label { font-size: 10px; }
+        .money-hud-value { font-size: 19px; }
+        .stage { padding-top: 130px; }
+        .board-frame { padding: 7px; border-radius: 17px; }
+        .board { gap: 3px; padding: 3px; }
+        .cell { padding: 3px 2px; border-radius: 6px; }
+        .cell-number { font-size: 10px; top: 2px; left: 3px; }
+        .cell .name { font-size: 7px; }
+        .cell .icon { font-size: 12px; }
+        .player-rail { padding: 8px; }
+        .player-card { min-height: 62px; }
+      }
+
+
+      .mode-choice { flex:1; min-width:130px; border:1px solid rgba(255,255,255,.16); background:#171714; color:var(--ivory); padding:9px 10px; border-radius:10px; cursor:pointer; }
+      .mode-choice.active { border-color:#f5c542; box-shadow:0 0 0 2px rgba(245,197,66,.14); color:#f5c542; }
+      .secondary-btn { background:#24241f !important; color:var(--ivory-dim) !important; }
+      #roomControls { display:none; gap:8px; align-items:center; }
+      #roomControls input { flex:1; }
+      .audio-controls {
+        position: fixed;
+        right: max(12px, env(safe-area-inset-right));
+        bottom: max(12px, env(safe-area-inset-bottom));
+        z-index: 45;
+        display: none;
+        gap: 6px;
+      }
+      .audio-controls.on { display: flex; }
+      .audio-controls button {
+        border: 1px solid rgba(233,205,106,.55);
+        border-radius: 12px;
+        background: rgba(62,39,22,.94);
+        color: var(--ivory);
+        padding: 8px 11px;
+        cursor: pointer;
+        box-shadow: 0 6px 18px rgba(0,0,0,.3);
+      }
+      .audio-controls button:hover { transform: translateY(-1px); }
+    
+      /* Roiet penalty quiz card */
+      .quiz-modal {
+        width: min(560px, 94vw);
+        background: linear-gradient(155deg, #6b4226, #2f1d11);
+        border: 2px solid rgba(233,205,106,.75);
+        border-radius: 20px;
+        padding: 22px;
+        box-shadow: 0 20px 60px rgba(0,0,0,.55);
+        color: var(--ivory);
+      }
+      .quiz-card-top { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+      .quiz-card-icon {
+        width:54px; height:54px; border-radius:14px; display:grid; place-items:center;
+        background: linear-gradient(145deg,#f5d76e,#a87312);
+        color:#3d260b; font-size:28px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.45);
+      }
+      .quiz-card-label { font-size:11px; color:var(--brass-light); letter-spacing:.08em; }
+      .quiz-card-title { margin:2px 0 0; font-size:clamp(19px,4vw,26px); }
+      .quiz-question {
+        background:rgba(243,233,214,.96); color:var(--ink); border-radius:13px;
+        padding:16px; font-size:clamp(15px,2.8vw,19px); font-weight:700; line-height:1.5;
+        margin-bottom:12px;
+      }
+      .quiz-choices { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+      .quiz-choice {
+        border:1px solid rgba(233,205,106,.55); border-radius:11px; padding:11px 12px;
+        background:rgba(15,61,46,.92); color:var(--ivory); text-align:left; cursor:pointer;
+        font:inherit; font-weight:600; transition:transform .15s, background .15s;
+      }
+      .quiz-choice:hover:not(:disabled) { transform:translateY(-2px); background:#16543f; }
+      .quiz-choice:disabled { cursor:default; opacity:.72; }
+      .quiz-choice.correct { background:#286a3d; border-color:#8be28e; }
+      .quiz-choice.wrong { background:#8f3028; border-color:#ff9c91; }
+      .quiz-penalty { margin-top:12px; font-size:12px; color:var(--ivory-dim); text-align:center; }
+      .quiz-wait { margin-top:12px; text-align:center; color:var(--ivory-dim); font-size:13px; }
+
+      .angel-modal { width:min(440px,92vw); padding:22px; border-radius:20px; background:linear-gradient(145deg,#fffaf0,#e8f7ff 55%,#f9edc7); color:#173d36; box-shadow:0 20px 70px rgba(0,0,0,.45), inset 0 0 0 2px rgba(230,190,70,.65); text-align:center; }
+      .angel-icon { font-size:58px; line-height:1; margin-bottom:8px; filter:drop-shadow(0 5px 8px rgba(185,140,40,.3)); }
+      .angel-label { font-size:12px; letter-spacing:.12em; color:#a16b10; font-weight:800; }
+      .angel-title { margin:5px 0 8px; font-size:clamp(22px,5vw,30px); color:#6d4a0d; }
+      .angel-text { font-size:16px; font-weight:700; line-height:1.5; }
+      .angel-reward { margin-top:12px; font-size:18px; color:#187345; font-weight:900; }
+      .angel-close { margin-top:16px; border:0; border-radius:12px; padding:10px 22px; background:#c99a2e; color:#fff; font:inherit; font-weight:800; cursor:pointer; }
+      @media (max-width:600px) {
+        .quiz-modal { padding:16px; border-radius:16px; }
+        .quiz-choices { grid-template-columns:1fr; }
+      }
+
+      /* ---------- center card decks ---------- */
+      .center-card-decks{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;gap:18px;align-items:center;justify-content:center;z-index:4;pointer-events:none;width:min(420px,72%);}
+      .card-deck{width:118px;height:166px;border-radius:16px;border:2px solid rgba(255,255,255,.65);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;box-shadow:0 12px 30px rgba(0,0,0,.35),inset 0 0 0 3px rgba(255,255,255,.12);position:relative;overflow:hidden;transition:transform .25s,filter .25s,box-shadow .25s;}
+      .card-deck::before{content:"";position:absolute;inset:8px;border:1px dashed rgba(255,255,255,.35);border-radius:11px;}
+      .card-deck.quiz-deck{background:linear-gradient(145deg,#8e3029,#4b1815);border-color:#e5b66a;}
+      .card-deck.angel-deck{background:linear-gradient(145deg,#fff4c7,#9edcf4);border-color:#e8c65b;color:#5c450e;}
+      .card-deck-icon{font-size:40px;line-height:1;margin-bottom:10px;filter:drop-shadow(0 4px 5px rgba(0,0,0,.25));z-index:1}
+      .card-deck-title{font-size:15px;font-weight:900;z-index:1;text-shadow:0 2px 4px rgba(0,0,0,.25)}
+      .card-deck-sub{font-size:10px;opacity:.82;margin-top:5px;z-index:1}
+      .card-deck.active{transform:translateY(-14px) scale(1.08) rotate(-2deg);filter:brightness(1.15);box-shadow:0 20px 45px rgba(255,215,100,.38),0 0 0 3px rgba(255,255,255,.3);}
+      .card-deck.disabled{opacity:.42;filter:grayscale(.55)}
+      @media(max-width:900px){.center-card-decks{width:58%;gap:10px}.card-deck{width:92px;height:130px}.card-deck-icon{font-size:32px}.card-deck-title{font-size:12px}.card-deck-sub{font-size:8px}}
+      @media(max-width:600px){.center-card-decks{width:52%;gap:6px}.card-deck{width:76px;height:108px;border-radius:12px}.card-deck-icon{font-size:26px;margin-bottom:6px}.card-deck-title{font-size:10px}.card-deck-sub{display:none}}
+
+    
+      /* Tourism information system V2.5 */
+      .tourism-hub{position:fixed;inset:0;z-index:1200;display:none;background:rgba(4,6,5,.78);backdrop-filter:blur(8px);padding:18px;overflow:auto}
+      .tourism-hub.on{display:flex;align-items:center;justify-content:center}
+      .tourism-hub-panel{width:min(1100px,96vw);max-height:92vh;overflow:auto;border:1px solid rgba(245,205,96,.4);border-radius:22px;background:linear-gradient(145deg,#171916,#0b0d0c);box-shadow:0 24px 80px rgba(0,0,0,.55);padding:20px;color:#f7f1df}
+      .tourism-hub-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:14px}
+      .tourism-hub-title{font-size:clamp(22px,4vw,34px);font-weight:900}.tourism-hub-sub{color:#bdb8a8;margin-top:4px;font-size:13px}
+      .tourism-tools{display:grid;grid-template-columns:1fr auto;gap:10px;margin-bottom:14px}.tourism-tools input,.tourism-tools select{width:100%;padding:11px 13px;border-radius:12px;border:1px solid #3a4037;background:#10130f;color:#fff}
+      .tourism-count{font-size:12px;color:#bdb8a8;margin-bottom:10px}.tourism-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+      .tourism-district{border:1px solid rgba(255,255,255,.08);border-radius:16px;background:rgba(255,255,255,.035);overflow:hidden;cursor:pointer;transition:.18s;display:grid;grid-template-columns:120px 1fr}
+      .tourism-district:hover{transform:translateY(-2px);border-color:rgba(245,205,96,.45)}.tourism-district img{width:120px;height:100%;min-height:120px;object-fit:cover;background:#222}.tourism-district-body{padding:13px}.tourism-district h3{margin:0 0 5px;font-size:16px}.tourism-cat{font-size:11px;color:#f5d36e}.tourism-summary{font-size:12px;color:#c8c5ba;line-height:1.5;margin:6px 0}.tourism-spots{font-size:11px;color:#ddd}.tourism-empty{padding:35px;text-align:center;color:#aaa}
+      .tourism-detail-panel{width:min(760px,94vw);max-height:90vh;overflow:auto;border-radius:20px;background:#11140f;border:1px solid rgba(245,205,96,.4);padding:18px}.tourism-detail-hero{width:100%;height:min(300px,38vw);object-fit:cover;border-radius:14px;background:#222}.tourism-detail-list{display:grid;gap:8px;margin-top:12px}.tourism-detail-list div{padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.05)}
+      .tourism-open-btn{position:fixed;right:16px;bottom:74px;z-index:900;border:1px solid rgba(245,205,96,.5);background:#181a14;color:#f7d66f;border-radius:999px;padding:10px 14px;font-weight:800;box-shadow:0 8px 30px rgba(0,0,0,.3);cursor:pointer}
+      @media(max-width:700px){.tourism-grid{grid-template-columns:1fr}.tourism-district{grid-template-columns:96px 1fr}.tourism-district img{width:96px;min-height:110px}.tourism-tools{grid-template-columns:1fr}.tourism-hub{padding:8px}.tourism-hub-panel{padding:13px;border-radius:16px}}
+</style>
+  
+<style id="tourism-photos-v26">
+.tourism-attraction-card{display:grid;grid-template-columns:92px 1fr;gap:12px;align-items:center;padding:10px;margin:8px 0;border-radius:14px;background:rgba(255,255,255,.08)}
+.tourism-attraction-card img{width:92px;height:72px;object-fit:cover;border-radius:10px;background:#222}
+.tourism-photo-missing{width:92px;height:72px;border-radius:10px;display:grid;place-items:center;text-align:center;font-size:11px;background:#333;color:#ddd;padding:5px;box-sizing:border-box}
+.tourism-attraction-card h4{margin:0 0 4px}
+.tourism-attraction-card p{margin:0;font-size:12px;opacity:.82}
+</style>
+<script id="tourism-photos-v26">
+function tourismPhotoCard(a){
+  const obj = (typeof a === 'string') ? {name:a} : (a || {});
+  const card = document.createElement('div');
+  card.className = 'tourism-attraction-card';
+
+  const mediaWrap = document.createElement('div');
+  if (obj.image_url) {
+    const img = document.createElement('img');
+    img.src = obj.image_url;
+    img.alt = obj.name || 'สถานที่ท่องเที่ยว';
+    img.loading = 'lazy';
+    img.addEventListener('error', function(){
+      const missing = document.createElement('div');
+      missing.className = 'tourism-photo-missing';
+      missing.textContent = 'รูปโหลดไม่ได้ / ให้ Admin เปลี่ยนรูป';
+      this.replaceWith(missing);
+    });
+    mediaWrap.appendChild(img);
+  } else {
+    const missing = document.createElement('div');
+    missing.className = 'tourism-photo-missing';
+    missing.textContent = 'ยังไม่มีรูป / Admin อัปโหลดได้';
+    mediaWrap.appendChild(missing);
+  }
+
+  const body = document.createElement('div');
+  const title = document.createElement('h4');
+  title.textContent = obj.name || 'สถานที่ท่องเที่ยว';
+  const desc = document.createElement('p');
+  desc.textContent = obj.description || '';
+  body.append(title, desc);
+
+  card.append(mediaWrap, body);
+  return card;
+}
+</script>
+
+
+<script id="announcer-v26-fix">
+(function(){
+  const synth = window.speechSynthesis;
+  if (!synth) return;
+
+  let active = false;
+  let pending = null;
+  let voices = [];
+
+  // เสียงบางตัว (โดยเฉพาะเสียงจากผู้ให้บริการนอก OS) ไม่ได้ติด lang code แบบ th-TH
+  // มาตรฐาน แต่ใส่คำว่า "Thai"/"ไทย" ไว้ในชื่อแทน จึงตรวจทั้งสองแบบ
+  function isThaiVoice(v){
+    return /^th(-|_)/i.test(v.lang || '') || /thai|ไทย/i.test(v.name || '');
+  }
+
+  function loadVoices(){
+    voices = synth.getVoices ? synth.getVoices() : [];
+    updateStatusUI();
+  }
+  loadVoices();
+  if (synth.onvoiceschanged !== undefined) synth.addEventListener('voiceschanged', loadVoices);
+  document.addEventListener('DOMContentLoaded', updateStatusUI);
+
+  // แจ้งผู้เล่นเมื่อเบราว์เซอร์/เครื่องนี้ไม่มีเสียงพูดภาษาไทยติดตั้งไว้เลย
+  // เพราะ Web Speech API จะเลือกเสียงสำรอง (ปกติเป็นภาษาอังกฤษ) มาอ่านข้อความไทยแทน
+  // ซึ่งจะออกเสียงเพี้ยน — ไม่ใช่บั๊กของโค้ด แต่เป็นข้อจำกัดของเสียงที่ติดตั้งในระบบ
+  function updateStatusUI(){
+    const statusEl = document.getElementById('announcerStatus');
+    if (!statusEl) return;
+    const hasThai = voices.some(isThaiVoice);
+    statusEl.textContent = hasThai
+      ? ''
+      : '⚠️ เครื่องนี้ไม่มีเสียงพูดภาษาไทย ระบบจะใช้เสียงสำรอง (อาจไม่ใช่ภาษาไทย) — ติดตั้งเสียงพูดไทยเพิ่มในตั้งค่าระบบ/เบราว์เซอร์เพื่อให้ประกาศเป็นภาษาไทย';
+  }
+
+  function pickVoice(forAI){
+    const thai = voices.filter(isThaiVoice);
+    if (!thai.length) return null;
+    // Prefer a different Thai voice for AI. If only one exists, keep it.
+    if (forAI && thai.length > 1) {
+      const ai = thai.find(v => /female|woman|siri|kanya|narisa|premwadee/i.test(v.name));
+      return ai || thai[1];
+    }
+    return thai[0];
+  }
+
+  function announceSafe(text, opts){
+    if (!text) return;
+    const forAI = !!(opts && opts.ai);
+    pending = {text: String(text), forAI};
+
+    // Never let two announcements overlap.
+    try { synth.cancel(); } catch(e) {}
+    active = false;
+
+    const job = pending;
+    pending = null;
+
+    const u = new SpeechSynthesisUtterance(job.text);
+    u.lang = 'th-TH';
+    u.rate = forAI ? 1.02 : 0.96;
+    u.pitch = forAI ? 1.12 : 0.92;
+    u.volume = 1;
+    const voice = pickVoice(job.forAI);
+    if (voice) u.voice = voice;
+
+    active = true;
+    u.onend = function(){ active=false; };
+    u.onerror = function(){ active=false; };
+    synth.speak(u);
+  }
+
+  // Expose a single API for the rest of the game.
+  window.gameAnnounce = announceSafe;
+
+  // Keep compatibility with common old function names.
+  window.announceGame = function(text){ announceSafe(text, {ai:false}); };
+  window.announceAI = function(text){ announceSafe(text, {ai:true}); };
+})();
+</script>
+
+
+<style id="announcer-v263-ui">
+.announcer-status{font-size:12px;opacity:.8;margin-top:4px}
+</style>
+
+</head>
+  <body>
+    <div class="audio-controls" id="audioControls" aria-label="ควบคุมเสียง">
+      <button type="button" id="musicToggle" title="เปิด/ปิดเพลง">🎵 เพลง: เปิด</button>
+      <button type="button" id="soundToggle" title="เปิด/ปิดเสียงเดินหมาก">🔊 เสียงหมาก: เปิด</button>
+      <button type="button" id="announceToggle" title="เปิด/ปิดเสียงประกาศเกม">📢 ประกาศ: เปิด</button>
+      <div class="announcer-status" id="announcerStatus"></div>
+    </div>
+    <audio id="stepSound" src="/assets/token-step.wav" preload="auto"></audio>
+    <audio id="boardMusic" src="/assets/board-music.wav" preload="auto" loop></audio>
+    <header>
+      <div class="eyebrow">Realtime · Socket.IO · Server-authoritative</div>
+      <h1>เกมเศษฐี101</h1>
+    </header>
+
+    <div class="join-card" id="joinCard">
+      <p style="margin: 0 0 8px; font-size: 13px; color: var(--ivory-dim)">
+        เลือกโหมด แล้วสร้าง/เข้าร่วมโต๊ะ
+      </p>
+      <input id="nameInput" placeholder="ชื่อผู้เล่น" maxlength="20" />
+      <div style="display:flex;gap:8px;margin:8px 0;flex-wrap:wrap">
+        <button type="button" id="modeAiBtn" class="mode-choice active">🤖 เล่นกับ AI</button>
+        <button type="button" id="modeHumanBtn" class="mode-choice">👥 เล่นกับคน</button>
+      </div>
+      <div id="roomControls">
+        <input id="roomInput" placeholder="รหัสห้อง เช่น 101ABC" maxlength="12" />
+        <button type="button" id="newRoomBtn" class="secondary-btn">🎲 สร้างรหัสห้อง</button>
+        <button type="button" id="createRoomBtn" class="secondary-btn">➕ สร้างห้อง</button>
+      </div>
+      <div id="aiControls" style="display:flex;align-items:center;gap:8px;margin:8px 0">
+        <label for="aiCount">จำนวน AI</label>
+        <select id="aiCount"><option value="1">1 คน</option><option value="2">2 คน</option><option value="3" selected>3 คน</option></select>
+      </div>
+      <button id="joinBtn">สร้างเกม</button>
+      <div id="joinHint" style="font-size:11px;color:var(--ivory-dim);margin-top:7px">โหมด AI: สร้างโต๊ะใหม่ให้คุณและ AI</div>
+    </div>
+
+    <div class="game-topbar" id="gameTopbar">
+      <div class="turn-status">
+        <div class="turn-label">เทิร์นของ</div>
+        <div class="turn-player" id="turnPlayerName">รอผู้เล่น</div>
+        <div class="turn-message" id="turnMessage">เข้าร่วมเกมแล้วทอยลูกเต๋าได้เลย!</div>
+      </div>
+      <div class="top-dice" id="topDice" aria-hidden="true">⚄</div>
+      <div class="top-actions" aria-label="เมนูเกม">
+        <button type="button" title="อารมณ์" aria-label="อารมณ์">●</button>
+        <button type="button" title="ผู้เล่น" aria-label="ผู้เล่น">♟</button>
+        <button type="button" title="เสียง" aria-label="เสียง">🔊</button>
+        <button type="button" title="เมนู" aria-label="เมนู">☰</button>
+      </div>
+    </div>
+
+    <div class="money-hud" id="moneyHud" aria-live="polite" aria-label="เงินของคุณ">
+      <div class="money-icon"><img src="/coin-horhod101.png" alt="เหรียญหอโหวด 101" /></div>
+      <div>
+        <div class="money-hud-label">เงินของฉัน</div>
+        <div class="money-hud-value" id="myMoney">฿0</div>
+      </div>
+    </div>
+
+    <div class="stage" id="stage">
+      <aside class="player-rail panel" aria-label="ผู้เล่น">
+        <div class="rail-title">ผู้เล่น</div>
+        <div id="playerRailList"></div>
+      </aside>
+      <div class="board-wrapper">
+        <div class="board-frame">
+          <div class="board" id="board">
+            <div class="gm-panel">
+              <div class="gm-avatar">🎙️</div>
+              <div class="dice" id="dice"></div>
+              <div class="gm-bubble" id="gmBubble">รอผู้เล่นทอยลูกเต๋า...</div>
+            </div>
+            <div class="center-card-decks" id="centerCardDecks" aria-label="กองการ์ดกลางกระดาน">
+              <div class="card-deck quiz-deck" id="quizDeck" aria-label="กองการ์ดทำโทษ">
+                <div class="card-deck-icon">🃏</div>
+                <div class="card-deck-title">การ์ดทำโทษ</div>
+                <div class="card-deck-sub">ความรู้ร้อยเอ็ด</div>
+              </div>
+              <div class="card-deck angel-deck" id="angelDeck" aria-label="กองการ์ดนางฟ้า">
+                <div class="card-deck-icon">😇</div>
+                <div class="card-deck-title">การ์ดนางฟ้า</div>
+                <div class="card-deck-sub">รับพรและโชคดี</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="side">
+        <div class="panel">
+          <h2>ผู้เล่นบนโต๊ะ</h2>
+          <div id="playerList"></div>
+          <button class="roll-btn" id="rollBtn">🎲 ทอยลูกเต๋า</button>
+          <div class="err" id="errMsg"></div>
+        </div>
+        <div class="panel property-panel">
+          <h2>🏠 ทรัพย์สินของฉัน</h2>
+          <div id="myProperties">
+            <div style="font-size: 12px; color: var(--ivory-dim)">
+              ยังไม่มีทรัพย์สิน
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>Game Master Log</h2>
+          <div class="log-feed" id="logFeed"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="purchaseBackdrop">
+      <div class="purchase-modal">
+        <h2>🏠 ซื้อทรัพย์สิน</h2>
+        <div class="purchase-info" id="purchaseInfo">กำลังโหลด...</div>
+        <div class="purchase-actions">
+          <button id="buyBtn">🛒 ซื้อทรัพย์สิน</button>
+          <button id="skipBtn">➡️ ไม่ซื้อ</button>
+        </div>
+        <div class="purchase-wait" id="purchaseWait"></div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="tourismBackdrop" aria-hidden="true">
+      <div
+        class="tourism-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="tourismTitle"
+      >
+        <button
+          class="tourism-close"
+          id="tourismClose"
+          aria-label="ปิดหน้าต่าง"
+        >
+          ×
+        </button>
+        <div class="tourism-hero">
+          <div class="tourism-placeholder" id="tourismPlaceholder">🏞️</div>
+          <img
+            id="tourismImage"
+            alt="รูปสถานที่ท่องเที่ยว"
+            style="display: none"
+          />
+          <div class="tourism-title">
+            <div class="eyebrow">เที่ยวร้อยเอ็ด · 20 อำเภอ</div>
+            <h2 id="tourismTitle">อำเภอ</h2>
+          </div>
+        </div>
+        <div class="tourism-body">
+          <p class="tourism-description" id="tourismDescription"></p>
+          <ul class="tourism-list" id="tourismList"></ul>
+          <div class="tourism-footer">
+            <div class="tourism-price" id="tourismPrice"></div>
+            <button class="tourism-close-btn" id="tourismCloseBtn">ปิด</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="quizBackdrop" aria-hidden="true">
+      <div class="quiz-modal" role="dialog" aria-modal="true" aria-labelledby="quizTitle">
+        <div class="quiz-card-top">
+          <div class="quiz-card-icon">🃏</div>
+          <div>
+            <div class="quiz-card-label">การ์ดทำโทษ · ความรู้ร้อยเอ็ด</div>
+            <h2 class="quiz-card-title" id="quizTitle">ตอบคำถามให้ถูก!</h2>
+          </div>
+        </div>
+        <div class="quiz-question" id="quizQuestion">กำลังสุ่มคำถาม...</div>
+        <div class="quiz-choices" id="quizChoices"></div>
+        <div class="quiz-penalty" id="quizPenalty">ตอบถูก +฿300 · ตอบผิด -฿500</div>
+        <div class="quiz-wait" id="quizWait"></div>
+      </div>
+    </div>
+
+
+    <div class="modal-backdrop" id="angelBackdrop" aria-hidden="true">
+      <div class="angel-modal" role="dialog" aria-modal="true" aria-labelledby="angelTitle">
+        <div class="angel-icon" id="angelIcon">😇✨</div>
+        <div class="angel-label">การ์ดนางฟ้า · เกมเศษฐี101</div>
+        <h2 class="angel-title" id="angelTitle">พรแห่งโชค</h2>
+        <div class="angel-text" id="angelText">นางฟ้ามอบพรให้คุณ</div>
+        <div class="angel-reward" id="angelReward"></div>
+        <button class="angel-close" id="angelClose">รับพร ✨</button>
+      </div>
+    </div>
+
+
+    <button id="tourismHubOpen" class="tourism-open-btn" type="button">🗺️ เที่ยวร้อยเอ็ด 20 อำเภอ</button>
+    <div class="tourism-hub" id="tourismHub" aria-hidden="true">
+      <div class="tourism-hub-panel">
+        <div class="tourism-hub-head">
+          <div><div class="tourism-hub-title">🗺️ เที่ยวร้อยเอ็ด 20 อำเภอ</div><div class="tourism-hub-sub">ค้นหาและดูข้อมูลสถานที่ท่องเที่ยวจากข้อมูลของเกม</div></div>
+          <button id="tourismHubClose" type="button">✕ ปิด</button>
+        </div>
+        <div class="tourism-tools"><input id="tourismSearch" type="search" placeholder="ค้นหาอำเภอหรือสถานที่..." /><select id="tourismCategory"><option value="">ทุกหมวด</option></select></div>
+        <div class="tourism-count" id="tourismCount">กำลังโหลดข้อมูล...</div>
+        <div class="tourism-grid" id="tourismGrid"></div>
+      </div>
+    </div>
+    <div class="tourism-hub" id="tourismDetail" aria-hidden="true">
+      <div class="tourism-detail-panel">
+        <div class="tourism-hub-head"><div><div class="tourism-hub-title" id="tourismDetailTitle">อำเภอ</div><div class="tourism-hub-sub" id="tourismDetailCategory"></div></div><button id="tourismDetailClose" type="button">✕ ปิด</button></div>
+        <img id="tourismDetailImage" class="tourism-detail-hero" alt="" />
+        <p id="tourismDetailSummary" class="tourism-summary"></p>
+        <h3>📍 สถานที่/จุดเด่น</h3><div id="tourismDetailList" class="tourism-detail-list"></div>
+      </div>
+    </div>
+    <div class="modal-backdrop" id="gameOverBackdrop">
+      <div class="gameover-modal">
+        <div style="font-size: 44px">🏆</div>
+        <h2>จบเกม!</h2>
+        <div id="gameOverText">กำลังสรุปผล...</div>
+        <button id="gameOverClose">ปิดหน้าต่าง</button>
+      </div>
+    </div>
+
+    <script>
+      let socket = null;
+      let MY_ID = null;
+      let CELL_TYPES = {};
+      let CELLS = [];
+      const PLAYER_TOKEN_KEY = "boardGamePlayerToken";
+      const PLAYER_TOKEN =
+        sessionStorage.getItem(PLAYER_TOKEN_KEY) ||
+        (crypto.randomUUID
+          ? crypto.randomUUID()
+          : "player-" + Date.now() + "-" + Math.random().toString(36).slice(2));
+      sessionStorage.setItem(PLAYER_TOKEN_KEY, PLAYER_TOKEN);
+
+      function rowCol(pos) {
+        if (pos <= 7) return { row: 0, col: pos - 1 };
+        if (pos <= 12) return { row: pos - 7, col: 6 };
+        if (pos <= 19) return { row: 6, col: 19 - pos };
+        return { row: 25 - pos, col: 0 };
+      }
+
+      async function loadBoardData() {
+        CELL_TYPES = await fetch("/api/cell-types").then((r) => r.json());
+        CELLS = await fetch("/api/board/default/cells").then((r) => r.json());
+      }
+
+      // ข้อมูลท่องเที่ยวมาจากฐานข้อมูลช่องเดียวกับหน้า Admin โดยตรง
+      // ทุกครั้งที่เปิด Popup จะดึงข้อมูลล่าสุดจาก /api/board/default/cells
+      async function getLatestCell(cellId) {
+        const response = await fetch("/api/board/default/cells", {
+          cache: "no-store",
+        });
+        if (!response.ok) throw new Error("โหลดข้อมูลช่องไม่สำเร็จ");
+        const cells = await response.json();
+        return cells.find((c) => c.id === cellId) || null;
+      }
+
+      let popupRequestId = 0;
+      let popupLastCellId = null;
+
+      async function openTourismPopup(cell) {
+        if (!cell) return;
+        const requestId = ++popupRequestId;
+        popupLastCellId = cell.id;
+
+        const backdrop = document.getElementById("tourismBackdrop");
+        const title = document.getElementById("tourismTitle");
+        const desc = document.getElementById("tourismDescription");
+        const list = document.getElementById("tourismList");
+        const price = document.getElementById("tourismPrice");
+        const img = document.getElementById("tourismImage");
+        const placeholder = document.getElementById("tourismPlaceholder");
+        const eyebrow = backdrop.querySelector(".tourism-title .eyebrow");
+
+        // ทุกช่องบนกระดานเปิด Popup ได้ ไม่ว่าจะเป็นอำเภอ, START, EVENT, TAX หรือ BANK
+        backdrop.classList.add("on");
+        backdrop.setAttribute("aria-hidden", "false");
+        eyebrow.textContent =
+          cell.type === "PROPERTY"
+            ? "เที่ยวร้อยเอ็ด · จุดท่องเที่ยว"
+            : cell.type === "START"
+              ? "เที่ยวร้อยเอ็ด · จุดเริ่มต้น"
+              : "เที่ยวร้อยเอ็ด · ช่องพิเศษ";
+        title.textContent = cell.name || "ข้อมูลช่อง";
+        desc.textContent = "กำลังโหลดข้อมูลล่าสุดจาก Admin...";
+        list.innerHTML = "<li>กำลังโหลดข้อมูล...</li>";
+        price.textContent = "";
+        img.style.display = "none";
+        placeholder.style.display = "flex";
+
+        let latest = cell;
+        try {
+          latest = (await getLatestCell(cell.id)) || cell;
+        } catch (error) {
+          console.warn("ใช้ข้อมูลในเกมแทนข้อมูลล่าสุด:", error);
+        }
+        if (requestId !== popupRequestId) return;
+
+        const typeLabel =
+          {
+            PROPERTY: "สถานที่ท่องเที่ยว",
+            START: "จุดเริ่มต้น",
+            EVENT: "เหตุการณ์",
+            TAX: "ค่าผ่านทาง",
+            PENALTY: "บทลงโทษ",
+            BONUS: "โบนัส",
+            BANK: "ธนาคาร",
+            FORWARD: "เดินหน้า",
+            BACKWARD: "ถอยหลัง",
+            TELEPORT: "วาร์ป",
+          }[latest.type] || "ข้อมูลช่อง";
+
+        eyebrow.textContent =
+          latest.type === "PROPERTY"
+            ? "เที่ยวร้อยเอ็ด · จุดท่องเที่ยว"
+            : `เที่ยวร้อยเอ็ด · ${typeLabel}`;
+        title.textContent = latest.name || "ข้อมูลช่อง";
+
+        desc.textContent =
+          latest.description ||
+          (latest.type === "PROPERTY"
+            ? "สำรวจสถานที่ท่องเที่ยวของอำเภอนี้"
+            : "ข้อมูลของช่องนี้ในเกมเศรษฐีเที่ยวร้อยเอ็ด");
+
+        let items = Array.isArray(latest.attractions)
+          ? latest.attractions.filter(Boolean).map(String)
+          : [];
+
+        // ช่องที่ไม่ใช่อำเภอให้ Popup แสดงรายละเอียดเอฟเฟกต์ด้วย
+        if (!items.length && latest.type !== "PROPERTY") {
+          const effect = Number(latest.effect_value);
+          const steps = Number(latest.effect_steps);
+          if (Number.isFinite(effect) && effect !== 0) {
+            items.push(
+              effect > 0
+                ? `รับเงินโบนัส ฿${effect.toLocaleString()}`
+                : `จ่ายเงิน ฿${Math.abs(effect).toLocaleString()}`,
+            );
+          }
+          if (Number.isFinite(steps) && steps !== 0) {
+            items.push(
+              steps > 0
+                ? `เดินหน้า ${steps} ช่อง`
+                : `ถอยหลัง ${Math.abs(steps)} ช่อง`,
+            );
+          }
+        }
+
+        list.innerHTML = "";
+        if (items.length) {
+          items.forEach((item) => {
+            const li = document.createElement("li");
+            li.textContent = item;
+            list.appendChild(li);
+          });
+        } else {
+          const li = document.createElement("li");
+          li.textContent =
+            latest.type === "PROPERTY"
+              ? "ยังไม่มีข้อมูลสถานที่ท่องเที่ยว — เพิ่มได้จากหน้า Admin"
+              : "ช่องนี้ยังไม่มีรายละเอียดเพิ่มเติม";
+          list.appendChild(li);
+        }
+
+        if (latest.type === "PROPERTY" && latest.price != null) {
+          price.textContent = `ราคาทรัพย์สิน ฿${Number(latest.price).toLocaleString()} · ค่าเช่า ฿${Number(latest.rent_base || 0).toLocaleString()}`;
+        } else if (
+          latest.type === "TAX" ||
+          latest.type === "PENALTY" ||
+          latest.type === "BONUS"
+        ) {
+          const amount = Number(latest.effect_value);
+          price.textContent =
+            Number.isFinite(amount) && amount !== 0
+              ? `ผลกระทบเงิน ฿${Math.abs(amount).toLocaleString()}`
+              : "";
+        } else {
+          price.textContent = "";
+        }
+
+        img.style.display = "none";
+        placeholder.style.display = "flex";
+        if (latest.image_url) {
+          img.onload = () => {
+            placeholder.style.display = "none";
+            img.style.display = "block";
+          };
+          img.onerror = () => {
+            img.style.display = "none";
+            placeholder.style.display = "flex";
+          };
+          img.src = latest.image_url;
+        }
+      }
+
+      function closeTourismPopup() {
+        popupRequestId++;
+        popupLastCellId = null;
+        const backdrop = document.getElementById("tourismBackdrop");
+        backdrop.classList.remove("on");
+        backdrop.setAttribute("aria-hidden", "true");
+      }
+
+      function renderBoard() {
+        const board = document.getElementById("board");
+        document.querySelectorAll(".cell").forEach((c) => c.remove());
+        CELLS.sort((a, b) => a.position - b.position).forEach((cell) => {
+          const { row, col } = rowCol(cell.position);
+          const meta = CELL_TYPES[cell.type] || {};
+          const div = document.createElement("div");
+          // ทั้งช่องเป็นพื้นที่กดสำหรับเปิดข้อมูล Popup
+          div.className = "cell property-cell";
+          div.dataset.cellId = cell.id;
+          div.dataset.type = cell.type || "SPECIAL";
+          div.tabIndex = 0;
+          div.setAttribute("role", "button");
+          div.setAttribute("aria-label", `ดูข้อมูล ${cell.name}`);
+          div.id = "cell-" + cell.position;
+          div.style.gridRow = row + 1;
+          div.style.gridColumn = col + 1;
+          div.innerHTML = `
+      <span class="type-tag" style="background:${meta.color || "#999"}"></span>
+      <span class="icon"></span>
+      <span class="name"></span>
+      <span class="owner-badge" style="display:none"></span>
+      <button type="button" class="tourism-detail-btn" data-tourism-detail="${cell.id}" aria-label="ดูรายละเอียด ${cell.name}">📍 รายละเอียด</button>
+    `;
+          div.querySelector(".icon").textContent = meta.icon || "❔";
+          div.querySelector(".name").textContent = cell.name;
+          board.appendChild(div);
+        });
+      }
+
+      // คลิก/แตะตรงไหนก็ได้ภายในช่องเพื่อเปิด Popup
+      // ใช้ event delegation เพื่อให้ทำงานกับช่องที่ render ใหม่ทุกครั้ง
+      const boardEl = document.getElementById("board");
+      boardEl.addEventListener("click", (event) => {
+        const cellEl = event.target.closest?.(".cell[data-cell-id]");
+        if (!cellEl || !boardEl.contains(cellEl)) return;
+        const cell = CELLS.find((c) => c.id === cellEl.dataset.cellId);
+        if (!cell) return;
+        openTourismPopup(cell);
+      });
+
+      boardEl.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        const cellEl = event.target.closest?.(".cell[data-cell-id]");
+        if (!cellEl || !boardEl.contains(cellEl)) return;
+        const cell = CELLS.find((c) => c.id === cellEl.dataset.cellId);
+        if (!cell) return;
+        event.preventDefault();
+        openTourismPopup(cell);
+      });
+
+      const PIP_LAYOUTS = {
+        1: [4],
+        2: [0, 8],
+        3: [0, 4, 8],
+        4: [0, 2, 6, 8],
+        5: [0, 2, 4, 6, 8],
+        6: [0, 2, 3, 5, 6, 8],
+      };
+      function renderDice(value) {
+        const el = document.getElementById("dice");
+        el.innerHTML = "";
+        const active = PIP_LAYOUTS[value] || [];
+        for (let i = 0; i < 9; i++) {
+          const p = document.createElement("div");
+          p.className = "pip" + (active.includes(i) ? " active" : "");
+          el.appendChild(p);
+        }
+      }
+      renderDice(1);
+
+      function renderOwnership(state) {
+        document.querySelectorAll(".owner-badge").forEach((el) => {
+          el.textContent = "";
+          el.style.display = "none";
+        });
+        document
+          .querySelectorAll(".cell.property-owned")
+          .forEach((el) => el.classList.remove("property-owned"));
+        (state.properties || []).forEach((prop) => {
+          const cellEl = document.getElementById(
+            "cell-" + (CELLS.find((c) => c.id === prop.cellId)?.position || ""),
+          );
+          if (!cellEl || !prop.ownerName) return;
+          const badge = cellEl.querySelector(".owner-badge");
+          badge.textContent = "🏠 " + prop.ownerName;
+          badge.style.display = "block";
+          cellEl.classList.add("property-owned");
+        });
+      }
+
+      function renderPurchaseOffer(offer) {
+        const backdrop = document.getElementById("purchaseBackdrop");
+        if (!offer) {
+          backdrop.classList.remove("on");
+          return;
+        }
+        document.getElementById("purchaseInfo").innerHTML = `
+    <strong>${escapeHtml(offer.name)}</strong><br>
+    ราคา <b>฿${Number(offer.price || 0).toLocaleString()}</b><br>
+    ค่าเช่า <b>฿${Number(offer.rent || 0).toLocaleString()}</b>
+  `;
+        const mine = offer.playerId === MY_ID;
+        document.getElementById("buyBtn").disabled = !mine;
+        document.getElementById("skipBtn").disabled = !mine;
+        document.getElementById("purchaseWait").textContent = mine
+          ? "เลือกซื้อหรือไม่ซื้อเพื่อจบตาของคุณ"
+          : "กำลังรอเจ้าของตาตัดสินใจ...";
+        backdrop.classList.add("on");
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "").replace(
+          /[&<>'"]/g,
+          (ch) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              "'": "&#39;",
+              '"': "&quot;",
+            })[ch],
+        );
+      }
+
+      const TOKEN_STYLES = [
+        { style: 1, label: "ราชาแห่งร้อยเอ็ด" },
+        { style: 2, label: "คาวบอย 101" },
+        { style: 3, label: "จอมเวท" },
+        { style: 4, label: "นักสำรวจ" },
+        { style: 5, label: "นินจา" },
+        { style: 6, label: "ซูเปอร์ฮีโร่" },
+      ];
+
+      function renderTokens(players) {
+        document.querySelectorAll(".player-token").forEach((t) => t.remove());
+        const byCell = {};
+        players.forEach((p, playerIndex) => {
+          if (!p.connected) return;
+          (byCell[p.pos] ||= []).push({ p, playerIndex });
+        });
+        const slots = [
+          { left: "5%", top: "58%" },
+          { left: "52%", top: "58%" },
+          { left: "5%", top: "79%" },
+          { left: "52%", top: "79%" },
+        ];
+
+        Object.entries(byCell).forEach(([pos, list]) => {
+          const cellEl = document.getElementById("cell-" + pos);
+          if (!cellEl) return;
+          list.forEach(({ p, playerIndex }, i) => {
+            const tok = document.createElement("div");
+            const style = TOKEN_STYLES[playerIndex % TOKEN_STYLES.length];
+            tok.className = "player-token";
+            tok.dataset.style = style.style;
+            tok.style.setProperty("--token-color", p.color || "#e9cd6a");
+            tok.setAttribute("aria-label", `${p.name} — ${style.label}`);
+            tok.title = `${p.name} • ${style.label}`;
+
+            const figure = document.createElement("div");
+            figure.className = "token-figure";
+            const head = document.createElement("div");
+            head.className = "token-head";
+            const hat = document.createElement("div");
+            hat.className = "token-hat";
+            const badge = document.createElement("div");
+            badge.className = "token-badge";
+            const base = document.createElement("div");
+            base.className = "token-base";
+            figure.append(head, hat, badge, base);
+            tok.appendChild(figure);
+
+            const slot = slots[i % slots.length];
+            tok.style.left = slot.left;
+            tok.style.top = slot.top;
+            if (p.id === MY_ID) tok.style.transform = "scale(1.08)";
+            cellEl.appendChild(tok);
+          });
+        });
+      }
+
+      let lastMyMoney = null;
+
+      function renderMyMoney(state) {
+        const me = (state.players || []).find((p) => p.id === MY_ID);
+        const hud = document.getElementById("moneyHud");
+        const value = document.getElementById("myMoney");
+        if (!me) {
+          hud.classList.remove("on");
+          return;
+        }
+
+        const money = Number(me.money) || 0;
+        const previous = lastMyMoney;
+        value.textContent = `฿${money.toLocaleString()}`;
+        hud.classList.add("on");
+
+        if (previous !== null && previous !== money) {
+          const direction = money > previous ? "positive" : "negative";
+          hud.classList.remove("changed");
+          value.classList.remove("positive", "negative");
+          void hud.offsetWidth;
+          void value.offsetWidth;
+          hud.classList.add("changed");
+          value.classList.add(direction);
+          setTimeout(() => {
+            value.classList.remove("positive", "negative");
+            hud.classList.remove("changed");
+          }, 600);
+        }
+        lastMyMoney = money;
+      }
+
+      function renderTurnBar(state) {
+        const turn = (state.players || []).find((p) => p.id === state.turnPlayerId);
+        const name = turn ? turn.name : "รอผู้เล่น";
+        const mine = turn && turn.id === MY_ID;
+        const turnName = document.getElementById("turnPlayerName");
+        const turnMessage = document.getElementById("turnMessage");
+        const topDice = document.getElementById("topDice");
+        if (turnName) {
+          turnName.textContent = name;
+          turnName.style.color = turn?.color || "#f5c542";
+        }
+        if (turnMessage) {
+          turnMessage.textContent = state.gameOver
+            ? "เกมจบแล้ว"
+            : mine
+              ? "ถึงตาคุณแล้ว — ทอยลูกเต๋าได้เลย!"
+              : "กำลังรอผู้เล่นคนนี้ทอยลูกเต๋า...";
+        }
+        if (topDice) {
+          topDice.textContent = state.isMoving ? "🎲" : "⚄";
+          topDice.classList.toggle("spinning", !!state.isMoving);
+        }
+      }
+
+      function renderPlayerRail(state) {
+        const list = document.getElementById("playerRailList");
+        if (!list) return;
+        list.innerHTML = (state.players || []).map((p, i) => `
+          <div class="player-card ${p.id === MY_ID ? "me" : ""} ${p.id === state.turnPlayerId ? "turn" : ""} ${p.connected ? "" : "offline"}" style="--player-color:${p.color || "#e9cd6a"}">
+            <div class="player-token-icon" data-style="${(i % TOKEN_STYLES.length) + 1}" aria-hidden="true">
+              <span class="mini-token-head"></span><span class="mini-token-hat"></span><span class="mini-token-badge"></span>
+            </div>
+            <div class="player-card-main">
+              <div class="player-card-name">${escapeHtml(p.name)}${p.id === MY_ID ? ' <span class="you-tag">คุณ</span>' : ""}</div>
+              <div class="player-card-money">฿${Number(p.money || 0).toLocaleString()}</div>
+            </div>
+            ${p.id === state.turnPlayerId ? '<span class="turn-dot">●</span>' : ""}
+          </div>
+        `).join("");
+      }
+
+      function renderPlayerList(state) {
+        const list = document.getElementById("playerList");
+        list.innerHTML = state.players
+          .map(
+            (p) => `
+    <div class="player-row ${p.id === state.turnPlayerId ? "current" : ""} ${p.connected ? "" : "offline"}">
+      <span class="token-dot" style="background:${p.color}"></span>
+      <span>${p.name}${p.id === MY_ID ? " (คุณ)" : ""}${p.bankrupt ? " — ล้มละลาย" : ""}</span>
+      <span class="player-money">฿${p.money.toLocaleString()}</span>
+    </div>
+  `,
+          )
+          .join("");
+
+        const rollBtn = document.getElementById("rollBtn");
+        rollBtn.disabled = state.isMoving || state.turnPlayerId !== MY_ID;
+        rollBtn.textContent =
+          state.turnPlayerId === MY_ID
+            ? "🎲 ทอยลูกเต๋า (ตาคุณ)"
+            : "🎲 รอตาผู้เล่นอื่น...";
+      }
+
+      function renderMyProperties(state) {
+        const box = document.getElementById("myProperties");
+        const mine = (state.properties || []).filter(
+          (p) => p.ownerId === MY_ID,
+        );
+        if (!mine.length) {
+          box.innerHTML =
+            '<div style="font-size:12px;color:var(--ivory-dim)">ยังไม่มีทรัพย์สิน</div>';
+          return;
+        }
+        const targets = state.players.filter(
+          (p) => p.id !== MY_ID && p.connected && !p.bankrupt,
+        );
+        box.innerHTML = mine
+          .map((p) => {
+            const options = targets
+              .map(
+                (t) =>
+                  `<option value="${escapeHtml(t.id)}">${escapeHtml(t.name)}</option>`,
+              )
+              .join("");
+            return `<div class="property-item">
+      <strong>${escapeHtml(p.name)}</strong>
+      <div>ราคาซื้อ ฿${Number(p.price || 0).toLocaleString()} · ค่าเช่า <b>฿${Number(p.rent || 0).toLocaleString()}</b></div>
+      <div class="property-level">🏗️ ระดับ ${Number(p.level || 0)}/${Number(p.maxLevel || 3)}${p.level >= 3 ? ' · MAX' : ` · อัปเกรด ฿${Number(p.upgradeCost || 0).toLocaleString()}`}</div>
+      <select id="target-${escapeHtml(p.cellId)}" ${targets.length ? "" : "disabled"}>
+        ${targets.length ? '<option value="">เลือกผู้รับโอน</option>' + options : "<option>ไม่มีผู้เล่นให้โอน</option>"}
+      </select>
+      <div class="property-actions">
+        <button class="upgrade-btn" data-upgrade="${escapeHtml(p.cellId)}" ${Number(p.level || 0) >= Number(p.maxLevel || 3) ? "disabled" : ""}>🏗️ อัปเกรด</button>
+        <button class="sell-btn" data-sell="${escapeHtml(p.cellId)}">🏷️ ขาย 50%</button>
+        <button class="transfer-btn" data-transfer="${escapeHtml(p.cellId)}" ${targets.length ? "" : "disabled"}>🤝 โอน</button>
+      </div>
+    </div>`;
+          })
+          .join("");
+        box.querySelectorAll("[data-upgrade]").forEach((btn) =>
+          btn.addEventListener("click", () => {
+            const prop = mine.find((p) => p.cellId === btn.dataset.upgrade);
+            if (!prop || Number(prop.level || 0) >= Number(prop.maxLevel || 3)) return;
+            const cost = Number(prop.upgradeCost || 0);
+            if (confirm(`อัปเกรด ${prop.name} เป็น Lv.${Number(prop.level || 0) + 1} ใช้เงิน ฿${cost.toLocaleString()} ?\nค่าเช่าปัจจุบัน ฿${Number(prop.rent || 0).toLocaleString()}`)) {
+              socket?.emit("upgrade_property", { cellId: btn.dataset.upgrade });
+            }
+          }),
+        );
+        box.querySelectorAll("[data-sell]").forEach((btn) =>
+          btn.addEventListener("click", () => {
+            if (
+              confirm("ยืนยันขายทรัพย์สินนี้คืนธนาคารในราคา 50% ของราคาซื้อ?")
+            )
+              socket?.emit("sell_property", { cellId: btn.dataset.sell });
+          }),
+        );
+        box.querySelectorAll("[data-transfer]").forEach((btn) =>
+          btn.addEventListener("click", () => {
+            const select = document.getElementById(
+              "target-" + btn.dataset.transfer,
+            );
+            if (!select?.value) return showError("กรุณาเลือกผู้รับโอน");
+            if (
+              confirm("ยืนยันโอนทรัพย์สินให้ผู้เล่นที่เลือกโดยไม่มีค่าใช้จ่าย?")
+            )
+              socket?.emit("transfer_property", {
+                cellId: btn.dataset.transfer,
+                targetPlayerId: select.value,
+              });
+          }),
+        );
+      }
+
+
+      let activeQuiz = null;
+      let quizResultTimer = null;
+
+      function closeQuizCard() {
+        document.getElementById("quizBackdrop").classList.remove("on");
+        document.getElementById("quizBackdrop").setAttribute("aria-hidden", "true");
+        activeQuiz = null;
+      }
+
+      function highlightCardDeck(type) {
+        const quiz = document.getElementById("quizDeck");
+        const angel = document.getElementById("angelDeck");
+        [quiz, angel].forEach((el) => el && el.classList.remove("active"));
+        const target = type === "angel" ? angel : quiz;
+        if (!target) return;
+        target.classList.add("active");
+        clearTimeout(window.cardDeckTimer);
+        window.cardDeckTimer = setTimeout(() => target.classList.remove("active"), 1200);
+      }
+
+      function renderQuizCard(questionData) {
+        highlightCardDeck("quiz");
+        if (!questionData) {
+          closeQuizCard();
+          return;
+        }
+        activeQuiz = questionData;
+        const backdrop = document.getElementById("quizBackdrop");
+        const qEl = document.getElementById("quizQuestion");
+        const choicesEl = document.getElementById("quizChoices");
+        const waitEl = document.getElementById("quizWait");
+        const penaltyEl = document.getElementById("quizPenalty");
+        const isMine = questionData.playerId === MY_ID;
+
+        qEl.textContent = questionData.question;
+        penaltyEl.textContent = `ตอบถูก +฿300 · ตอบผิด -฿${Number(questionData.penalty || 500).toLocaleString()}`;
+        waitEl.textContent = isMine ? "เลือกคำตอบที่คิดว่าถูกที่สุด" : `รอ ${questionData.playerName} ตอบคำถาม...`;
+
+        choicesEl.innerHTML = (questionData.choices || []).map((choice, i) =>
+          `<button class="quiz-choice" data-quiz-choice="${i}" ${isMine ? "" : "disabled"}>${String.fromCharCode(65+i)}. ${escapeHtml(choice)}</button>`
+        ).join("");
+
+        if (isMine) {
+          choicesEl.querySelectorAll("[data-quiz-choice]").forEach(btn => {
+            btn.addEventListener("click", () => {
+              choicesEl.querySelectorAll("button").forEach(b => b.disabled = true);
+              waitEl.textContent = "กำลังตรวจคำตอบ...";
+              activeQuiz.lastChoice = Number(btn.dataset.quizChoice);
+              socket?.emit("answer_quiz", { choiceIndex: activeQuiz.lastChoice });
+            });
+          });
+        }
+        backdrop.classList.add("on");
+        backdrop.setAttribute("aria-hidden", "false");
+      }
+
+      function showQuizResult(result) {
+        if (!activeQuiz) return;
+        const buttons = document.querySelectorAll("#quizChoices .quiz-choice");
+        buttons.forEach((btn, i) => {
+          btn.disabled = true;
+          if (i === result.correctIndex) btn.classList.add("correct");
+          if (!result.correct && i !== result.correctIndex && i === activeQuiz.lastChoice) btn.classList.add("wrong");
+        });
+        document.getElementById("quizWait").textContent = result.correct
+          ? "🎉 ตอบถูก! รับเงินรางวัล ฿300"
+          : `❌ ตอบผิด! เสียเงิน ฿${Number(result.penalty || 500).toLocaleString()}`;
+        clearTimeout(quizResultTimer);
+        quizResultTimer = setTimeout(closeQuizCard, 1500);
+      }
+
+      function showAngelCard(card) {
+        highlightCardDeck("angel");
+        document.getElementById("angelIcon").textContent = card.icon || "😇✨";
+        document.getElementById("angelTitle").textContent = card.title || "การ์ดนางฟ้า";
+        document.getElementById("angelText").textContent = card.text || "นางฟ้ามอบพรให้คุณ";
+        const reward = [];
+        if (Number(card.money || 0) > 0) reward.push(`+฿${Number(card.money).toLocaleString()}`);
+        if (Number(card.steps || 0) > 0) reward.push(`เดินเพิ่ม ${Number(card.steps)} ช่อง`);
+        document.getElementById("angelReward").textContent = reward.length ? reward.join(" · ") : "✨ ขอให้โชคดี!";
+        const backdrop = document.getElementById("angelBackdrop");
+        backdrop.classList.add("on");
+        backdrop.setAttribute("aria-hidden", "false");
+        clearTimeout(window.angelTimer);
+        window.angelTimer = setTimeout(closeAngelCard, 2200);
+      }
+      function closeAngelCard() {
+        const backdrop = document.getElementById("angelBackdrop");
+        backdrop.classList.remove("on");
+        backdrop.setAttribute("aria-hidden", "true");
+      }
+
+      function showGameOver(state) {
+        document.getElementById("gameOverText").innerHTML =
+          `<strong>${escapeHtml(state.winnerName || "ผู้ชนะ")}</strong><br><span style="color:var(--ivory-dim)">เป็นผู้ชนะจากเงื่อนไขผู้เล่นคนสุดท้ายที่ยังไม่ล้มละลาย</span>`;
+        document.getElementById("gameOverBackdrop").classList.add("on");
+      }
+      function showError(msg) {
+        const el = document.getElementById("errMsg");
+        el.textContent = msg;
+        setTimeout(() => (el.textContent = ""), 2500);
+      }
+
+      function focusCell(pos) {
+        document
+          .querySelectorAll(".cell.active-cell")
+          .forEach((c) => c.classList.remove("active-cell"));
+        const el = document.getElementById("cell-" + pos);
+        if (el) el.classList.add("active-cell");
+      }
+
+      document
+        .getElementById("tourismClose")
+        .addEventListener("click", closeTourismPopup);
+      document.getElementById("angelClose").addEventListener("click", closeAngelCard);
+      document.getElementById("angelBackdrop").addEventListener("click", (event) => {
+        if (event.target.id === "angelBackdrop") closeAngelCard();
+      });
+      document
+        .getElementById("tourismCloseBtn")
+        .addEventListener("click", closeTourismPopup);
+      document
+        .getElementById("tourismBackdrop")
+        .addEventListener("click", (event) => {
+          if (event.target.id === "tourismBackdrop") closeTourismPopup();
+        });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") closeTourismPopup();
+      });
+
+      /* ---------- board game audio ---------- */
+      const stepSound = document.getElementById("stepSound");
+      const boardMusic = document.getElementById("boardMusic");
+      const audioControls = document.getElementById("audioControls");
+      const musicToggle = document.getElementById("musicToggle");
+      const soundToggle = document.getElementById("soundToggle");
+      let musicEnabled = true;
+      let stepSoundEnabled = true;
+      let announceEnabled = true;
+      let lastAnnouncementKey = "";
+      let lastAnnouncementAt = 0;
+      const announceToggle = document.getElementById("announceToggle");
+
+      // ระบบประกาศเกม: ใช้เสียงพูดของเบราว์เซอร์ ไม่ต้องติดตั้งไฟล์เสียงเพิ่ม
+      function cleanAnnouncement(text) {
+        return String(text || "")
+          .replace(/[🏆💥🏷️🤝🏠💸🏘️🛒➡️🎉⚠️❓🎁🏦📈🔒🅿️🌀🎲]/gu, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      function speakAnnouncement(text) {
+        if (!announceEnabled || !("speechSynthesis" in window)) return;
+        const message = cleanAnnouncement(text);
+        if (!message) return;
+        const now = Date.now();
+        if (message === lastAnnouncementKey && now - lastAnnouncementAt < 1800) return;
+        lastAnnouncementKey = message;
+        lastAnnouncementAt = now;
+        try {
+          gameAnnounce(message, {ai:false});
+        } catch (_) {}
+      }
+
+      announceToggle.addEventListener("click", () => {
+        announceEnabled = !announceEnabled;
+        if (!announceEnabled && "speechSynthesis" in window) window.speechSynthesis.cancel();
+        announceToggle.textContent = announceEnabled ? "📢 ประกาศ: เปิด" : "🔇 ประกาศ: ปิด";
+      });
+
+      function startBoardMusic() {
+        if (!musicEnabled) return;
+        boardMusic.volume = 0.22;
+        boardMusic.currentTime = 0;
+        boardMusic.play().catch(() => {
+          // เบราว์เซอร์บางตัวจะอนุญาตหลังจากผู้เล่นกดปุ่มเท่านั้น
+        });
+      }
+
+      function playStepSound() {
+        if (!stepSoundEnabled) return;
+        try {
+          const sound = stepSound.cloneNode();
+          sound.volume = 0.55;
+          sound.play().catch(() => {});
+          sound.addEventListener("ended", () => sound.remove(), { once: true });
+        } catch (_) {}
+      }
+
+      musicToggle.addEventListener("click", () => {
+        musicEnabled = !musicEnabled;
+        if (musicEnabled) startBoardMusic();
+        else boardMusic.pause();
+        musicToggle.textContent = musicEnabled ? "🎵 เพลง: เปิด" : "🔇 เพลง: ปิด";
+      });
+
+      soundToggle.addEventListener("click", () => {
+        stepSoundEnabled = !stepSoundEnabled;
+        soundToggle.textContent = stepSoundEnabled ? "🔊 เสียงหมาก: เปิด" : "🔇 เสียงหมาก: ปิด";
+      });
+
+      /* ---------- lobby / join flow ---------- */
+      let PLAY_MODE = "ai";
+      const modeAiBtn = document.getElementById("modeAiBtn");
+      const modeHumanBtn = document.getElementById("modeHumanBtn");
+      const roomControls = document.getElementById("roomControls");
+      const aiControls = document.getElementById("aiControls");
+      const roomInput = document.getElementById("roomInput");
+      const joinHint = document.getElementById("joinHint");
+      const joinBtn = document.getElementById("joinBtn");
+      function setPlayMode(mode) {
+        PLAY_MODE = mode;
+        const ai = mode === "ai";
+        modeAiBtn.classList.toggle("active", ai);
+        modeHumanBtn.classList.toggle("active", !ai);
+        aiControls.style.display = ai ? "flex" : "none";
+        roomControls.style.display = ai ? "none" : "flex";
+        joinBtn.textContent = ai ? "🤖 สร้างเกมกับ AI" : "👥 เข้าร่วมห้อง";
+        joinHint.textContent = ai ? "โหมด AI: สร้างโต๊ะใหม่ให้คุณและ AI" : "สร้างห้องด้วยปุ่ม ➕ หรือกรอกรหัสเดิมเพื่อเข้าร่วม";
+        document.getElementById('createRoomBtn').style.display = ai ? 'none' : 'inline-flex';
+      }
+      modeAiBtn.addEventListener("click", () => setPlayMode("ai"));
+      modeHumanBtn.addEventListener("click", () => setPlayMode("human"));
+      document.getElementById("newRoomBtn").addEventListener("click", () => {
+        roomInput.value = Math.random().toString(36).slice(2, 8).toUpperCase();
+      });
+
+      document.getElementById("createRoomBtn").addEventListener("click", async () => {
+        if (PLAY_MODE !== "human") return;
+        await connectAndEmit("create_room", {
+          playerName: document.getElementById("nameInput").value.trim() || "ผู้เล่น",
+          playerToken: PLAYER_TOKEN,
+        });
+      });
+
+      /* ---------- tourism information system ---------- */
+      let tourismData = [];
+      async function loadTourismData() {
+        try {
+          let data = null;
+          if (window.FirebaseTourism && window.FirebaseTourism.configured()) {
+            try {
+              const districts = await window.FirebaseTourism.getDistricts();
+              if (districts.length) data = { districts };
+            } catch (firebaseErr) {
+              console.warn('Firestore tourism fallback:', firebaseErr);
+            }
+          }
+          if (!data) {
+            const res = await fetch('/api/tourism');
+            if (!res.ok) throw new Error('API tourism unavailable');
+            data = await res.json();
+          }
+          tourismData = data.districts || [];
+          const cats = [...new Set(tourismData.map(d => d.category))].sort();
+          const select = document.getElementById('tourismCategory');
+          select.innerHTML = '<option value="">ทุกหมวด</option>' + cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+          renderTourismHub();
+        } catch (_) { document.getElementById('tourismCount').textContent = 'โหลดข้อมูลท่องเที่ยวไม่สำเร็จ'; }
+      }
+      function renderTourismHub() {
+        const q = document.getElementById('tourismSearch').value.trim().toLowerCase();
+        const cat = document.getElementById('tourismCategory').value;
+        const list = tourismData.filter(d => (!cat || d.category === cat) && (!q || [d.district,d.category,d.summary,...d.attractions].join(' ').toLowerCase().includes(q)));
+        document.getElementById('tourismCount').textContent = `พบ ${list.length} จาก ${tourismData.length} อำเภอ`;
+        document.getElementById('tourismGrid').innerHTML = list.length ? list.map(d => `
+          <article class="tourism-district" data-tourism-district="${escapeHtml(d.district)}">
+            ${d.image_url ? `<img src="${escapeHtml(d.image_url)}" alt="${escapeHtml(d.district)}" onerror="this.style.display='none'">` : '<div></div>'}
+            <div class="tourism-district-body"><h3>${escapeHtml(d.district)}</h3><div class="tourism-cat">${escapeHtml(d.category)}</div><div class="tourism-summary">${escapeHtml(d.summary)}</div><div class="tourism-spots">📍 ${escapeHtml(d.highlights.slice(0,3).join(' · '))}</div></div>
+          </article>`).join('') : '<div class="tourism-empty">ไม่พบข้อมูลที่ค้นหา</div>';
+        document.querySelectorAll('[data-tourism-district]').forEach(el => el.addEventListener('click', () => showTourismDetail(tourismData.find(d => d.district === el.dataset.tourismDistrict))));
+      }
+      function showTourismDetail(d) {
+        if (!d) return;
+        document.getElementById('tourismDetailTitle').textContent = d.district;
+        document.getElementById('tourismDetailCategory').textContent = d.category;
+        document.getElementById('tourismDetailSummary').textContent = d.summary;
+        const img=document.getElementById('tourismDetailImage'); img.src=d.image_url||''; img.style.display=d.image_url?'block':'none'; img.alt=d.district;
+        const detailList = document.getElementById('tourismDetailList');
+        detailList.innerHTML = '';
+        (d.attractions || []).forEach((x) => detailList.appendChild(tourismPhotoCard(x)));
+        document.getElementById('tourismDetail').classList.add('on'); document.getElementById('tourismDetail').setAttribute('aria-hidden','false');
+      }
+      function closeTourismHub(){document.getElementById('tourismHub').classList.remove('on');document.getElementById('tourismHub').setAttribute('aria-hidden','true');}
+      function closeTourismDetail(){document.getElementById('tourismDetail').classList.remove('on');document.getElementById('tourismDetail').setAttribute('aria-hidden','true');}
+      document.getElementById('tourismHubOpen').addEventListener('click',()=>{document.getElementById('tourismHub').classList.add('on');document.getElementById('tourismHub').setAttribute('aria-hidden','false');loadTourismData();});
+      document.getElementById('tourismHubClose').addEventListener('click',closeTourismHub);
+      document.getElementById('tourismDetailClose').addEventListener('click',closeTourismDetail);
+      document.getElementById('tourismSearch').addEventListener('input',renderTourismHub);
+      document.getElementById('tourismCategory').addEventListener('change',renderTourismHub);
+      loadTourismData();
+
+      setPlayMode("ai");
+
+      async function connectAndEmit(eventName, payload) {
+        await loadBoardData();
+        renderBoard();
+        if (socket) { try { socket.disconnect(); } catch (_) {} }
+        socket = io();
+        socket.on("connect", () => {
+          MY_ID = socket.id;
+          socket.emit(eventName, payload);
+        });
+        socket.on("room_created", ({ roomId }) => {
+          roomInput.value = roomId;
+          showError(`สร้างห้องสำเร็จ: ${roomId} — ส่งรหัสนี้ให้เพื่อน`);
+        });
+        socket.on("room_info", ({ roomId, playerCount }) => {
+          roomInput.value = roomId;
+          joinHint.textContent = `ห้อง ${roomId} · ผู้เล่น ${playerCount} คน`;
+        });
+        socket.on("error_msg", (msg) => {
+          showError(msg);
+        });
+      }
+
+      document.getElementById("joinBtn").addEventListener("click", async () => {
+        const name = document.getElementById("nameInput").value.trim() || "ผู้เล่น";
+        let sessionId;
+        if (PLAY_MODE === "ai") {
+          sessionId = "ai-" + Math.random().toString(36).slice(2, 10);
+        } else {
+          sessionId = roomInput.value.trim().toUpperCase();
+          if (!sessionId) { showError("กรุณากรอกรหัสห้อง หรือกด ➕ สร้างห้อง"); return; }
+        }
+        await connectAndEmit("join", {
+          sessionId,
+          playerName: name,
+          playerToken: PLAYER_TOKEN,
+          mode: PLAY_MODE,
+          aiCount: Number(document.getElementById("aiCount").value) || 3,
+        });
+
+        socket.on("state_update", (state) => {
+          document.getElementById("joinCard").style.display = "none";
+          renderMyMoney(state);
+          renderTurnBar(state);
+          renderPlayerRail(state);
+          renderOwnership(state);
+          renderTokens(state.players);
+          renderPlayerList(state);
+          renderMyProperties(state);
+          if (state.gameOver) showGameOver(state);
+          if (state.pendingPurchase) {
+            renderPurchaseOffer(state.pendingPurchase);
+          } else {
+            renderPurchaseOffer(null);
+          }
+          if (state.currentQuestion) {
+            renderQuizCard(state.currentQuestion);
+          } else if (!activeQuiz) {
+            closeQuizCard();
+          }
+        });
+
+        socket.on("player_moving", ({ playerId, pos }) => {
+          focusCell(pos);
+          // เล่นเสียงทุกครั้งที่หมากขยับ 1 ช่อง
+          playStepSound();
+          // อัปเดตตำแหน่ง token แบบ optimistic เพื่อความลื่นไหล (state_update จะยืนยันอีกครั้ง)
+        });
+
+        socket.on("dice_result", ({ value }) => {
+          document.getElementById("dice").classList.add("rolling");
+          setTimeout(() => {
+            document.getElementById("dice").classList.remove("rolling");
+            renderDice(value);
+          }, 480);
+        });
+
+        socket.on("property_offer", (offer) => {
+          renderPurchaseOffer(offer);
+        });
+
+        socket.on("quiz_card", (card) => {
+          renderQuizCard(card);
+        });
+
+        socket.on("quiz_result", (result) => {
+          showQuizResult(result);
+        });
+
+        socket.on("angel_card", (card) => {
+          showAngelCard(card);
+        });
+
+        socket.on("gm_log", (entry) => {
+          if (!entry) return;
+          document.getElementById("gmBubble").textContent = entry.text;
+          const feed = document.getElementById("logFeed");
+          const div = document.createElement("div");
+          div.textContent = entry.text;
+          feed.prepend(div);
+          speakAnnouncement(entry.text);
+        });
+
+        socket.on("bankruptcy", ({ playerName }) => {
+          document.getElementById("gmBubble").textContent =
+            `💥 ${playerName} ล้มละลาย!`;
+        });
+
+        socket.on("game_over", ({ winnerName }) => {
+          document.getElementById("gameOverText").innerHTML =
+            `<strong>${escapeHtml(winnerName)}</strong><br><span style="color:var(--ivory-dim)">เป็นผู้ชนะ! เกมจบลงแล้ว</span>`;
+          document.getElementById("gameOverBackdrop").classList.add("on");
+          document.getElementById("rollBtn").disabled = true;
+        });
+
+        socket.on("error_msg", (msg) => {
+          const el = document.getElementById("errMsg");
+          el.textContent = msg;
+          setTimeout(() => (el.textContent = ""), 2500);
+        });
+
+        document.getElementById("joinCard").style.display = "none";
+        document.getElementById("stage").classList.add("on");
+        document.body.classList.add("game-active");
+        audioControls.classList.add("on");
+        startBoardMusic();
+      });
+
+      document.getElementById("buyBtn").addEventListener("click", () => {
+        if (socket) socket.emit("buy_property");
+      });
+
+      document.getElementById("skipBtn").addEventListener("click", () => {
+        if (socket) socket.emit("skip_property");
+      });
+
+      document.getElementById("rollBtn").addEventListener("click", () => {
+        if (socket) socket.emit("roll_dice");
+      });
+      document.getElementById("gameOverClose").addEventListener("click", () => {
+        document.getElementById("gameOverBackdrop").classList.remove("on");
+      });
+    </script>
+  </body>
+</html>
