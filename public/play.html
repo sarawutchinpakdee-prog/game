@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>เล่นเกมเศษฐี101 — Real-time</title>
+    <title>เศรษฐีสาเกตฮู้ถิ่น 101</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
       href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600..900&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap"
@@ -34,35 +34,50 @@
       body {
         margin: 0;
         min-height: 100vh;
-        background: radial-gradient(
-          ellipse at 50% -10%,
-          #1c5a44 0%,
-          var(--felt) 55%,
-          var(--felt-dark) 100%
-        );
+        background:
+          radial-gradient(ellipse at 20% 0%, rgba(56,178,130,0.18) 0%, transparent 50%),
+          radial-gradient(ellipse at 80% 100%, rgba(44,120,90,0.14) 0%, transparent 50%),
+          linear-gradient(170deg, #0d3d2c 0%, #0a2e1e 50%, #071e14 100%);
         font-family: "IBM Plex Sans Thai", sans-serif;
         color: var(--ivory);
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding: 24px 14px 60px;
-        gap: 18px;
+        padding: 32px 14px 60px;
+        gap: 20px;
       }
       header {
         text-align: center;
       }
+      .lobby-logo {
+        margin-bottom: 8px;
+      }
+      .lobby-logo-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(135deg, #2a8c6c, #1a6b50);
+        border-radius: 18px;
+        font-size: 32px;
+        box-shadow: 0 4px 20px rgba(42,140,108,0.4), 0 0 0 3px rgba(255,255,255,0.08);
+      }
       .eyebrow {
-        font-family: "IBM Plex Mono", monospace;
-        letter-spacing: 0.18em;
-        font-size: 11px;
-        color: var(--brass-light);
-        text-transform: uppercase;
+        font-size: 12px;
+        color: rgba(163,230,200,0.75);
+        letter-spacing: 0.04em;
+        margin: 6px 0 0;
       }
       h1 {
         font-family: "Fraunces", serif;
         font-weight: 800;
-        font-size: clamp(22px, 4vw, 32px);
-        margin: 4px 0;
+        font-size: clamp(24px, 4.5vw, 36px);
+        margin: 8px 0 0;
+        background: linear-gradient(135deg, #a3e6c8 0%, #f3e9d6 60%, #e9cd6a 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
       }
 
 
@@ -150,34 +165,49 @@
 
       /* join card */
       .join-card {
-        width: min(340px, 90vw);
-        background: linear-gradient(
-          160deg,
-          var(--wood) 0%,
-          var(--wood-dark) 100%
-        );
-        border-radius: 14px;
-        padding: 22px;
-        box-shadow: var(--shadow);
+        width: min(360px, 92vw);
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 28px 24px 22px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.06);
         text-align: center;
+        color: #1a2e22;
+      }
+      .join-card p {
+        color: #5a7a68 !important;
+        font-size: 13px;
+        font-weight: 500;
       }
       .join-card input {
         width: 100%;
-        padding: 10px;
-        border-radius: 8px;
-        border: none;
+        padding: 11px 14px;
+        border-radius: 10px;
+        border: 1.5px solid #d0e8dc;
         margin: 10px 0;
-        font-size: 14px;
+        font-size: 15px;
+        font-family: inherit;
+        background: #f4faf7;
+        color: #1a2e22;
+        outline: none;
+        transition: border-color .18s;
       }
+      .join-card input:focus {
+        border-color: #2a8c6c;
+        background: #fff;
+      }
+      .join-card input::placeholder { color: #9ab8aa; }
       .join-card button {
         width: 100%;
-        padding: 11px;
+        padding: 12px;
         border: none;
-        border-radius: 9px;
-        background: linear-gradient(180deg, var(--brass-light), var(--brass));
-        color: var(--ink);
+        border-radius: 10px;
+        background: linear-gradient(135deg, #2a8c6c, #1f7058);
+        color: #fff;
         font-weight: 700;
+        font-size: 15px;
+        font-family: inherit;
         cursor: pointer;
+        letter-spacing: 0.02em;
       }
 
       .stage {
@@ -530,12 +560,8 @@
       }
       .purchase-modal {
         width: min(420px, 94vw);
-        background: linear-gradient(
-          160deg,
-          var(--wood) 0%,
-          var(--wood-dark) 100%
-        );
-        border: 1px solid rgba(233, 205, 106, 0.45);
+        background: linear-gradient(160deg, #14503a 0%, #0a2a1d 100%);
+        border: 1px solid rgba(163, 230, 200, 0.4);
         border-radius: 16px;
         padding: 20px;
         box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
@@ -676,8 +702,8 @@
       }
       .gameover-modal {
         width: min(430px, 94vw);
-        background: linear-gradient(160deg, var(--wood), var(--wood-dark));
-        border: 1px solid rgba(233, 205, 106, 0.45);
+        background: linear-gradient(160deg, #14503a, #0a2a1d);
+        border: 1px solid rgba(163, 230, 200, 0.4);
         border-radius: 16px;
         padding: 24px;
         text-align: center;
@@ -902,80 +928,30 @@
         }
       }
 
-      body::before,
-      body::after {
+      body::before {
         content: "";
         position: fixed;
-        inset: auto;
+        width: 400px;
+        height: 400px;
+        top: -100px;
+        left: -100px;
         pointer-events: none;
         z-index: -1;
-        filter: blur(40px);
-        opacity: 0.7;
-      }
-      body::before {
-        width: 320px;
-        height: 320px;
-        top: -80px;
-        left: -80px;
-        background: radial-gradient(circle, #3f7d53 0%, transparent 70%);
-      }
-      body::after {
-        width: 360px;
-        height: 360px;
-        bottom: -120px;
-        right: -120px;
-        background: radial-gradient(circle, #c9a227 0%, transparent 72%);
+        filter: blur(60px);
+        opacity: 0.35;
+        background: radial-gradient(circle, #2a8c6c 0%, transparent 70%);
       }
       body {
         position: relative;
         overflow-x: hidden;
       }
       header {
-        width: min(760px, 100%);
-        background: rgba(255, 255, 255, 0.08);
-        backdrop-filter: blur(14px);
-        border: 1px solid rgba(233, 205, 106, 0.2);
-        border-radius: 24px;
-        padding: 18px 22px;
-        box-shadow: 0 14px 40px rgba(0, 0, 0, 0.25);
-      }
-      .eyebrow {
-        font-size: 11px;
-        letter-spacing: 0.24em;
-        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-      }
-      h1 {
-        margin: 6px 0 0;
-        letter-spacing: 0.3px;
-        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
+        width: min(520px, 100%);
+        text-align: center;
       }
       .join-card {
         position: relative;
         overflow: hidden;
-        border: 1px solid rgba(233, 205, 106, 0.3);
-        background: linear-gradient(
-          145deg,
-          rgba(107, 66, 38, 0.98),
-          rgba(62, 39, 22, 0.98)
-        );
-        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
-      }
-      .join-card::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(
-          120deg,
-          rgba(255, 255, 255, 0.16),
-          transparent 40%,
-          rgba(255, 255, 255, 0.06)
-        );
-        pointer-events: none;
-      }
-      .join-card input {
-        border: 1px solid rgba(255, 255, 255, 0.16);
-        background: rgba(255, 255, 255, 0.94);
-        box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.08);
       }
       .join-card button,
       .roll-btn,
@@ -1132,16 +1108,16 @@
         background: rgba(255, 255, 255, 0.05);
       }
     
-      /* ===== V1.3 visual skin — inspired by the supplied board screenshot ===== */
+      /* ===== V1.3 visual skin ===== */
       body {
         background:
-          radial-gradient(circle at 50% 25%, rgba(112, 72, 35, .25), transparent 42%),
-          linear-gradient(135deg, #1b120b 0%, #0b0806 48%, #1d130b 100%);
+          radial-gradient(ellipse at 20% 0%, rgba(56,178,130,0.18) 0%, transparent 50%),
+          linear-gradient(170deg, #0d3d2c 0%, #0a2e1e 50%, #071e14 100%);
         padding: 18px 18px 48px;
       }
-      body::before, body::after {
+      body::before {
         filter: blur(55px);
-        opacity: .32;
+        opacity: .28;
       }
       body.game-active header,
       body.game-active .join-card {
@@ -1160,10 +1136,10 @@
         justify-content: center;
         gap: 14px;
         padding: 10px 82px 10px 18px;
-        border: 1px solid rgba(244, 188, 67, .55);
+        border: 1px solid rgba(163,230,200,.35);
         border-radius: 16px;
-        background: linear-gradient(145deg, rgba(20,15,11,.96), rgba(7,8,8,.96));
-        box-shadow: 0 12px 34px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.04);
+        background: linear-gradient(145deg, rgba(13,42,31,.96), rgba(7,24,17,.96));
+        box-shadow: 0 12px 34px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.04);
         backdrop-filter: blur(12px);
       }
       body.game-active .game-topbar { display: flex; }
@@ -1196,6 +1172,27 @@
         box-shadow: 0 5px 15px rgba(0,0,0,.45), inset 0 1px 0 #fff;
       }
       .top-dice.spinning { animation: roll .5s linear infinite; }
+      .exit-game-btn {
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        border: 1px solid rgba(255,150,130,.45);
+        background: rgba(70,25,18,.6);
+        color: #ffb8a8;
+        border-radius: 10px;
+        padding: 8px 12px;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: .15s;
+      }
+      .exit-game-btn:hover {
+        background: rgba(178,58,46,.85);
+        color: #fff;
+        transform: translateY(-50%) scale(1.04);
+      }
       .top-actions {
         position: absolute;
         left: calc(100% + 165px);
@@ -1222,10 +1219,10 @@
         min-width: 350px;
         min-height: 116px;
         padding: 12px 20px 12px 13px;
-        border: 2px solid #e6a925;
+        border: 2px solid rgba(42,140,108,.75);
         border-radius: 18px;
-        background: linear-gradient(145deg, rgba(12,12,10,.98), rgba(5,7,6,.98));
-        box-shadow: 0 10px 30px rgba(0,0,0,.58), inset 0 0 0 1px rgba(255,222,130,.15);
+        background: linear-gradient(145deg, rgba(11,36,26,.98), rgba(6,20,14,.98));
+        box-shadow: 0 10px 30px rgba(0,0,0,.5), inset 0 0 0 1px rgba(163,230,200,.12);
         gap: 16px;
       }
       .money-icon {
@@ -1269,17 +1266,17 @@
         flex-direction: column;
         gap: 9px;
         padding: 12px;
-        border: 1px solid rgba(244,188,67,.55);
+        border: 1px solid rgba(163,230,200,.28);
         border-radius: 15px;
-        background: linear-gradient(160deg, rgba(10,12,12,.97), rgba(19,13,9,.96));
-        box-shadow: 0 15px 34px rgba(0,0,0,.45);
+        background: linear-gradient(160deg, rgba(10,30,22,.97), rgba(7,20,14,.96));
+        box-shadow: 0 15px 34px rgba(0,0,0,.4);
       }
       .rail-title {
         font-size: 16px;
         font-weight: 900;
-        color: #f6cf68;
+        color: #a3e6c8;
         padding: 3px 4px 8px;
-        border-bottom: 1px solid rgba(244,188,67,.24);
+        border-bottom: 1px solid rgba(163,230,200,.22);
       }
       .player-card {
         position: relative;
@@ -1368,28 +1365,28 @@
         transform: none;
         padding: 13px;
         border-radius: 24px;
-        background: linear-gradient(145deg, #4a2d18, #160e08);
-        border: 2px solid rgba(223,166,55,.65);
-        box-shadow: 0 22px 60px rgba(0,0,0,.65), inset 0 0 0 2px rgba(255,255,255,.05);
+        background: linear-gradient(145deg, #144835, #082018);
+        border: 2px solid rgba(120,200,165,.45);
+        box-shadow: 0 22px 60px rgba(0,0,0,.6), inset 0 0 0 2px rgba(255,255,255,.05);
       }
       .board-frame::before {
         inset: 9px;
         border-radius: 17px;
-        border-color: rgba(255,212,112,.15);
+        border-color: rgba(163,230,200,.14);
       }
       .board {
         gap: 5px;
         padding: 5px;
-        background: #2b2115;
-        border: 2px solid rgba(231,183,73,.35);
+        background: #0c2b1f;
+        border: 2px solid rgba(120,200,165,.3);
         border-radius: 16px;
-        box-shadow: inset 0 0 28px rgba(0,0,0,.75);
+        box-shadow: inset 0 0 28px rgba(0,0,0,.7);
       }
       .cell {
         min-width: 0;
         border-radius: 9px;
         border: 2px solid rgba(43,30,16,.35);
-        background: linear-gradient(145deg, #e6c97e, #a9813e);
+        background: linear-gradient(145deg, #efe6cc, #bfae83);
         padding: 5px 3px;
         box-shadow: inset 0 2px 0 rgba(255,255,255,.2), 0 3px 7px rgba(0,0,0,.45);
         cursor: pointer;
@@ -1412,7 +1409,7 @@
       .cell[data-type="PROPERTY"]:hover, .cell[data-type="EVENT"]:hover, .cell[data-type="TAX"]:hover,
       .cell[data-type="BANK"]:hover, .cell[data-type="START"]:hover {
         transform: translateY(-4px) scale(1.015);
-        box-shadow: 0 10px 18px rgba(0,0,0,.55), 0 0 0 2px rgba(255,211,92,.55);
+        box-shadow: 0 10px 18px rgba(0,0,0,.55), 0 0 0 2px rgba(120,220,175,.6);
       }
       .cell-number {
         position: absolute;
@@ -1479,34 +1476,35 @@
       .side .panel {
         border-radius: 15px;
         padding: 12px;
-        background: linear-gradient(160deg, rgba(13,15,15,.97), rgba(22,15,10,.96));
-        border: 1px solid rgba(244,188,67,.38);
-        box-shadow: 0 10px 26px rgba(0,0,0,.42);
+        background: linear-gradient(160deg, rgba(10,30,22,.97), rgba(7,20,14,.96));
+        border: 1px solid rgba(163,230,200,.25);
+        box-shadow: 0 10px 26px rgba(0,0,0,.4);
       }
       .side .panel:first-child #playerList { display: none; }
       .side .panel:first-child h2::before { content: "🎲 "; }
-      .side .panel:first-child h2 { color: #f4d06a; font-size: 16px; }
+      .side .panel:first-child h2 { color: #a3e6c8; font-size: 16px; }
       .roll-btn {
         border-radius: 12px;
         min-height: 52px;
-        background: linear-gradient(180deg, #f3c84e, #b87a13);
-        box-shadow: 0 7px 18px rgba(0,0,0,.45);
+        background: linear-gradient(135deg, #2a8c6c, #1f7058);
+        color: #fff;
+        box-shadow: 0 7px 18px rgba(0,0,0,.4);
         font-size: 16px;
       }
       .log-feed { max-height: 360px; }
       .log-feed div {
         background: rgba(0,0,0,.28);
-        border-left: 3px solid #e7b83e;
+        border-left: 3px solid #2a8c6c;
         padding: 8px 9px;
         border-radius: 0 8px 8px 0;
       }
 
       .tourism-modal {
         width: min(720px, 94vw);
-        background: linear-gradient(145deg, #f7e8c6, #ead4a8);
-        border: 3px solid #b77716;
-        color: #2b1d10;
-        box-shadow: 0 28px 90px rgba(0,0,0,.75), 0 0 0 2px rgba(255,220,105,.2);
+        background: #fdfaf2;
+        border: 3px solid #2a8c6c;
+        color: #21322a;
+        box-shadow: 0 28px 90px rgba(0,0,0,.7), 0 0 0 2px rgba(163,230,200,.2);
       }
       .tourism-title { left: 24px; bottom: 18px; }
       .tourism-title h2 {
@@ -1520,9 +1518,10 @@
         border-color: rgba(159,111,37,.25);
         color: #3b2916;
       }
-      .tourism-price { color: #8d5b0b; font-weight: 900; }
+      .tourism-price { color: #1f7058; font-weight: 900; }
       .tourism-close-btn {
-        background: linear-gradient(180deg,#f4c94c,#b97810);
+        background: linear-gradient(135deg,#2a8c6c,#1f7058);
+        color: #fff;
       }
 
       @media (max-width: 1180px) {
@@ -1540,8 +1539,9 @@
           left: 15px;
           transform: none;
           top: 10px;
-          padding-right: 16px;
+          padding-right: 74px;
         }
+        .exit-game-btn { right: 10px; padding: 7px 9px; font-size: 12px; }
         .top-actions { display: none; }
         .money-hud { top: 92px; min-width: 220px; min-height: 76px; }
         .money-icon { width: 54px; height: 54px; flex-basis: 54px; }
@@ -1585,9 +1585,12 @@
       }
 
 
-      .mode-choice { flex:1; min-width:130px; border:1px solid rgba(255,255,255,.16); background:#171714; color:var(--ivory); padding:9px 10px; border-radius:10px; cursor:pointer; }
-      .mode-choice.active { border-color:#f5c542; box-shadow:0 0 0 2px rgba(245,197,66,.14); color:#f5c542; }
-      .secondary-btn { background:#24241f !important; color:var(--ivory-dim) !important; }
+      .mode-choice { flex:1; min-width:130px; border:1.5px solid #c8e0d5; background:#f0faf5; color:#3a6655; padding:9px 10px; border-radius:10px; cursor:pointer; font-family:inherit; font-size:14px; font-weight:600; transition:.15s; }
+      .mode-choice:hover { border-color:#2a8c6c; }
+      .mode-choice.active { border-color:#2a8c6c; background:#e6f6ef; color:#1a6b50; box-shadow:0 0 0 2px rgba(42,140,108,.15); }
+      .secondary-btn { background:#f0faf5 !important; color:#3a6655 !important; border:1.5px solid #c8e0d5 !important; font-size:13px; }
+      #joinBtn { margin-top:4px; }
+      #joinHint { color:#7aa08e !important; }
       #roomControls { display:none; gap:8px; align-items:center; }
       #roomControls input { flex:1; }
       .audio-controls {
@@ -1600,9 +1603,9 @@
       }
       .audio-controls.on { display: flex; }
       .audio-controls button {
-        border: 1px solid rgba(233,205,106,.55);
+        border: 1px solid rgba(163,230,200,.4);
         border-radius: 12px;
-        background: rgba(62,39,22,.94);
+        background: rgba(11,36,26,.94);
         color: var(--ivory);
         padding: 8px 11px;
         cursor: pointer;
@@ -1613,8 +1616,8 @@
       /* Roiet penalty quiz card */
       .quiz-modal {
         width: min(560px, 94vw);
-        background: linear-gradient(155deg, #6b4226, #2f1d11);
-        border: 2px solid rgba(233,205,106,.75);
+        background: linear-gradient(155deg, #14503a, #0a2a1d);
+        border: 2px solid rgba(163,230,200,.55);
         border-radius: 20px;
         padding: 22px;
         box-shadow: 0 20px 60px rgba(0,0,0,.55);
@@ -1685,7 +1688,7 @@
       .tourism-district:hover{transform:translateY(-2px);border-color:rgba(245,205,96,.45)}.tourism-district img{width:120px;height:100%;min-height:120px;object-fit:cover;background:#222}.tourism-district-body{padding:13px}.tourism-district h3{margin:0 0 5px;font-size:16px}.tourism-cat{font-size:11px;color:#f5d36e}.tourism-summary{font-size:12px;color:#c8c5ba;line-height:1.5;margin:6px 0}.tourism-spots{font-size:11px;color:#ddd}.tourism-empty{padding:35px;text-align:center;color:#aaa}
       .tourism-detail-panel{width:min(760px,94vw);max-height:90vh;overflow:auto;border-radius:20px;background:#11140f;border:1px solid rgba(245,205,96,.4);padding:18px}.tourism-detail-hero{width:100%;height:min(300px,38vw);object-fit:cover;border-radius:14px;background:#222}.tourism-detail-list{display:grid;gap:8px;margin-top:12px}.tourism-detail-list div{padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.05)}
       .tourism-contact-section{margin-top:16px}.tourism-contact-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:10px}.tourism-contact-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(245,205,96,.15);text-decoration:none;color:inherit;transition:.15s}.tourism-contact-item:hover{background:rgba(245,205,96,.12);border-color:rgba(245,205,96,.4)}.tourism-contact-item .contact-icon{font-size:22px;flex-shrink:0}.tourism-contact-item .contact-body{min-width:0}.tourism-contact-item .contact-label{font-size:10px;color:#a09070;margin-bottom:2px}.tourism-contact-item .contact-value{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-      .tourism-open-btn{position:fixed;right:16px;bottom:74px;z-index:900;border:1px solid rgba(245,205,96,.5);background:#181a14;color:#f7d66f;border-radius:999px;padding:10px 14px;font-weight:800;box-shadow:0 8px 30px rgba(0,0,0,.3);cursor:pointer}
+      .tourism-open-btn{position:fixed;right:16px;bottom:74px;z-index:900;border:1px solid rgba(163,230,200,.45);background:#0b241a;color:#a3e6c8;border-radius:999px;padding:10px 14px;font-weight:800;box-shadow:0 8px 30px rgba(0,0,0,.3);cursor:pointer}
       @media(max-width:700px){.tourism-grid{grid-template-columns:1fr}.tourism-district{grid-template-columns:96px 1fr}.tourism-district img{width:96px;min-height:110px}.tourism-tools{grid-template-columns:1fr}.tourism-hub{padding:8px}.tourism-hub-panel{padding:13px;border-radius:16px}}
 </style>
   
@@ -1832,8 +1835,11 @@ function tourismPhotoCard(a){
     <audio id="stepSound" src="/assets/token-step.wav" preload="auto"></audio>
     <audio id="boardMusic" src="/assets/board-music.wav" preload="auto" loop></audio>
     <header>
-      <div class="eyebrow">Realtime · Socket.IO · Server-authoritative</div>
-      <h1>เกมเศษฐี101</h1>
+      <div class="lobby-logo">
+        <span class="lobby-logo-icon">🗺️</span>
+      </div>
+      <h1>เศรษฐีสาเกตฮู้ถิ่น 101</h1>
+      <p class="eyebrow">เกมกระดานสำรวจร้อยเอ็ด · สนุก · เรียนรู้ · ฮู้ถิ่น</p>
     </header>
 
     <div class="join-card" id="joinCard">
@@ -1865,6 +1871,7 @@ function tourismPhotoCard(a){
         <div class="turn-message" id="turnMessage">เข้าร่วมเกมแล้วทอยลูกเต๋าได้เลย!</div>
       </div>
       <div class="top-dice" id="topDice" aria-hidden="true">⚄</div>
+      <button type="button" id="exitGameBtn" class="exit-game-btn" title="ออกจากเกม กลับหน้าแรก">🚪 ออก</button>
     </div>
 
     <div class="money-hud" id="moneyHud" aria-live="polite" aria-label="เงินของคุณ">
@@ -2011,7 +2018,7 @@ function tourismPhotoCard(a){
     <div class="modal-backdrop" id="angelBackdrop" aria-hidden="true">
       <div class="angel-modal" role="dialog" aria-modal="true" aria-labelledby="angelTitle">
         <div class="angel-icon" id="angelIcon">😇✨</div>
-        <div class="angel-label">การ์ดนางฟ้า · เกมเศษฐี101</div>
+        <div class="angel-label">การ์ดนางฟ้า · เศรษฐีสาเกตฮู้ถิ่น 101</div>
         <h2 class="angel-title" id="angelTitle">พรแห่งโชค</h2>
         <div class="angel-text" id="angelText">นางฟ้ามอบพรให้คุณ</div>
         <div class="angel-reward" id="angelReward"></div>
@@ -2984,6 +2991,11 @@ function tourismPhotoCard(a){
       document.getElementById('tourismSearch').addEventListener('input',renderTourismHub);
       document.getElementById('tourismCategory').addEventListener('change',renderTourismHub);
       loadTourismData();
+
+      // ปุ่มออกจากเกม — กลับหน้าแรก (โหลดหน้าใหม่เพื่อตัดการเชื่อมต่อจากโต๊ะ)
+      document.getElementById("exitGameBtn").addEventListener("click", () => {
+        if (confirm("ออกจากเกมแล้วกลับหน้าแรกใช่ไหม?")) location.reload();
+      });
 
       setPlayMode("ai");
 
