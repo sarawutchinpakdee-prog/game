@@ -94,8 +94,96 @@ function scheduleAiTurn(session, delay = 900) {
     } finally {
       session.aiRunning = false;
       if (!session.gameOver && game.botShouldPlay(session)) scheduleAiTurn(session, 800);
+      if (session.pendingAuction) scheduleAuctionBotBidding(session);
+      scheduleTurnWatchdog(session);
     }
   }, delay);
+}
+
+/* ============================================================
+   TURN WATCHDOG — กันโต๊ะค้างเมื่อผู้เล่นจริงออนไลน์อยู่แต่เฉย (AFK)
+   บอทมี scheduleAiTurn เดินให้อัตโนมัติอยู่แล้ว แต่ผู้เล่นจริงไม่มี
+   ระบบใดคอยเตือน ถ้าไม่ทอย/ไม่ตอบ/ไม่ตัดสินใจซื้อภายในเวลาที่กำหนด
+   จะให้ระบบจัดการแทนโดยอัตโนมัติ เพื่อไม่ให้ทั้งโต๊ะรอเก้อ
+   ============================================================ */
+const TURN_TIMEOUT_MS = 45000;
+
+function clearTurnWatchdog(session) {
+  if (session?.turnWatchdog) {
+    clearTimeout(session.turnWatchdog);
+    session.turnWatchdog = null;
+  }
+}
+
+function scheduleTurnWatchdog(session) {
+  if (!session) return;
+  clearTurnWatchdog(session);
+  if (session.gameOver) return;
+  const player = game.currentPlayer(session);
+  if (!player || player.isBot || !player.connected) return;
+  session.turnWatchdog = setTimeout(() => handleTurnTimeout(session), TURN_TIMEOUT_MS);
+}
+
+async function handleTurnTimeout(session) {
+  session.turnWatchdog = null;
+  if (session.gameOver) return;
+  const player = game.currentPlayer(session);
+  if (!player || player.isBot || !player.connected) return;
+
+  try {
+    if (session.pendingQuestion?.playerKey === player.playerKey) {
+      const pending = session.pendingQuestion;
+      const wrongChoice = (Number(pending.answer) + 1) % pending.choices.length;
+      game.addLog(session, `⏱️ ${player.name} ไม่ตอบการ์ดคำถามภายในเวลาที่กำหนด ระบบตอบแทนอัตโนมัติ`);
+      game.answerQuestion(io, session, player.socketId, wrongChoice);
+    } else if (session.pendingPurchase?.playerKey === player.playerKey) {
+      game.addLog(session, `⏱️ ${player.name} ไม่ตัดสินใจซื้อภายในเวลาที่กำหนด ระบบข้ามให้อัตโนมัติ`);
+      game.skipPropertyPurchase(io, session, player.socketId);
+    } else if (!session.isMoving) {
+      game.addLog(session, `⏱️ ${player.name} ไม่ทอยลูกเต๋าภายในเวลาที่กำหนด ระบบทอยแทนอัตโนมัติ`);
+      const result = await game.handleRollDice(io, session, player.socketId);
+      if (result?.error && session.pendingPurchase?.playerKey === player.playerKey) {
+        game.skipPropertyPurchase(io, session, player.socketId);
+      }
+    }
+    io.to(session.id).emit('gm_log', session.logs[0]);
+    io.to(session.id).emit('state_update', game.publicState(session));
+  } catch (err) {
+    console.error('Turn watchdog error:', err);
+  } finally {
+    if (session.pendingAuction) scheduleAuctionBotBidding(session);
+    scheduleTurnWatchdog(session);
+    scheduleAiTurn(session, 700);
+  }
+}
+
+/* ============================================================
+   AUCTION BOT BIDDING — เมื่อทรัพย์สินเข้าสู่การประมูล ให้บอทในโต๊ะ
+   สุ่มพิจารณาเสนอราคาเป็นระยะ เพื่อให้การประมูลในห้อง AI มีชีวิตชีวา
+   ไม่ปล่อยให้ค้างเงียบจนหมดเวลาทุกครั้ง
+   ============================================================ */
+const AUCTION_BOT_TICK_MS = 1400;
+
+function scheduleAuctionBotBidding(session) {
+  if (!session || !session.pendingAuction || session.gameOver) return;
+  const auctionCellId = session.pendingAuction.cellId;
+  setTimeout(() => {
+    const auction = session.pendingAuction;
+    if (!auction || auction.cellId !== auctionCellId || session.gameOver) return;
+    if (Date.now() >= auction.endsAt - 1200) return; // ปล่อยให้ปิดประมูลแบบไม่มีบอทแซงวินาทีสุดท้าย
+
+    const bots = session.players.filter(p => p.isBot && p.connected && !p.bankrupt && p.playerKey !== auction.currentBidderKey);
+    if (bots.length) {
+      const bot = bots[Math.floor(Math.random() * bots.length)];
+      const nextBid = auction.currentBid > 0 ? auction.currentBid + auction.minIncrement : auction.minBid;
+      const budget = Math.floor(bot.money * 0.6);
+      const priceCeiling = Math.floor(auction.price * 1.1);
+      if (nextBid <= budget && nextBid <= priceCeiling && Math.random() < 0.55) {
+        game.placeBid(io, session, bot.socketId, nextBid);
+      }
+    }
+    scheduleAuctionBotBidding(session);
+  }, AUCTION_BOT_TICK_MS + Math.random() * 900);
 }
 
 function normalizeRoomId(value) {
@@ -117,7 +205,13 @@ function joinSession(socket, { sessionId, playerName, playerToken, mode, aiCount
   if (!sid) return socket.emit('error_msg', 'กรุณาระบุรหัสห้อง');
 
   let session = game.getSession(sid);
-  if (!session && mode === 'ai') session = game.createSession(sid);
+  if (!session && mode === 'ai') {
+    session = game.createSession(sid);
+    // ตั้งโหมดทันทีตอนสร้างห้องใหม่ — ค่าเริ่มต้นของ createSession คือ 'human'
+    // ถ้าไม่ตั้งก่อน เงื่อนไขตรวจโหมดด้านล่างจะเข้าใจผิดว่าห้องที่เพิ่งสร้างเป็นห้องผู้เล่น
+    // แล้วปฏิเสธการสร้างห้อง AI ทุกครั้งที่เป็นห้องใหม่
+    session.mode = 'ai';
+  }
   if (!session) return socket.emit('error_msg', `ไม่พบห้อง ${sid} กรุณาตรวจสอบรหัสห้อง`);
   if (session.mode === 'ai' && mode !== 'ai') return socket.emit('error_msg', 'ห้องนี้เป็นห้อง AI ไม่สามารถเข้าร่วมแบบผู้เล่นได้');
   if (session.mode === 'human' && mode === 'ai') return socket.emit('error_msg', 'ห้องนี้เป็นห้องผู้เล่น ไม่สามารถเปลี่ยนเป็นห้อง AI ได้');
@@ -142,6 +236,7 @@ function joinSession(socket, { sessionId, playerName, playerToken, mode, aiCount
   io.to(sid).emit('state_update', game.publicState(session));
   io.to(sid).emit('gm_log', session.logs[0]);
   scheduleAiTurn(session, 1200);
+  scheduleTurnWatchdog(session);
 }
 
 io.on('connection', (socket) => {
@@ -162,6 +257,7 @@ io.on('connection', (socket) => {
     const result = game.buyProperty(io, session, socket.id);
     if (result.error) socket.emit('error_msg', result.error);
     scheduleAiTurn(session, 700);
+    scheduleTurnWatchdog(session);
   });
 
   socket.on('sell_property', ({ cellId }) => {
@@ -195,6 +291,16 @@ io.on('connection', (socket) => {
     const result = game.skipPropertyPurchase(io, session, socket.id);
     if (result.error) socket.emit('error_msg', result.error);
     scheduleAiTurn(session, 700);
+    if (session.pendingAuction) scheduleAuctionBotBidding(session);
+    scheduleTurnWatchdog(session);
+  });
+
+  socket.on('auction_bid', ({ amount }) => {
+    const sid = socket.data.sessionId;
+    if (!sid) return socket.emit('error_msg', 'กรุณาเข้าร่วมเกมก่อน');
+    const session = game.getOrCreateSession(sid);
+    const result = game.placeBid(io, session, socket.id, amount);
+    if (result.error) socket.emit('error_msg', result.error);
   });
 
   socket.on('roll_dice', async () => {
@@ -204,6 +310,8 @@ io.on('connection', (socket) => {
     const result = await game.handleRollDice(io, session, socket.id);
     if (result.error) socket.emit('error_msg', result.error);
     scheduleAiTurn(session, 700);
+    if (session.pendingAuction) scheduleAuctionBotBidding(session);
+    scheduleTurnWatchdog(session);
   });
 
   socket.on('answer_quiz', ({ choiceIndex }) => {
@@ -213,6 +321,7 @@ io.on('connection', (socket) => {
     const result = game.answerQuestion(io, session, socket.id, choiceIndex);
     if (result.error) socket.emit('error_msg', result.error);
     scheduleAiTurn(session, 700);
+    scheduleTurnWatchdog(session);
   });
 
   socket.on('disconnect', () => {
@@ -221,6 +330,7 @@ io.on('connection', (socket) => {
     const session = game.getOrCreateSession(sid);
     game.removePlayerBySocket(session, socket.id);
     io.to(sid).emit('state_update', game.publicState(session));
+    scheduleTurnWatchdog(session);
   });
 });
 

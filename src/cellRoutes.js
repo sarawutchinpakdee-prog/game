@@ -121,6 +121,14 @@ router.put('/cells/:id', requireAuth, (req, res) => {
     }
     if (imageUrl.length > 1000) return res.status(400).json({ error: 'URL รูปภาพยาวเกินไป' });
   }
+  for (const field of ['phone', 'facebook', 'line_id', 'website']) {
+    if (patch[field] != null && String(patch[field]).length > 200) {
+      return res.status(400).json({ error: `${field} ยาวเกินไป (สูงสุด 200 ตัวอักษร)` });
+    }
+  }
+  if (patch.website != null && patch.website.trim() && !/^https?:\/\//i.test(patch.website.trim())) {
+    return res.status(400).json({ error: 'website ต้องเป็น http/https URL' });
+  }
 
   const updated = updateCell(req.params.id, patch);
   res.json(updated);

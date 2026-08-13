@@ -3,9 +3,15 @@ const { getCells, getCellTypes } = require('./store');
 const BOARD_ID = 'default';
 const PLAYER_COLORS = ['#3B82F6', '#EF4444', '#22C55E', '#F5B841', '#A855F7', '#EC4899'];
 const START_MONEY = 20000;
-const START_BONUS = 20000;
+// เดิมโบนัสผ่าน START เท่ากับทุนตั้งต้นพอดี (20,000) ทำให้ผ่าน START ทุก ~7 ตาก็ได้ทุนคืนเกือบเต็ม
+// แทบไม่มีใครล้มละลาย เศรษฐกิจในเกมจึงไม่มีความหมาย — ลดสัดส่วนลงเหลือ ~15% ของทุนเริ่มเกม
+const START_BONUS = 3000;
 const STEP_DELAY_MS = 300;
 const MAX_CELL_CHAIN = 24;
+// จำกัดจำนวนตาทอยรวมทั้งโต๊ะ กันเกมค้างไม่จบเมื่อไม่มีใครล้มละลาย — ครบแล้วให้ผู้เล่นที่มีทรัพย์สินรวมมากที่สุดชนะ
+const MAX_TOTAL_TURNS = 150;
+// ระยะเวลาการประมูลทรัพย์สินที่ถูกปฏิเสธซื้อ (มิลลิวินาที)
+const AUCTION_DURATION_MS = 20000;
 
 // sessionId -> session state (ทั้งหมดอยู่ใน memory — เหมาะกับโต๊ะเกมสั้นๆ)
 const sessions = new Map();
@@ -31,6 +37,9 @@ function createSession(sessionId) {
       propertyUpgrades: {},
       pendingPurchase: null,
       pendingQuestion: null,
+      pendingAuction: null,
+      auctionQueue: [],
+      turnCount: 0,
       gameStarted: false,
       winnerKey: null,
       winnerName: null,
@@ -88,13 +97,18 @@ function publicState(session) {
         playerId: buyer.socketId,
       };
     })() : null,
-    currentQuestion: session.pendingQuestion ? {
-      id: session.pendingQuestion.id,
-      question: session.pendingQuestion.question,
-      choices: session.pendingQuestion.choices,
-      playerId: session.players.find(p => p.playerKey === session.pendingQuestion.playerKey)?.socketId || null,
-      penalty: session.pendingQuestion.penalty,
-    } : null,
+    pendingAuction: publicAuction(session),
+    currentQuestion: session.pendingQuestion ? (() => {
+      const foundPlayer = session.players.find(p => p.playerKey === session.pendingQuestion.playerKey);
+      console.log('📋 Quiz Player Lookup:', { playerKey: session.pendingQuestion.playerKey, foundPlayer: foundPlayer?.socketId, allPlayers: session.players.map(p => ({ playerKey: p.playerKey, socketId: p.socketId })) });
+      return {
+        id: session.pendingQuestion.id,
+        question: session.pendingQuestion.question,
+        choices: session.pendingQuestion.choices,
+        playerId: foundPlayer?.socketId || null,
+        penalty: session.pendingQuestion.penalty,
+      };
+    })() : null,
     properties: Object.entries(session.properties).map(([cellId, ownerKey]) => {
       const owner = session.players.find(p => p.playerKey === ownerKey);
       const cell = getCells(session.boardId).find(c => c.id === cellId);
@@ -154,6 +168,8 @@ function addPlayer(session, socketId, name, playerKey) {
     pos: 1,
     connected: true,
     bankrupt: false,
+    lastRoll: null,
+    comboRolls: 0,
   };
   session.players.push(player);
   return player;
@@ -172,6 +188,8 @@ function addBot(session, name) {
     connected: true,
     bankrupt: false,
     isBot: true,
+    lastRoll: null,
+    comboRolls: 0,
   };
   session.players.push(player);
   session.aiCount = session.players.filter(p => p.isBot).length;
@@ -242,6 +260,17 @@ function advanceTurn(session) {
   // ไม่มีผู้เล่นที่ยังออนไลน์และยังเล่นอยู่: คง index เดิมไว้
 }
 
+// ใช้แทน advanceTurn() ตรงๆ ทุกจุดที่จบการตัดสินใจของผู้เล่นแล้วจะสลับตา (ซื้อ/ไม่ซื้อที่ดิน,
+// ตอบคำถาม) — ถ้าผู้เล่นเพิ่งได้ "ตาพิเศษ" จากการทอยเลขซ้ำกับตาที่แล้ว (ดู handleRollDice)
+// จะใช้ตาพิเศษนั้นแทนการสลับตาไปผู้เล่นคนถัดไป
+function advanceTurnOrConsumeBonus(session, player) {
+  if (player?.pendingBonusRoll) {
+    player.pendingBonusRoll = false;
+    return;
+  }
+  advanceTurn(session);
+}
+
 function getPropertyOwner(session, cellId) {
   const ownerKey = session.properties[cellId];
   return ownerKey ? session.players.find(p => p.playerKey === ownerKey) || null : null;
@@ -255,6 +284,17 @@ function endTurn(session) {
 
 function getActivePlayers(session) {
   return session.players.filter(p => p.connected && !p.bankrupt);
+}
+
+function netWorth(session, player) {
+  const cells = getCells(session.boardId);
+  const propertyValue = Object.entries(session.properties)
+    .filter(([, ownerKey]) => ownerKey === player.playerKey)
+    .reduce((sum, [cellId]) => {
+      const cell = cells.find(c => c.id === cellId);
+      return sum + (cell ? Math.max(0, Number(cell.price) || 0) : 0);
+    }, 0);
+  return (Number(player.money) || 0) + propertyValue;
 }
 
 function checkWinCondition(io, session) {
@@ -281,29 +321,69 @@ function checkWinCondition(io, session) {
   return true;
 }
 
-function declareBankrupt(io, session, player, reason) {
+// เงื่อนไขจบเกมสำรอง: ถ้าครบจำนวนตาสูงสุดแล้วยังไม่มีใครล้มละลายจนเหลือคนเดียว
+// (เช่น เศรษฐกิจสมดุลเกินไป) ให้ผู้เล่นที่มีทรัพย์สินรวม (เงิน + ราคาที่ดิน) มากที่สุดชนะแทน
+function checkTurnLimit(io, session) {
+  if (session.gameOver) return false;
+  if ((session.turnCount || 0) < MAX_TOTAL_TURNS) return false;
+
+  const active = getActivePlayers(session);
+  if (!active.length) return false;
+
+  const winner = active.reduce((best, p) => (netWorth(session, p) > netWorth(session, best) ? p : best), active[0]);
+  session.gameOver = true;
+  session.winnerKey = winner.playerKey;
+  session.winnerName = winner.name;
+  session.pendingPurchase = null;
+  addLog(session, `🏆 ครบ ${MAX_TOTAL_TURNS} ตาแล้ว — ${winner.name} ชนะเกมด้วยทรัพย์สินรวมมากที่สุด (฿${netWorth(session, winner).toLocaleString()})`);
+  io.to(session.id).emit('game_over', {
+    winnerId: winner.socketId,
+    winnerName: winner.name,
+    reason: 'turn_limit_richest'
+  });
+  io.to(session.id).emit('gm_log', session.logs[0]);
+  return true;
+}
+
+// creditorKey: ถ้าล้มละลายเพราะจ่ายค่าเช่าให้ผู้เล่นคนใดคนหนึ่งไม่ไหว ทรัพย์สินทั้งหมด
+// จะตกเป็นของผู้เล่นคนนั้นแทนที่จะกลับเข้าธนาคารเฉยๆ (เหมือนเศรษฐีคลาสสิก) — ถ้าล้มละลาย
+// จากภาษี/การ์ดทำโทษ/ไม่มีเจ้าหนี้เจาะจง ทรัพย์สินจะกลับเข้าธนาคารตามเดิม
+function declareBankrupt(io, session, player, reason, creditorKey) {
   if (!player || player.bankrupt) return false;
   player.bankrupt = true;
   player.money = 0;
 
-  // ทรัพย์สินกลับเป็นของธนาคาร
   const released = Object.entries(session.properties)
     .filter(([, ownerKey]) => ownerKey === player.playerKey)
     .map(([cellId]) => cellId);
+
+  const creditor = creditorKey
+    ? session.players.find(p => p.playerKey === creditorKey && p.connected && !p.bankrupt)
+    : null;
+
   released.forEach(cellId => {
-    delete session.properties[cellId];
-    delete session.propertyUpgrades[cellId];
+    if (creditor) {
+      session.properties[cellId] = creditor.playerKey; // ระดับอัปเกรดเดิมยังคงอยู่
+    } else {
+      delete session.properties[cellId];
+      delete session.propertyUpgrades[cellId];
+    }
   });
 
   if (session.pendingPurchase?.playerKey === player.playerKey) {
     session.pendingPurchase = null;
   }
 
-  addLog(session, `💥 ${player.name} ล้มละลาย${reason ? ` — ${reason}` : ''} ทรัพย์สินทั้งหมดกลับสู่ธนาคาร`);
+  const transferNote = creditor
+    ? ` ทรัพย์สินทั้งหมดตกเป็นของ ${creditor.name} (เจ้าหนี้)`
+    : ' ทรัพย์สินทั้งหมดกลับสู่ธนาคาร';
+  addLog(session, `💥 ${player.name} ล้มละลาย${reason ? ` — ${reason}` : ''}${transferNote}`);
   io.to(session.id).emit('bankruptcy', {
     playerId: player.socketId,
     playerName: player.name,
-    releasedProperties: released
+    releasedProperties: released,
+    creditorId: creditor ? creditor.socketId : null,
+    creditorName: creditor ? creditor.name : null,
   });
 
   if (currentPlayer(session)?.playerKey === player.playerKey) {
@@ -313,9 +393,9 @@ function declareBankrupt(io, session, player, reason) {
   return true;
 }
 
-function checkBankruptcy(io, session, player, reason) {
+function checkBankruptcy(io, session, player, reason, creditorKey) {
   if (player && player.money <= 0) {
-    return declareBankrupt(io, session, player, reason);
+    return declareBankrupt(io, session, player, reason, creditorKey);
   }
   return false;
 }
@@ -397,6 +477,13 @@ function transferProperty(io, session, socketId, cellId, targetSocketId) {
 }
 
 function handlePropertyLanding(io, session, player, cell) {
+  const isUnderAuction = session.pendingAuction?.cellId === cell.id
+    || session.auctionQueue.some(q => q.cellId === cell.id);
+  if (isUnderAuction) {
+    addLog(session, `🔨 "${cell.name}" กำลังอยู่ระหว่างการประมูล กรุณารอผลก่อน`);
+    return { action: 'end' };
+  }
+
   const price = Math.max(0, Number(cell.price) || 0);
   const baseRent = Math.max(0, Number(cell.rent_base) || 0);
   const level = Math.max(0, Math.min(3, Number(session.propertyUpgrades[cell.id]) || 0));
@@ -415,7 +502,7 @@ function handlePropertyLanding(io, session, player, cell) {
     owner.money += actualRent;
     addLog(session, `💸 ${player.name} จ่ายค่าเช่า ${actualRent.toLocaleString()} บาท ให้ ${owner.name} ที่ "${cell.name}"`);
     if (player.money <= 0) {
-      checkBankruptcy(io, session, player, `ไม่มีเงินจ่ายค่าใช้จ่ายหลังตกที่ "${cell.name}"`);
+      checkBankruptcy(io, session, player, `ไม่มีเงินจ่ายค่าเช่าให้ ${owner.name} ที่ "${cell.name}"`, owner.playerKey);
       return { action: 'bankrupt' };
     }
     return { action: 'end' };
@@ -427,7 +514,8 @@ function handlePropertyLanding(io, session, player, cell) {
   }
 
   if (player.money < price) {
-    addLog(session, `💰 ${player.name} มีเงินไม่พอซื้อ "${cell.name}" (ต้องใช้ ${price.toLocaleString()} บาท)`);
+    addLog(session, `💰 ${player.name} มีเงินไม่พอซื้อ "${cell.name}" (ต้องใช้ ${price.toLocaleString()} บาท) — เปิดประมูลให้ผู้เล่นคนอื่นแทน`);
+    startAuction(io, session, cell.id);
     return { action: 'end' };
   }
 
@@ -472,7 +560,7 @@ function buyProperty(io, session, socketId) {
   session.properties[cell.id] = player.playerKey;
   session.pendingPurchase = null;
   addLog(session, `🛒 ${player.name} ซื้อ "${cell.name}" สำเร็จในราคา ${price.toLocaleString()} บาท`);
-  advanceTurn(session);
+  advanceTurnOrConsumeBonus(session, player);
   io.to(session.id).emit('gm_log', session.logs[0]);
   io.to(session.id).emit('state_update', publicState(session));
   return { ok: true };
@@ -485,11 +573,131 @@ function skipPropertyPurchase(io, session, socketId) {
 
   const player = session.players.find(p => p.socketId === socketId);
   session.pendingPurchase = null;
-  addLog(session, `➡️ ${player.name} เลือกไม่ซื้อทรัพย์สิน`);
-  advanceTurn(session);
+  addLog(session, `➡️ ${player.name} เลือกไม่ซื้อทรัพย์สิน — เปิดประมูลให้ผู้เล่นคนอื่นแทน`);
+  startAuction(io, session, pending.cellId);
+  advanceTurnOrConsumeBonus(session, player);
   io.to(session.id).emit('gm_log', session.logs[0]);
   io.to(session.id).emit('state_update', publicState(session));
   return { ok: true };
+}
+
+// ---------- ระบบประมูลทรัพย์สินที่ถูกปฏิเสธซื้อ ----------
+
+function publicAuction(session) {
+  const auction = session.pendingAuction;
+  if (!auction) return null;
+  const bidder = auction.currentBidderKey
+    ? session.players.find(p => p.playerKey === auction.currentBidderKey)
+    : null;
+  return {
+    cellId: auction.cellId,
+    cellName: auction.cellName,
+    price: auction.price,
+    minBid: auction.minBid,
+    minIncrement: auction.minIncrement,
+    currentBid: auction.currentBid,
+    currentBidderId: bidder ? bidder.socketId : null,
+    currentBidderName: bidder ? bidder.name : null,
+    endsAt: auction.endsAt,
+  };
+}
+
+// ถ้ามีการประมูลอื่นดำเนินอยู่แล้ว ให้ต่อคิวแทนที่จะประมูลพร้อมกัน (คงสถานะเดียวให้ง่าย)
+function startAuction(io, session, cellId) {
+  if (session.gameOver) return;
+  if (session.pendingAuction) {
+    if (session.pendingAuction.cellId !== cellId && !session.auctionQueue.some(q => q.cellId === cellId)) {
+      session.auctionQueue.push({ cellId });
+    }
+    return;
+  }
+
+  const cell = getCells(session.boardId).find(c => c.id === cellId && c.type === 'PROPERTY');
+  if (!cell) return;
+  const price = Math.max(0, Number(cell.price) || 0);
+  if (price <= 0) return;
+
+  const minBid = Math.max(50, Math.floor(price * 0.1));
+  const minIncrement = Math.max(50, Math.floor(price * 0.05));
+  session.pendingAuction = {
+    cellId: cell.id,
+    cellName: cell.name,
+    price,
+    minBid,
+    minIncrement,
+    currentBid: 0,
+    currentBidderKey: null,
+    endsAt: Date.now() + AUCTION_DURATION_MS,
+  };
+
+  addLog(session, `🔨 เปิดประมูล "${cell.name}" เริ่มต้นที่ ฿${minBid.toLocaleString()} (${Math.round(AUCTION_DURATION_MS / 1000)} วินาที)`);
+  io.to(session.id).emit('auction_start', publicAuction(session));
+  io.to(session.id).emit('gm_log', session.logs[0]);
+
+  setTimeout(() => resolveAuction(io, session, cell.id), AUCTION_DURATION_MS);
+}
+
+function placeBid(io, session, socketId, amount) {
+  const auction = session.pendingAuction;
+  if (!auction) return { error: 'ตอนนี้ไม่มีการประมูล' };
+
+  const player = session.players.find(p => p.socketId === socketId);
+  if (!player || !player.connected || player.bankrupt) return { error: 'ไม่พบผู้เล่นที่ยังเล่นอยู่' };
+
+  const bid = Math.floor(Number(amount));
+  if (!Number.isFinite(bid)) return { error: 'จำนวนเงินไม่ถูกต้อง' };
+
+  const minNext = auction.currentBid > 0 ? auction.currentBid + auction.minIncrement : auction.minBid;
+  if (bid < minNext) return { error: `ต้องประมูลอย่างน้อย ฿${minNext.toLocaleString()}` };
+  if (bid > player.money) return { error: 'เงินของคุณไม่พอสำหรับการประมูลนี้' };
+
+  auction.currentBid = bid;
+  auction.currentBidderKey = player.playerKey;
+  addLog(session, `🔨 ${player.name} ประมูล "${auction.cellName}" ที่ ฿${bid.toLocaleString()}`);
+  io.to(session.id).emit('auction_update', publicAuction(session));
+  io.to(session.id).emit('gm_log', session.logs[0]);
+  return { ok: true };
+}
+
+function resolveAuction(io, session, cellId) {
+  const auction = session.pendingAuction;
+  if (!auction || auction.cellId !== cellId) return; // ถูกจัดการไปแล้วหรือไม่ตรงกัน
+
+  session.pendingAuction = null;
+
+  if (session.gameOver) {
+    // เกมจบไปก่อนที่จะประมูลเสร็จ — ไม่ต้องประมวลผลต่อ แต่ยังต้องเคลียร์คิวเพื่อไม่ให้ค้าง
+    session.auctionQueue = [];
+    return;
+  }
+
+  const cell = getCells(session.boardId).find(c => c.id === cellId);
+  const winner = auction.currentBidderKey
+    ? session.players.find(p => p.playerKey === auction.currentBidderKey)
+    : null;
+
+  if (cell && winner && winner.connected && !winner.bankrupt && winner.money >= auction.currentBid) {
+    winner.money -= auction.currentBid;
+    session.properties[cell.id] = winner.playerKey;
+    addLog(session, `🔨 ${winner.name} ชนะประมูล "${cell.name}" ที่ ฿${auction.currentBid.toLocaleString()}`);
+    io.to(session.id).emit('auction_end', {
+      cellId: cell.id,
+      winnerId: winner.socketId,
+      winnerName: winner.name,
+      amount: auction.currentBid,
+    });
+  } else {
+    addLog(session, `📦 ไม่มีผู้เสนอราคาซื้อ "${cell ? cell.name : cellId}" ทรัพย์สินยังคงเป็นของธนาคาร`);
+    io.to(session.id).emit('auction_end', { cellId, winnerId: null, amount: 0 });
+  }
+
+  io.to(session.id).emit('gm_log', session.logs[0]);
+  io.to(session.id).emit('state_update', publicState(session));
+
+  if (session.auctionQueue.length) {
+    const next = session.auctionQueue.shift();
+    startAuction(io, session, next.cellId);
+  }
 }
 
 const EVENT_LINES = [
@@ -737,7 +945,7 @@ function answerQuestion(io, session, socketId, choiceIndex) {
 
   checkBankruptcy(io, session, player, 'ตอบการ์ดทำโทษผิดและเงินคงเหลือไม่พอ');
   if (!session.gameOver && !player.bankrupt && currentPlayer(session)?.playerKey === player.playerKey) {
-    advanceTurn(session);
+    advanceTurnOrConsumeBonus(session, player);
   }
   checkWinCondition(io, session);
   io.to(session.id).emit('gm_log', session.logs[0]);
@@ -762,12 +970,20 @@ async function handleRollDice(io, session, socketId) {
   if (player.socketId !== socketId) return { error: 'ยังไม่ถึงตาของคุณ' };
   if (session.isMoving) return { error: 'กำลังประมวลผลตาก่อนหน้าอยู่ กรุณารอสักครู่' };
   if (session.pendingQuestion?.playerKey === player.playerKey) return { error: 'กรุณาตอบการ์ดคำถามก่อนจบตา' };
-  if (session.players.filter(p => p.connected).length < 1) return { error: 'ต้องมีผู้เล่นอย่างน้อย 1 คน' };
+  // ห้องผู้เล่นจริงล้วนต้องมีอย่างน้อย 2 คนถึงจะเริ่มเกมได้ (เงื่อนไขชนะต้องมีคู่แข่ง)
+  // ห้อง AI ไม่ติดเงื่อนไขนี้เพราะมีบอทเข้าร่วมอยู่แล้วตั้งแต่สร้างโต๊ะ
+  const minPlayers = session.mode === 'human' ? 2 : 1;
+  if (session.players.filter(p => p.connected).length < minPlayers) {
+    return { error: minPlayers > 1 ? 'ต้องมีผู้เล่นอย่างน้อย 2 คนก่อนเริ่มเกม กรุณารอเพื่อนเข้าร่วมห้อง' : 'ต้องมีผู้เล่นอย่างน้อย 1 คน' };
+  }
 
   session.isMoving = true;
   session.gameStarted = true;
+  session.turnCount = (session.turnCount || 0) + 1;
   try {
+    const previousRoll = player.lastRoll;
     const result = 1 + Math.floor(Math.random() * 6);
+    player.lastRoll = result;
     io.to(session.id).emit('dice_result', { playerId: player.socketId, value: result });
     addLog(session, `🎲 ${player.name} ทอยได้ ${result} แต้ม`);
     io.to(session.id).emit('gm_log', session.logs[0]);
@@ -777,13 +993,29 @@ async function handleRollDice(io, session, socketId) {
     await moveSteps(io, session, player, result);
     await resolveCell(io, session, player);
 
-    // PROPERTY ที่ยังรอการตัดสินใจซื้อจะค้างเทิร์นไว้จนกว่าจะซื้อ/ไม่ซื้อ
+    // ทอยได้เลขซ้ำกับตาที่แล้วของตัวเอง (เช่นเดียวกับผู้เล่นอื่นสลับกันทอย โอกาสน้อยกว่า
+    // "ทอยเบิ้ล" ของเศรษฐีต้นฉบับที่ใช้ 2 ลูกเต๋า) ให้ทอยพิเศษอีกครั้งทันทีโดยไม่สลับตา
+    // จำกัดไว้ไม่เกิน 3 ตาติดกันกันเทิร์นค้างนาน (เกมนี้ใช้ลูกเต๋าเดียว จึงไม่ใช่กฎ doubles แท้)
+    const isRepeatRoll = previousRoll !== null && previousRoll === result;
+    player.comboRolls = isRepeatRoll ? (player.comboRolls || 0) + 1 : 0;
+    const grantsBonusTurn = isRepeatRoll && player.comboRolls < 3;
+    // เก็บสถานะ "ตาพิเศษ" ไว้ที่ตัวผู้เล่นเอง เพราะจุดที่จบเทิร์นจริงๆ อาจไม่ใช่ตรงนี้
+    // (เช่น ยังรอซื้อที่ดินหรือตอบการ์ดคำถามอยู่ ต้องรอ buyProperty/skipPropertyPurchase/
+    // answerQuestion เป็นผู้ตัดสินใจสลับตาแทน — ดู advanceTurnOrConsumeBonus)
+    player.pendingBonusRoll = grantsBonusTurn;
+    if (grantsBonusTurn) {
+      addLog(session, `🎯 ${player.name} ทอยได้ ${result} แต้มซ้ำกับตาที่แล้ว! ได้ทอยพิเศษอีกครั้ง`);
+      io.to(session.id).emit('gm_log', session.logs[0]);
+    }
+
+    // PROPERTY ที่ยังรอการตัดสินใจซื้อ หรือการ์ดคำถามที่ยังไม่ตอบ จะค้างเทิร์นไว้จนกว่าจะจบ
     // ถ้าผู้เล่นล้มละลาย resolveCell/declareBankrupt จะเลื่อนเทิร์นให้แล้ว
-    // จึงเลื่อนเทิร์นซ้ำเฉพาะกรณีที่ผู้เล่นคนเดิมยังเป็นเจ้าของเทิร์นอยู่
-    if (!session.pendingPurchase && !session.gameOver && currentPlayer(session)?.playerKey === player.playerKey && !player.bankrupt) {
-      advanceTurn(session);
+    // จึงเลื่อนเทิร์นซ้ำเฉพาะกรณีที่ผู้เล่นคนเดิมยังเป็นเจ้าของเทิร์นอยู่ และไม่มีอะไรค้างให้ตัดสินใจ
+    if (!session.pendingPurchase && !session.pendingQuestion && !session.gameOver && currentPlayer(session)?.playerKey === player.playerKey && !player.bankrupt) {
+      advanceTurnOrConsumeBonus(session, player);
     }
     checkWinCondition(io, session);
+    checkTurnLimit(io, session);
     return { ok: true };
   } finally {
     session.isMoving = false;
@@ -794,5 +1026,5 @@ async function handleRollDice(io, session, socketId) {
 module.exports = {
   getSession, createSession, getOrCreateSession, listSessions, publicState, addPlayer, removePlayerBySocket,
   handleRollDice, answerQuestion, buyProperty, skipPropertyPurchase, sellProperty, upgradeProperty, transferProperty,
-  addLog, currentPlayer, advanceTurn, addBot, isBotPlayer, chooseBotPurchase, botShouldPlay,
+  addLog, currentPlayer, advanceTurn, addBot, isBotPlayer, chooseBotPurchase, botShouldPlay, placeBid,
 };

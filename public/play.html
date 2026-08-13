@@ -578,6 +578,36 @@
         font-size: 12px;
         margin-top: 10px;
       }
+      .auction-timer {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--brass-light);
+        margin: 4px 0 12px;
+      }
+      .auction-bid-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 9px;
+      }
+      .auction-bid-row input {
+        padding: 11px;
+        border-radius: 9px;
+        border: 1px solid rgba(233, 205, 106, 0.5);
+        font: inherit;
+        font-weight: 700;
+        text-align: center;
+      }
+      .auction-bid-row button {
+        padding: 11px 16px;
+        border: 0;
+        border-radius: 9px;
+        font-weight: 700;
+        cursor: pointer;
+        background: linear-gradient(180deg, var(--brass-light), var(--brass));
+        color: var(--ink);
+        white-space: nowrap;
+      }
       .property-panel {
         max-height: 280px;
         overflow: auto;
@@ -1401,6 +1431,26 @@
         text-shadow: 0 1px 2px rgba(0,0,0,.45);
       }
       .cell .tourism-detail-btn { display: none; }
+      /* รูปที่แอดมินอัปโหลด/ตั้งค่าไว้ให้ช่อง — แสดงเป็นพื้นหลังช่องเลยตอนเล่น */
+      .cell.has-photo {
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+      }
+      .cell.has-photo::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(10,8,4,.12) 0%, rgba(10,8,4,.52) 60%, rgba(10,8,4,.8) 100%);
+        border-radius: inherit;
+        pointer-events: none;
+      }
+      .cell.has-photo .icon,
+      .cell.has-photo .name {
+        position: relative;
+        text-shadow: 0 1px 3px rgba(0,0,0,.9);
+        color: #fff;
+      }
       .owner-badge {
         font-size: 8px;
         background: rgba(0,0,0,.65);
@@ -1634,6 +1684,7 @@
       .tourism-district{border:1px solid rgba(255,255,255,.08);border-radius:16px;background:rgba(255,255,255,.035);overflow:hidden;cursor:pointer;transition:.18s;display:grid;grid-template-columns:120px 1fr}
       .tourism-district:hover{transform:translateY(-2px);border-color:rgba(245,205,96,.45)}.tourism-district img{width:120px;height:100%;min-height:120px;object-fit:cover;background:#222}.tourism-district-body{padding:13px}.tourism-district h3{margin:0 0 5px;font-size:16px}.tourism-cat{font-size:11px;color:#f5d36e}.tourism-summary{font-size:12px;color:#c8c5ba;line-height:1.5;margin:6px 0}.tourism-spots{font-size:11px;color:#ddd}.tourism-empty{padding:35px;text-align:center;color:#aaa}
       .tourism-detail-panel{width:min(760px,94vw);max-height:90vh;overflow:auto;border-radius:20px;background:#11140f;border:1px solid rgba(245,205,96,.4);padding:18px}.tourism-detail-hero{width:100%;height:min(300px,38vw);object-fit:cover;border-radius:14px;background:#222}.tourism-detail-list{display:grid;gap:8px;margin-top:12px}.tourism-detail-list div{padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.05)}
+      .tourism-contact-section{margin-top:16px}.tourism-contact-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:10px}.tourism-contact-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(245,205,96,.15);text-decoration:none;color:inherit;transition:.15s}.tourism-contact-item:hover{background:rgba(245,205,96,.12);border-color:rgba(245,205,96,.4)}.tourism-contact-item .contact-icon{font-size:22px;flex-shrink:0}.tourism-contact-item .contact-body{min-width:0}.tourism-contact-item .contact-label{font-size:10px;color:#a09070;margin-bottom:2px}.tourism-contact-item .contact-value{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       .tourism-open-btn{position:fixed;right:16px;bottom:74px;z-index:900;border:1px solid rgba(245,205,96,.5);background:#181a14;color:#f7d66f;border-radius:999px;padding:10px 14px;font-weight:800;box-shadow:0 8px 30px rgba(0,0,0,.3);cursor:pointer}
       @media(max-width:700px){.tourism-grid{grid-template-columns:1fr}.tourism-district{grid-template-columns:96px 1fr}.tourism-district img{width:96px;min-height:110px}.tourism-tools{grid-template-columns:1fr}.tourism-hub{padding:8px}.tourism-hub-panel{padding:13px;border-radius:16px}}
 </style>
@@ -1814,12 +1865,6 @@ function tourismPhotoCard(a){
         <div class="turn-message" id="turnMessage">เข้าร่วมเกมแล้วทอยลูกเต๋าได้เลย!</div>
       </div>
       <div class="top-dice" id="topDice" aria-hidden="true">⚄</div>
-      <div class="top-actions" aria-label="เมนูเกม">
-        <button type="button" title="อารมณ์" aria-label="อารมณ์">●</button>
-        <button type="button" title="ผู้เล่น" aria-label="ผู้เล่น">♟</button>
-        <button type="button" title="เสียง" aria-label="เสียง">🔊</button>
-        <button type="button" title="เมนู" aria-label="เมนู">☰</button>
-      </div>
     </div>
 
     <div class="money-hud" id="moneyHud" aria-live="polite" aria-label="เงินของคุณ">
@@ -1892,6 +1937,19 @@ function tourismPhotoCard(a){
       </div>
     </div>
 
+    <div class="modal-backdrop" id="auctionBackdrop" aria-hidden="true">
+      <div class="purchase-modal auction-modal">
+        <h2>🔨 เปิดประมูลทรัพย์สิน</h2>
+        <div class="purchase-info" id="auctionInfo">กำลังโหลด...</div>
+        <div class="auction-timer" id="auctionTimer"></div>
+        <div class="auction-bid-row">
+          <input type="number" id="auctionBidInput" min="0" step="50" />
+          <button id="auctionBidBtn">💰 เสนอราคา</button>
+        </div>
+        <div class="purchase-wait" id="auctionWait"></div>
+      </div>
+    </div>
+
     <div class="modal-backdrop" id="tourismBackdrop" aria-hidden="true">
       <div
         class="tourism-modal"
@@ -1921,6 +1979,10 @@ function tourismPhotoCard(a){
         <div class="tourism-body">
           <p class="tourism-description" id="tourismDescription"></p>
           <ul class="tourism-list" id="tourismList"></ul>
+          <div id="tourismContactSection" class="tourism-contact-section" style="display:none">
+            <h3>📞 ช่องทางติดต่อ</h3>
+            <div class="tourism-contact-grid" id="tourismContactGrid2"></div>
+          </div>
           <div class="tourism-footer">
             <div class="tourism-price" id="tourismPrice"></div>
             <button class="tourism-close-btn" id="tourismCloseBtn">ปิด</button>
@@ -1976,6 +2038,10 @@ function tourismPhotoCard(a){
         <img id="tourismDetailImage" class="tourism-detail-hero" alt="" />
         <p id="tourismDetailSummary" class="tourism-summary"></p>
         <h3>📍 สถานที่/จุดเด่น</h3><div id="tourismDetailList" class="tourism-detail-list"></div>
+        <div id="tourismDetailContact" class="tourism-contact-section" style="display:none">
+          <h3>📞 ช่องทางติดต่อ</h3>
+          <div class="tourism-contact-grid" id="tourismContactGrid"></div>
+        </div>
       </div>
     </div>
     <div class="modal-backdrop" id="gameOverBackdrop">
@@ -2159,6 +2225,31 @@ function tourismPhotoCard(a){
           };
           img.src = latest.image_url;
         }
+
+        // ช่องทางติดต่อ
+        const contactSection2 = document.getElementById('tourismContactSection');
+        const contactGrid2 = document.getElementById('tourismContactGrid2');
+        const contactDefs = [
+          { key: 'phone',    icon: '📱', label: 'โทรศัพท์', href: v => `tel:${v}` },
+          { key: 'line_id',  icon: '💬', label: 'Line',      href: v => `https://line.me/R/ti/p/${encodeURIComponent(v)}` },
+          { key: 'facebook', icon: '👥', label: 'Facebook',  href: v => v.startsWith('http') ? v : `https://facebook.com/${encodeURIComponent(v)}` },
+          { key: 'website',  icon: '🌐', label: 'เว็บไซต์',  href: v => v },
+        ];
+        contactGrid2.innerHTML = '';
+        let hasContact2 = false;
+        contactDefs.forEach(({ key, icon, label, href }) => {
+          const val = (latest[key] || '').trim();
+          if (!val) return;
+          hasContact2 = true;
+          const a = document.createElement('a');
+          a.className = 'tourism-contact-item';
+          a.href = href(val);
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          a.innerHTML = `<span class="contact-icon">${icon}</span><div class="contact-body"><div class="contact-label">${label}</div><div class="contact-value">${escapeHtml(val)}</div></div>`;
+          contactGrid2.appendChild(a);
+        });
+        contactSection2.style.display = hasContact2 ? '' : 'none';
       }
 
       function closeTourismPopup() {
@@ -2195,6 +2286,17 @@ function tourismPhotoCard(a){
     `;
           div.querySelector(".icon").textContent = meta.icon || "❔";
           div.querySelector(".name").textContent = cell.name;
+
+          // ถ้าช่องนี้มีรูปที่แอดมินอัปโหลด/ตั้งค่าไว้ ให้ขึ้นเป็นพื้นหลังช่องเลยตอนเล่น
+          if (cell.image_url) {
+            const probe = new Image();
+            probe.onload = () => {
+              div.style.backgroundImage = `url('${cell.image_url}')`;
+              div.classList.add("has-photo");
+            };
+            probe.src = cell.image_url;
+          }
+
           board.appendChild(div);
         });
       }
@@ -2278,6 +2380,54 @@ function tourismPhotoCard(a){
           ? "เลือกซื้อหรือไม่ซื้อเพื่อจบตาของคุณ"
           : "กำลังรอเจ้าของตาตัดสินใจ...";
         backdrop.classList.add("on");
+      }
+
+      let activeAuction = null;
+      let auctionCountdownTimer = null;
+
+      function renderAuction(auction) {
+        const backdrop = document.getElementById("auctionBackdrop");
+        if (!auction) {
+          activeAuction = null;
+          clearInterval(auctionCountdownTimer);
+          backdrop.classList.remove("on");
+          backdrop.setAttribute("aria-hidden", "true");
+          return;
+        }
+        activeAuction = auction;
+
+        const nextMin = auction.currentBid > 0
+          ? auction.currentBid + auction.minIncrement
+          : auction.minBid;
+
+        document.getElementById("auctionInfo").innerHTML = `
+    <strong>${escapeHtml(auction.cellName)}</strong><br>
+    ราคาประเมิน <b>฿${Number(auction.price || 0).toLocaleString()}</b><br>
+    ราคาปัจจุบัน <b>฿${Number(auction.currentBid || 0).toLocaleString()}</b>${
+      auction.currentBidderName ? ` โดย ${escapeHtml(auction.currentBidderName)}` : " (ยังไม่มีผู้เสนอราคา)"
+    }
+  `;
+
+        const input = document.getElementById("auctionBidInput");
+        input.min = nextMin;
+        if (!input.dataset.userEdited || Number(input.value) < nextMin) {
+          input.value = nextMin;
+        }
+
+        updateAuctionCountdown();
+        clearInterval(auctionCountdownTimer);
+        auctionCountdownTimer = setInterval(updateAuctionCountdown, 500);
+
+        backdrop.classList.add("on");
+        backdrop.setAttribute("aria-hidden", "false");
+      }
+
+      function updateAuctionCountdown() {
+        if (!activeAuction) return;
+        const secondsLeft = Math.max(0, Math.ceil((activeAuction.endsAt - Date.now()) / 1000));
+        document.getElementById("auctionTimer").textContent = `⏳ เหลือเวลา ${secondsLeft} วินาที`;
+        document.getElementById("auctionWait").textContent =
+          "ผู้เล่นทุกคนเสนอราคาแข่งกันได้ ใครเสนอสูงสุดตอนหมดเวลาจะได้ทรัพย์สินนี้ไป";
       }
 
       function escapeHtml(value) {
@@ -2551,6 +2701,7 @@ function tourismPhotoCard(a){
         const waitEl = document.getElementById("quizWait");
         const penaltyEl = document.getElementById("quizPenalty");
         const isMine = questionData.playerId === MY_ID;
+        console.log('🎯 Quiz Debug:', { MY_ID, playerId: questionData.playerId, isMine, questionData });
 
         qEl.textContent = questionData.question;
         penaltyEl.textContent = `ตอบถูก +฿300 · ตอบผิด -฿${Number(questionData.penalty || 500).toLocaleString()}`;
@@ -2799,6 +2950,30 @@ function tourismPhotoCard(a){
         const detailList = document.getElementById('tourismDetailList');
         detailList.innerHTML = '';
         (d.attractions || []).forEach((x) => detailList.appendChild(tourismPhotoCard(x)));
+        // ช่องทางติดต่อ
+        const contactSection = document.getElementById('tourismDetailContact');
+        const contactGrid = document.getElementById('tourismContactGrid');
+        const contacts = [
+          { key: 'phone',    icon: '📱', label: 'โทรศัพท์', href: v => `tel:${v}` },
+          { key: 'line_id',  icon: '💬', label: 'Line',      href: v => `https://line.me/R/ti/p/${encodeURIComponent(v)}` },
+          { key: 'facebook', icon: '👥', label: 'Facebook',  href: v => v.startsWith('http') ? v : `https://facebook.com/${encodeURIComponent(v)}` },
+          { key: 'website',  icon: '🌐', label: 'เว็บไซต์',  href: v => v },
+        ];
+        contactGrid.innerHTML = '';
+        let hasContact = false;
+        contacts.forEach(({ key, icon, label, href }) => {
+          const val = (d[key] || '').trim();
+          if (!val) return;
+          hasContact = true;
+          const a = document.createElement('a');
+          a.className = 'tourism-contact-item';
+          a.href = href(val);
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          a.innerHTML = `<span class="contact-icon">${icon}</span><div class="contact-body"><div class="contact-label">${label}</div><div class="contact-value">${escapeHtml(val)}</div></div>`;
+          contactGrid.appendChild(a);
+        });
+        contactSection.style.display = hasContact ? '' : 'none';
         document.getElementById('tourismDetail').classList.add('on'); document.getElementById('tourismDetail').setAttribute('aria-hidden','false');
       }
       function closeTourismHub(){document.getElementById('tourismHub').classList.remove('on');document.getElementById('tourismHub').setAttribute('aria-hidden','true');}
@@ -2819,6 +2994,7 @@ function tourismPhotoCard(a){
         socket = io();
         socket.on("connect", () => {
           MY_ID = socket.id;
+          console.log('🔌 Socket connected, MY_ID set to:', MY_ID);
           socket.emit(eventName, payload);
         });
         socket.on("room_created", ({ roomId }) => {
@@ -2871,6 +3047,7 @@ function tourismPhotoCard(a){
           } else if (!activeQuiz) {
             closeQuizCard();
           }
+          renderAuction(state.pendingAuction || null);
         });
 
         socket.on("player_moving", ({ playerId, pos }) => {
@@ -2890,6 +3067,24 @@ function tourismPhotoCard(a){
 
         socket.on("property_offer", (offer) => {
           renderPurchaseOffer(offer);
+        });
+
+        socket.on("auction_start", (auction) => {
+          document.getElementById("auctionBidInput").dataset.userEdited = "";
+          renderAuction(auction);
+        });
+
+        socket.on("auction_update", (auction) => {
+          renderAuction(auction);
+        });
+
+        socket.on("auction_end", ({ cellId, winnerName, amount }) => {
+          renderAuction(null);
+          const cell = CELLS.find((c) => c.id === cellId);
+          const name = cell ? cell.name : "ทรัพย์สิน";
+          document.getElementById("gmBubble").textContent = winnerName
+            ? `🔨 ${winnerName} ชนะประมูล "${name}" ที่ ฿${Number(amount || 0).toLocaleString()}`
+            : `📦 ไม่มีผู้เสนอราคาซื้อ "${name}"`;
         });
 
         socket.on("quiz_card", (card) => {
@@ -2945,6 +3140,17 @@ function tourismPhotoCard(a){
 
       document.getElementById("skipBtn").addEventListener("click", () => {
         if (socket) socket.emit("skip_property");
+      });
+
+      document.getElementById("auctionBidInput").addEventListener("input", (e) => {
+        e.target.dataset.userEdited = "1";
+      });
+
+      document.getElementById("auctionBidBtn").addEventListener("click", () => {
+        const input = document.getElementById("auctionBidInput");
+        const amount = Number(input.value);
+        if (!Number.isFinite(amount) || amount <= 0) return showError("กรุณาใส่จำนวนเงินที่ต้องการเสนอราคา");
+        if (socket) socket.emit("auction_bid", { amount });
       });
 
       document.getElementById("rollBtn").addEventListener("click", () => {

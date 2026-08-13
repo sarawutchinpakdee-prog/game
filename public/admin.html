@@ -580,6 +580,30 @@
           </div>
         </div>
 
+        <div class="field">
+          <label>📞 ช่องทางติดต่อ</label>
+          <div class="modal-row" style="margin-bottom:8px">
+            <div class="field" style="margin:0">
+              <label style="font-size:12px">📱 เบอร์โทรศัพท์</label>
+              <input type="text" id="f_phone" placeholder="เช่น 043-611234" />
+            </div>
+            <div class="field" style="margin:0">
+              <label style="font-size:12px">💬 Line ID</label>
+              <input type="text" id="f_line_id" placeholder="เช่น @amphoename" />
+            </div>
+          </div>
+          <div class="modal-row">
+            <div class="field" style="margin:0">
+              <label style="font-size:12px">👥 Facebook</label>
+              <input type="text" id="f_facebook" placeholder="เช่น อำเภอ..." />
+            </div>
+            <div class="field" style="margin:0">
+              <label style="font-size:12px">🌐 เว็บไซต์</label>
+              <input type="text" id="f_website" placeholder="https://..." />
+            </div>
+          </div>
+        </div>
+
         <div class="modal-row">
           <div class="field">
             <label>ราคา (บาท)</label>
@@ -802,6 +826,10 @@
           cell.effect_value ?? "";
         document.getElementById("f_effectSteps").value =
           cell.effect_steps ?? "";
+        document.getElementById("f_phone").value = cell.phone || "";
+        document.getElementById("f_line_id").value = cell.line_id || "";
+        document.getElementById("f_facebook").value = cell.facebook || "";
+        document.getElementById("f_website").value = cell.website || "";
         document.getElementById("f_imageFile").value = "";
         document.getElementById("uploadStatus").textContent =
           "รองรับ PNG, JPG/JPEG, WebP ขนาดไม่เกิน 5 MB";
@@ -907,6 +935,10 @@
               document.getElementById("f_effectSteps").value === ""
                 ? null
                 : Number(document.getElementById("f_effectSteps").value),
+            phone: document.getElementById("f_phone").value.trim(),
+            line_id: document.getElementById("f_line_id").value.trim(),
+            facebook: document.getElementById("f_facebook").value.trim(),
+            website: document.getElementById("f_website").value.trim(),
           };
           await api("/api/cells/" + ACTIVE_CELL.id, {
             method: "PUT",

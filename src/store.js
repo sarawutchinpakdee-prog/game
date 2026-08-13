@@ -35,7 +35,8 @@ function getCellById(id) {
 // เฉพาะฟิลด์ที่แอดมินแก้ไขได้ — กันไม่ให้ patch เผลอทับ id/board_id/position
 const EDITABLE_FIELDS = [
   'name', 'type', 'image_url', 'model_3d_url', 'description',
-  'price', 'rent_base', 'effect_value', 'effect_steps', 'attractions'
+  'price', 'rent_base', 'effect_value', 'effect_steps', 'attractions',
+  'phone', 'facebook', 'line_id', 'website'
 ];
 
 function updateCell(id, patch) {
