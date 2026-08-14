@@ -1960,7 +1960,7 @@
           height:102%;
           min-width:44px;
           min-height:76px;
-          transform:rotateZ(-45deg) rotateX(-44deg) scale(1.14) !important;
+          transform:rotateZ(-45deg) rotateX(-44deg) scale(1.42) !important;
           transform-origin:50% 88%;
           filter:drop-shadow(0 7px 5px rgba(0,0,0,.5));
         }
@@ -3755,8 +3755,14 @@ function tourismPhotoCard(a){
           showAngelCard(card);
         });
 
+        let lastRenderedGmLogKey = "";
         socket.on("gm_log", (entry) => {
           if (!entry) return;
+          // The server broadcasts the latest log while each movement step is animated.
+          // Only add an entry to the feed once, otherwise one dice result appears repeatedly.
+          const logKey = `${entry.at || ""}|${entry.text || ""}`;
+          if (logKey === lastRenderedGmLogKey) return;
+          lastRenderedGmLogKey = logKey;
           const gmBubble = document.getElementById("gmBubble");
           if (gmBubble) gmBubble.textContent = entry.text;
           const feed = document.getElementById("logFeed");
