@@ -990,10 +990,12 @@ async function handleRollDice(io, session, socketId) {
   session.turnCount = (session.turnCount || 0) + 1;
   try {
     const previousRoll = player.lastRoll;
-    const result = 1 + Math.floor(Math.random() * 6);
+    const diceOne = 1 + Math.floor(Math.random() * 6);
+    const diceTwo = 1 + Math.floor(Math.random() * 6);
+    const result = diceOne + diceTwo;
     player.lastRoll = result;
-    io.to(session.id).emit('dice_result', { playerId: player.socketId, value: result });
-    addLog(session, `🎲 ${player.name} ทอยได้ ${result} แต้ม`);
+    io.to(session.id).emit('dice_result', { playerId: player.socketId, value: result, diceValues: [diceOne, diceTwo] });
+    addLog(session, `🎲 ${player.name} ทอยได้ ${diceOne} + ${diceTwo} = ${result} แต้ม`);
     io.to(session.id).emit('gm_log', session.logs[0]);
     io.to(session.id).emit('state_update', publicState(session));
 

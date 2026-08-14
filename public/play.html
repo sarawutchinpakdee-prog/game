@@ -434,6 +434,15 @@
         padding: 5px;
         gap: 2px;
       }
+      .dice-pair {
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:7px;
+      }
+      .dice-pair .dice {
+        flex:0 0 auto;
+      }
       .dice.rolling {
         animation: roll 0.5s linear;
       }
@@ -1448,6 +1457,7 @@
         text-shadow: 0 1px 3px rgba(0,0,0,.9);
         color: #fff;
       }
+      .cell.has-photo .icon { display:none; }
       .owner-badge {
         font-size: 8px;
         background: rgba(0,0,0,.65);
@@ -1701,8 +1711,41 @@
       body.game-active .gm-bubble{background:rgba(5,21,14,.76);backdrop-filter:blur(5px)}
       @media(max-width:600px){body:not(.game-active){background-attachment:scroll}}
 
+      /* Extend the board into a calm Roi Et landscape instead of a flat green page. */
+      body.game-active{
+        background:
+          linear-gradient(90deg,rgba(3,20,13,.76) 0%,rgba(3,20,13,.22) 29%,rgba(3,20,13,.16) 71%,rgba(3,20,13,.76) 100%),
+          linear-gradient(180deg,rgba(1,12,8,.22),rgba(1,12,8,.42)),
+          url("/assets/roiet-journey-hero-3d.png") center / cover fixed,
+          #092819;
+        position:relative;
+        isolation:isolate;
+      }
+      body.game-active::before{
+        content:"";
+        position:fixed;
+        inset:8px;
+        z-index:-1;
+        pointer-events:none;
+        opacity:.48;
+        filter:none;
+        background:
+          linear-gradient(135deg,rgba(234,193,79,.82),transparent 32%) top left / 120px 120px no-repeat,
+          linear-gradient(315deg,rgba(234,193,79,.82),transparent 32%) top right / 120px 120px no-repeat,
+          linear-gradient(45deg,rgba(234,193,79,.82),transparent 32%) bottom left / 120px 120px no-repeat,
+          linear-gradient(225deg,rgba(234,193,79,.82),transparent 32%) bottom right / 120px 120px no-repeat;
+        mix-blend-mode:screen;
+      }
+      @media(max-width:700px){body.game-active{background-attachment:scroll}body.game-active::before{inset:3px;opacity:.3;background-size:70px 70px}}
+
       /* ===== Compact player rail / board-first game screen ===== */
-      body.game-active { padding: 14px 20px 48px; }
+      body.game-active {
+        padding: 14px 20px 48px;
+        background:
+          linear-gradient(180deg, rgba(3, 18, 12, .46), rgba(3, 18, 12, .72)),
+          url("/assets/roiet-board-3d.png") center / cover fixed,
+          #071e14;
+      }
       .game-topbar {
         width:min(590px,calc(100vw - 520px)); min-height:68px; padding:9px 76px 9px 16px;
         border-radius:18px; background:rgba(7,29,20,.92); border-color:rgba(245,205,96,.36);
@@ -1739,7 +1782,7 @@
       .property-panel { max-height:230px; overflow:auto; }.log-feed { max-height:210px; }.log-feed div { font-size:12px; }
       .tourism-open-btn { right:18px; bottom:74px; }
       @media(max-width:1180px){.stage{grid-template-columns:154px minmax(470px,1fr) 250px;gap:12px}.game-topbar{width:min(530px,calc(100vw - 400px))}}
-      @media(max-width:900px){body.game-active{padding:10px 8px 32px}.stage{padding-top:118px}.game-topbar{width:calc(100vw - 24px)}.player-rail{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0}.player-card{padding-left:7px}.money-hud{min-width:185px;min-height:66px}.money-icon{width:44px;height:44px;flex-basis:44px}.card-deck{width:84px;height:120px}}
+      @media(max-width:900px){body.game-active{padding:10px 8px 32px;background-attachment:scroll}.stage{padding-top:118px}.game-topbar{width:calc(100vw - 24px)}.player-rail{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0}.player-card{padding-left:7px}.money-hud{min-width:185px;min-height:66px}.money-icon{width:44px;height:44px;flex-basis:44px}.card-deck{width:84px;height:120px}}
 
       /* Layout matching the approved game-screen concept. */
       .stage { grid-template-columns:190px minmax(620px, 1fr) 315px; max-width:1720px; gap:24px; }
@@ -1794,6 +1837,9 @@
       .property-action-kicker { color:#f4d56e; font-size:11px; font-weight:800; letter-spacing:.08em; }.property-action-modal h2 { margin:5px 0 8px; font-size:23px; }.property-action-modal p { margin:0; color:#d4e6dc; line-height:1.55; }
       .property-action-summary { margin:16px 0; padding:12px; border:1px solid rgba(255,255,255,.1); border-radius:13px; background:rgba(0,0,0,.22); color:#fff2b5; font-weight:700; }
       .property-action-buttons { display:grid; grid-template-columns:1fr 1fr; gap:10px; }.property-action-buttons button { min-height:45px; border-radius:12px; font:700 14px "IBM Plex Sans Thai",sans-serif; cursor:pointer; }.property-cancel { border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.08); color:#e7efe9; }.property-action-buttons #propertyActionConfirm { border:0; background:linear-gradient(135deg,#45be87,#177151); color:#fff; }.property-action-modal.sell-mode .property-action-icon { background:linear-gradient(145deg,#f19576,#a43228); }.property-action-modal.sell-mode #propertyActionConfirm { background:linear-gradient(135deg,#d85c48,#963126); }
+      .exit-confirm-modal { width:min(390px,calc(100vw - 32px)); padding:26px; border:1px solid rgba(245,205,96,.58); border-radius:23px; background:linear-gradient(155deg,#133e2b,#061c13); color:#fff7e1; text-align:center; box-shadow:0 28px 90px rgba(0,0,0,.68),inset 0 1px rgba(255,255,255,.09); }
+      .exit-confirm-icon { width:68px; height:68px; display:grid; place-items:center; margin:0 auto 12px; border-radius:20px; background:linear-gradient(145deg,#f0cf6c,#a56717); border:1px solid rgba(255,244,183,.7); color:#33200d; font-size:34px; box-shadow:inset 0 1px rgba(255,255,255,.65),0 8px 18px rgba(0,0,0,.28); }
+      .exit-confirm-modal h2 { margin:0; color:#fff0b6; font-size:23px; }.exit-confirm-modal p { margin:8px 0 19px; color:#d2e0d6; font-size:14px; line-height:1.55; }.exit-confirm-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; }.exit-confirm-actions button { min-height:46px; border-radius:12px; font:700 14px "IBM Plex Sans Thai",sans-serif; cursor:pointer; }.exit-stay-btn { border:1px solid rgba(255,255,255,.23); background:rgba(255,255,255,.08); color:#edf4ef; }.exit-leave-btn { border:1px solid rgba(255,226,143,.58); background:linear-gradient(135deg,#e87754,#9e3425); color:#fff9e5; box-shadow:inset 0 1px rgba(255,255,255,.3); }
       .event-toast { position:fixed; left:50%; bottom:28px; z-index:1100; display:flex; align-items:center; gap:12px; width:min(460px,calc(100vw - 32px)); padding:14px 16px; border:1px solid rgba(245,205,96,.52); border-radius:18px; background:linear-gradient(145deg,rgba(14,58,40,.97),rgba(5,25,17,.97)); box-shadow:0 18px 45px rgba(0,0,0,.48); color:#fff7df; transform:translate(-50%,30px); opacity:0; pointer-events:none; transition:opacity .22s,transform .22s; }
       .event-toast.show { opacity:1; transform:translate(-50%,0); }.event-toast.gain { border-color:rgba(100,232,151,.7); }.event-toast.loss { border-color:rgba(243,113,91,.74); }
       .event-toast-icon { width:42px; height:42px; display:grid; place-items:center; flex:0 0 42px; border-radius:13px; background:rgba(245,205,96,.18); font-size:23px; }.event-toast.gain .event-toast-icon{background:rgba(74,203,123,.18)}.event-toast.loss .event-toast-icon{background:rgba(215,78,61,.2)}
@@ -1806,6 +1852,256 @@
       .audio-controls.open button { width:100%; text-align:left; }
       .audio-controls.open .announcer-status { font-size:10px; line-height:1.35; color:#c8d9cf; }
       @media(max-width:600px){.settings-toggle{right:10px;top:10px}.audio-controls.open{right:10px;top:58px;bottom:auto;width:min(250px,calc(100vw - 20px))}}
+
+      .rules-toggle { position:fixed; right:18px; top:68px; z-index:950; display:none; border:1px solid rgba(245,205,96,.5); border-radius:999px; padding:9px 14px; background:rgba(5,29,20,.92); color:#f6e4af; font:700 13px "IBM Plex Sans Thai",sans-serif; cursor:pointer; box-shadow:0 8px 24px rgba(0,0,0,.32); }
+      body.game-active .rules-toggle { display:block; }
+      .rules-modal { width:min(760px,94vw); max-height:min(82vh,760px); overflow:auto; padding:24px; border:1px solid rgba(245,205,96,.6); border-radius:22px; background:linear-gradient(155deg,#113c2a,#061d14); color:#f7f2df; box-shadow:0 28px 90px rgba(0,0,0,.65); }
+      .rules-modal-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding-bottom:15px; border-bottom:1px solid rgba(245,205,96,.24); }
+      .rules-modal h2 { margin:0; color:#f7d875; font-size:28px; }.rules-modal .rules-sub { margin:5px 0 0; color:#cbd9d1; font-size:13px; }
+      .rules-close { flex:0 0 auto; border:1px solid rgba(255,255,255,.2); border-radius:10px; padding:7px 10px; background:rgba(255,255,255,.08); color:#fff; font:700 13px "IBM Plex Sans Thai",sans-serif; cursor:pointer; }
+      .rules-highlight { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:16px 0; }.rules-highlight div { padding:11px; border:1px solid rgba(245,205,96,.23); border-radius:13px; background:rgba(0,0,0,.2); text-align:center; }.rules-highlight b { display:block; color:#ffd45a; font-size:18px; }.rules-highlight span { color:#d5e1da; font-size:11px; }
+      .rules-section { margin-top:16px; padding:14px; border:1px solid rgba(255,255,255,.09); border-radius:15px; background:rgba(0,0,0,.14); }.rules-section h3 { margin:0 0 8px; color:#f6dc8a; font-size:16px; }.rules-section p { margin:0; color:#e2ebe5; font-size:13px; line-height:1.6; }.rules-section ul { margin:8px 0 0; padding-left:20px; color:#d7e3dc; font-size:13px; line-height:1.65; }.rules-section li+li { margin-top:4px; }.rules-note { margin-top:16px; padding:12px 14px; border-radius:13px; background:rgba(76,194,133,.13); color:#dff7e7; font-size:12px; line-height:1.55; }
+      @media(max-width:620px){.rules-toggle{right:8px;top:112px;padding:8px 11px;font-size:11px}.rules-modal{width:calc(100vw - 20px);max-height:84vh;padding:17px;border-radius:18px}.rules-modal h2{font-size:22px}.rules-highlight{grid-template-columns:1fr;gap:7px}.rules-highlight div{text-align:left;display:flex;align-items:baseline;gap:8px}.rules-highlight b{font-size:16px}.rules-section{padding:12px}.rules-section p,.rules-section ul{font-size:12px}}
+
+      /* Responsive game layout: no horizontal overflow and a board-first mobile flow. */
+      body.game-active { overflow-x:hidden; }
+      .stage, .board-wrapper, .side, .player-rail { min-width:0; }
+      @media (max-width:1100px) {
+        .stage { grid-template-columns:150px minmax(0,1fr) 235px; gap:12px; max-width:100%; }
+        .board-frame { padding:9px; border-radius:22px; }
+        .board { gap:3px; padding:3px; }
+        .side .panel { padding:12px; }
+        .dice-hero { height:112px; }
+        .dice-hero span { width:54px; height:54px; font-size:40px; }
+        .player-rail { padding:10px; }
+      }
+      @media (max-width:860px) {
+        body.game-active { padding:10px 10px 36px; }
+        .game-topbar { width:calc(100vw - 20px); max-width:620px; }
+        .stage { grid-template-columns:1fr; gap:12px; padding-top:84px; }
+        .board-wrapper { grid-column:1; grid-row:auto; order:1; width:min(100%,720px); margin-inline:auto; }
+        .player-rail { grid-column:1; grid-row:auto; order:2; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:12px; align-items:start; }
+        .player-rail .money-hud { grid-column:1/-1; }
+        .side { grid-column:1; grid-row:auto; order:3; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+        .side .panel:last-child { grid-column:1/-1; }
+        .property-panel { max-height:280px; }
+      }
+      @media (max-width:620px) {
+        body.game-active { padding:8px 7px 28px; }
+        .game-topbar { top:7px; width:calc(100vw - 14px); min-height:56px; padding:7px 35px 7px 5px; border-radius:14px; }
+        .game-status-segment, .turn-status { padding:0 5px; }
+        .game-status-label, .turn-label { font-size:9px; }
+        .game-status-value, .turn-player { font-size:12px; }
+        .exit-game-btn { right:4px; }
+        .settings-toggle { top:72px; right:8px; padding:8px 11px; font-size:11px; }
+        .audio-controls.open { top:112px; right:8px; }
+        .stage { padding-top:66px; gap:9px; }
+        .board-frame { padding:5px; border-radius:16px; }
+        .board { gap:2px; padding:2px; border-radius:12px; }
+        .cell { padding:1px; border-radius:5px; border-width:1px; }
+        .cell::after { inset:1px; border-radius:4px; }
+        .cell-number { display:none; }
+        .cell .icon { font-size:10px; }
+        .cell .name { font-size:6px; line-height:1; }
+        .player-rail { padding:8px; grid-template-columns:1fr; }
+        .player-card { min-height:48px; }
+        .side { grid-template-columns:1fr; gap:9px; }
+        .side .panel:last-child { grid-column:auto; }
+        .action-panel { padding:12px !important; }
+        .dice-hero { height:84px; margin:0 0 7px; }
+        .dice-hero span { width:46px; height:46px; border-radius:12px; font-size:32px; }
+        .roll-btn { min-height:46px; font-size:13px; }
+        .property-panel { max-height:250px; }
+        .tourism-open-btn { right:10px; bottom:16px; padding:8px 10px; font-size:11px; }
+      }
+      @media (max-height:760px) and (min-width:861px) {
+        body.game-active { padding-top:8px; }
+        .stage { padding-top:72px; }
+        .dice-hero { height:96px; }
+        .side .panel { padding:10px; }
+        .log-feed { max-height:150px; }
+      }
+
+      /* Desktop board-first view: the entire board perimeter always stays inside the window. */
+      @media (min-width:861px) {
+        body.game-active { height:100vh; min-height:0; overflow:hidden; padding:8px 18px 14px; }
+        .stage { height:calc(100vh - 16px); max-width:none; padding-top:76px; grid-template-columns:190px minmax(0,1fr) 315px; align-items:center; }
+        .board-wrapper { width:min(calc(100vh - 104px), calc(100vw - 570px)); max-width:100%; margin:auto; }
+        .board-frame { padding:10px; transform:perspective(1400px) rotateX(7deg); transform-origin:center center; }
+        .board { width:100%; aspect-ratio:1/1; }
+        .player-rail, .side { max-height:calc(100vh - 96px); overflow:auto; scrollbar-width:thin; }
+        .player-rail { align-self:center; }
+        .side { align-self:center; }
+      }
+      @media (min-width:861px) and (max-width:1100px) {
+        .stage { grid-template-columns:145px minmax(0,1fr) 230px; gap:10px; }
+        .board-wrapper { width:min(calc(100vh - 104px), calc(100vw - 405px)); }
+        .side .panel h2 { font-size:14px; }
+      }
+
+      /* Roi Et kingdom layout — desktop composition follows the full-board 3D reference. */
+      @media (min-width:1200px) {
+        body.game-active { padding:7px 16px 12px; background-position:center; }
+        .game-topbar { top:12px; width:min(820px,calc(100vw - 650px)); min-height:64px; border-radius:18px; background:linear-gradient(180deg,rgba(7,39,27,.96),rgba(3,23,15,.94)); }
+        .settings-toggle { top:14px; right:22px; }.rules-toggle { top:68px; right:22px; }
+        .stage { height:calc(100vh - 18px); padding-top:82px; grid-template-columns:225px minmax(680px,1fr) 285px; gap:18px; align-items:center; }
+        .player-rail { max-height:calc(100vh - 135px); padding:12px 14px; border-radius:16px; background:linear-gradient(160deg,rgba(4,41,27,.94),rgba(4,22,15,.92)); border-color:rgba(229,186,69,.62); }
+        .player-rail .money-hud { margin-bottom:8px; }.player-card { min-height:67px; padding-block:9px; }
+        .player-token-icon { transform:scale(.9); margin-right:-3px; }.player-card-name { font-size:14px; }.player-card-money { font-size:12px; }
+        .board-wrapper { width:min(610px,calc((100vh - 190px) * 1.12),42vw); max-width:none; overflow:visible; }
+        .board-frame { position:relative; padding:12px; overflow:visible; transform:perspective(1500px) rotateX(44deg) rotateZ(45deg) scale(.78); transform-origin:center center; border:2px solid rgba(236,191,71,.78); background:linear-gradient(145deg,#3d301d,#0e2518 54%,#5b4020); box-shadow:0 42px 66px rgba(0,0,0,.68),inset 0 0 0 3px rgba(250,220,133,.16); }
+        .board-frame::before { border-color:rgba(255,223,132,.4); }
+        .board { gap:6px; padding:7px; border:3px solid rgba(244,204,100,.55); background:#103b27; box-shadow:inset 0 0 0 8px rgba(5,25,15,.56), inset 0 0 36px rgba(0,0,0,.72); }
+        .cell { border-radius:8px; border-width:2px; box-shadow:inset 0 2px 0 rgba(255,255,255,.26),0 8px 12px rgba(0,0,0,.62); }
+        .cell .name,.cell .icon,.cell-number,.owner-badge,.gm-panel > * { transform:rotateZ(-45deg) scale(1.15); }
+        /* Cancel the board tilt for characters, so they stand above their tile. */
+        .player-token {
+          width:54%;
+          height:102%;
+          min-width:44px;
+          min-height:76px;
+          transform:rotateZ(-45deg) rotateX(-44deg) scale(1.14) !important;
+          transform-origin:50% 88%;
+          filter:drop-shadow(0 7px 5px rgba(0,0,0,.5));
+        }
+        .cell.has-player-token { overflow:visible; z-index:12; }
+        .cell.has-player-token .player-token { z-index:20; }
+        .player-token .token-figure { background-size:165% auto; background-position:center bottom; }
+        .cell .name { font-size:9px; }.cell .icon { font-size:18px; }.cell-number { font-size:15px; }
+        .gm-panel { background:linear-gradient(rgba(1,30,18,.12),rgba(1,30,18,.28)),url("/assets/roiet-board-3d.png") center/cover !important; }
+        .gm-panel .dice-pair { gap:12px; }.gm-panel .dice { width:44px; height:44px; }
+        .gm-bubble { max-width:62%; font-size:10px; }
+        .side { max-height:calc(100vh - 132px); gap:12px; }.side .panel { padding:13px; border-radius:16px; background:linear-gradient(160deg,rgba(4,41,27,.94),rgba(4,22,15,.92)); border-color:rgba(229,186,69,.55); }
+        .action-panel { padding:14px !important; }.dice-hero { height:130px; }.dice-hero span { width:64px; height:64px; font-size:46px; }.roll-btn { min-height:48px; }
+        .property-panel { max-height:270px; }.log-feed { max-height:150px; }
+      }
+
+      @media (min-width:1200px) {
+        body.game-active {
+          background:linear-gradient(90deg,rgba(2,18,11,.58),rgba(2,18,11,.12) 34%,rgba(2,18,11,.12) 66%,rgba(2,18,11,.58)),linear-gradient(180deg,rgba(1,15,9,.28),rgba(1,15,9,.52)),url("/assets/roiet-kingdom-backdrop.png") center/cover fixed,#092819;
+        }
+        .stage { grid-template-columns:225px minmax(780px,1fr) 285px; }
+        .board-wrapper { width:min(760px,calc((100vh - 126px) * 1.15),49vw); }
+        .board-frame { transform:perspective(1550px) rotateX(43deg) rotateZ(45deg) scale(.9); }
+        .cell[data-type="PROPERTY"]:not(.has-photo) { background:linear-gradient(145deg,#197c82,#0b454c) !important; }
+        .cell.has-photo::before { display:block; background:linear-gradient(180deg,rgba(1,16,10,.04),rgba(1,16,10,.18)); }
+        .cell.has-photo[data-type="PROPERTY"] { background-color:#0b454c !important; }
+        /* Keep the colour identity as a fallback, but never paint over a supplied tile photo. */
+        .cell[data-type="EVENT"]:not(.has-photo) { background:linear-gradient(145deg,#b34283,#622655) !important; }
+        .cell[data-type="TAX"]:not(.has-photo),.cell[data-type="PENALTY"]:not(.has-photo) { background:linear-gradient(145deg,#c64429,#762016) !important; }
+        .cell[data-type="BONUS"]:not(.has-photo) { background:linear-gradient(145deg,#d9a72d,#8a5b08) !important; }
+        .cell[data-type="BANK"]:not(.has-photo) { background:linear-gradient(145deg,#337dbc,#16446d) !important; }
+        .cell[data-type="START"]:not(.has-photo) { background:linear-gradient(145deg,#eee1ae,#9d7d38) !important; }
+        .cell .name,.cell.has-photo .icon { display:none; }
+        .cell .icon { font-size:26px; filter:drop-shadow(0 2px 1px rgba(0,0,0,.42)); }
+      }
+      /* Phone layout: player information becomes a compact horizontal rail, keeping the board in view. */
+      @media (max-width:620px) {
+        body.game-active { padding:6px 7px 22px; overflow-x:hidden; }
+        .game-topbar { min-height:54px; top:5px; width:calc(100vw - 14px); }
+        .settings-toggle { top:64px; right:8px; padding:7px 10px; }.rules-toggle { top:64px; right:auto; left:8px; padding:7px 10px; }
+        .stage { padding-top:62px; gap:8px; }
+        .player-rail { order:1; display:flex; align-items:stretch; gap:7px; width:100%; padding:7px; overflow-x:auto; overflow-y:hidden; scrollbar-width:none; }
+        .player-rail::-webkit-scrollbar { display:none; }
+        .player-rail .money-hud { display:flex; flex:0 0 108px; width:108px; min-height:58px; margin:0; padding:2px 7px 2px 0; border:0; border-right:1px solid rgba(255,255,255,.16); }
+        .player-rail .money-icon { width:34px; height:34px; flex-basis:34px; }.player-rail .money-hud-label { font-size:9px; }.player-rail .money-hud-value { font-size:15px; }
+        #playerRailList { display:flex; gap:5px; min-width:max-content; }
+        .player-card { flex:0 0 104px; min-height:58px; padding:5px 3px; border-bottom:0; border-right:1px solid rgba(255,255,255,.13); }
+        .player-card::before { left:-7px; }.player-token-icon { transform:scale(.62); margin-right:-12px; }.player-card-name { font-size:10px; }.player-card-money { font-size:10px; }.turn-dot { display:none; }
+        .board-wrapper { order:2; width:100%; max-width:390px; margin:0 auto; }
+        .board-frame { padding:5px; border-radius:16px; transform:none; }
+        .board { gap:2px; padding:2px; border-radius:12px; }
+        .cell { border-width:1px; }.cell .name { font-size:6px; }.cell .icon { font-size:10px; }
+        .side { order:3; display:grid; grid-template-columns:1fr 1fr; gap:8px; }.side .panel { padding:10px; }.side .panel:last-child { grid-column:1/-1; }
+        .action-panel { padding:10px !important; }.action-panel h2 { font-size:13px !important; }.dice-hero { height:62px; margin:0 0 6px; }.dice-hero span { width:38px; height:38px; border-radius:10px; font-size:27px; }.roll-btn { min-height:42px; font-size:12px; }
+        .property-panel { max-height:190px; }.log-feed { max-height:110px; }.tourism-open-btn { bottom:9px; right:9px; }
+      }
+
+      /* The board is displayed in 3D on desktop. Moving a tile on hover makes the
+         pointer leave its hit area, so the hover state repeatedly flickers. */
+      .cell.property-cell { cursor:pointer; }
+      .cell:hover,
+      .cell[data-type="PROPERTY"]:hover,
+      .cell[data-type="EVENT"]:hover,
+      .cell[data-type="TAX"]:hover,
+      .cell[data-type="BANK"]:hover,
+      .cell[data-type="START"]:hover {
+        transform:none !important;
+        z-index:2;
+        filter:brightness(1.08) saturate(1.08);
+        box-shadow:inset 0 0 0 2px rgba(255,226,132,.92),0 5px 11px rgba(0,0,0,.48) !important;
+      }
+      .cell.property-cell:focus-visible {
+        outline:3px solid #ffe184;
+        outline-offset:2px;
+      }
+
+      /* Tourist character tokens — blue, red, green, gold. */
+      .player-token[data-style="1"] .token-figure { background:transparent url("/assets/tourist-blue.png") center bottom/contain no-repeat; width:100%; height:100%; border:0; box-shadow:none; }
+      .player-token[data-style="2"] .token-figure { background:transparent url("/assets/tourist-red.png") center bottom/contain no-repeat; width:100%; height:100%; border:0; box-shadow:none; }
+      .player-token[data-style="3"] .token-figure { background:transparent url("/assets/tourist-green.png") center bottom/contain no-repeat; width:100%; height:100%; border:0; box-shadow:none; }
+      .player-token[data-style="4"] .token-figure { background:transparent url("/assets/tourist-gold.png") center bottom/contain no-repeat; width:100%; height:100%; border:0; box-shadow:none; }
+      .player-token .token-head,.player-token .token-hat,.player-token .token-badge { display:none; }
+      .player-token-icon { background-color:transparent !important; background-position:center bottom !important; background-repeat:no-repeat !important; background-size:contain !important; border:0 !important; box-shadow:none !important; }
+      .player-token-icon[data-style="1"] { background-image:url("/assets/tourist-blue.png") !important; }
+      .player-token-icon[data-style="2"] { background-image:url("/assets/tourist-red.png") !important; }
+      .player-token-icon[data-style="3"] { background-image:url("/assets/tourist-green.png") !important; }
+      .player-token-icon[data-style="4"] { background-image:url("/assets/tourist-gold.png") !important; }
+      .player-token-icon .mini-token-head,.player-token-icon .mini-token-hat,.player-token-icon .mini-token-badge { display:none; }
+
+      /* A compact ownership flag makes purchased districts easy to spot. */
+      .cell.property-owned {
+        box-shadow:inset 0 0 0 3px var(--owner-color,#f5cd5e),0 5px 11px rgba(0,0,0,.48) !important;
+      }
+      .cell.property-owned .owner-badge {
+        top:4px;
+        right:4px;
+        bottom:auto;
+        z-index:4;
+        display:grid !important;
+        place-items:center;
+        width:19px;
+        height:19px;
+        padding:0;
+        border:1px solid rgba(255,249,220,.9);
+        border-radius:50% 50% 50% 3px;
+        background:var(--owner-color,#f5cd5e);
+        color:#fffdf2;
+        font-size:13px;
+        font-weight:900;
+        line-height:1;
+        box-shadow:0 2px 6px rgba(0,0,0,.52);
+        text-shadow:0 1px 2px rgba(0,0,0,.5);
+      }
+
+      /* Lobby / create-room screen */
+      body:not(.game-active) { justify-content:center; padding:28px 18px; gap:16px; }
+      body:not(.game-active) header { width:min(520px,100%); }
+      body:not(.game-active) .lobby-logo { margin-bottom:2px; }
+      body:not(.game-active) .lobby-logo-icon { width:54px; height:54px; border-radius:17px; font-size:27px; background:linear-gradient(145deg,#e9c354,#8d6311); box-shadow:0 8px 22px rgba(0,0,0,.3),inset 0 1px rgba(255,255,255,.5); }
+      body:not(.game-active) h1 { margin-top:5px; font-size:clamp(26px,4vw,38px); }
+      body:not(.game-active) .join-card { width:min(470px,100%); padding:0; overflow:hidden; border:1px solid rgba(242,204,102,.6); border-radius:23px; background:linear-gradient(155deg,rgba(14,52,36,.96),rgba(4,25,17,.98)); color:#f6f1df; text-align:left; box-shadow:0 25px 70px rgba(0,0,0,.5),inset 0 1px rgba(255,255,255,.08); }
+      body:not(.game-active) .join-card::after { opacity:.08; }
+      body:not(.game-active) .join-card > * { z-index:1; }
+      .lobby-card-head { padding:18px 22px 14px; border-bottom:1px solid rgba(246,215,128,.2); background:linear-gradient(90deg,rgba(229,184,75,.15),transparent); }
+      .lobby-card-head h2 { margin:0; color:#ffe7a0; font-size:21px; line-height:1.2; }
+      .lobby-card-head p { margin:5px 0 0 !important; color:rgba(241,239,218,.72) !important; font-size:12px !important; }
+      .lobby-form { padding:16px 22px 20px; display:grid; gap:13px; }
+      .lobby-label,.lobby-section-title { display:block; color:#e8dba9; font-size:12px; font-weight:800; letter-spacing:.02em; }
+      .lobby-form input { margin:6px 0 0; min-height:46px; border:1px solid rgba(246,218,142,.25); border-radius:12px; background:rgba(1,15,9,.42); color:#fff8e5; }
+      .lobby-form input:focus { border-color:#edca67; box-shadow:0 0 0 3px rgba(237,202,103,.14); background:rgba(1,18,11,.72); }
+      .lobby-form input::placeholder { color:rgba(233,237,219,.45); }
+      .mode-switch { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:7px; }
+      .join-card .mode-choice { width:auto; min-width:0; min-height:62px; padding:9px 8px; border:1px solid rgba(246,218,142,.22); border-radius:14px; background:rgba(255,255,255,.055); color:#e5ebdf; font-size:13px; }
+      .join-card .mode-choice.active { border-color:#ebc95f; background:linear-gradient(145deg,rgba(235,201,95,.26),rgba(49,125,80,.27)); color:#fff0b3; box-shadow:inset 0 0 0 1px rgba(255,241,183,.16),0 5px 13px rgba(0,0,0,.2); }
+      .lobby-ai-controls { display:flex !important; align-items:center !important; justify-content:space-between; gap:12px !important; margin:0 !important; padding:10px 12px; border:1px solid rgba(246,218,142,.18); border-radius:12px; background:rgba(0,0,0,.17); color:#e9e4cd; font-size:13px; }
+      .lobby-ai-controls select { min-width:105px; padding:7px 9px; border:1px solid rgba(246,218,142,.28); border-radius:9px; background:#103524; color:#fff5d6; font:700 13px "IBM Plex Sans Thai",sans-serif; }
+      #roomControls[style*="display: flex"] { display:grid !important; grid-template-columns:1fr 1fr; gap:8px; }
+      #roomControls input { grid-column:1/-1; }
+      .join-card .secondary-btn { width:auto; min-height:42px; padding:8px; border:1px solid rgba(246,218,142,.3) !important; border-radius:11px; background:rgba(255,255,255,.08) !important; color:#f6e6ad !important; font-size:12px; }
+      .join-card #joinBtn { min-height:50px; margin:2px 0 0; border:1px solid rgba(255,239,162,.56); border-radius:13px; background:linear-gradient(135deg,#f2cb5f,#af7618); color:#1f2418; font-size:16px; box-shadow:0 8px 18px rgba(0,0,0,.25),inset 0 1px rgba(255,255,255,.55); }
+      .join-card #joinHint { min-height:18px; margin:0 !important; color:rgba(226,238,223,.68) !important; font-size:11px !important; text-align:center; }
+      @media(max-width:520px) { body:not(.game-active) { justify-content:flex-start; padding:20px 12px; } .lobby-card-head { padding:16px 17px 13px; }.lobby-form { padding:14px 17px 17px; gap:11px; }.lobby-card-head h2 { font-size:19px; } }
 
 
 </style>
@@ -1954,8 +2250,9 @@ function tourismPhotoCard(a){
       <div class="announcer-status" id="announcerStatus"></div>
     </div>
     <button type="button" class="settings-toggle" id="settingsToggle" aria-expanded="false" title="ตั้งค่า">⚙️ ตั้งค่า</button>
+    <button type="button" class="rules-toggle" id="rulesToggle" aria-expanded="false" title="ดูกติกาการเล่น">📜 กติกา</button>
     <audio id="stepSound" src="/assets/token-step.wav" preload="auto"></audio>
-    <audio id="boardMusic" src="/assets/board-music.wav" preload="auto" loop></audio>
+    <audio id="boardMusic" src="/assets/isan-khaen-ambient.mp3" preload="auto" loop></audio>
     <header>
       <div class="lobby-logo">
         <span class="lobby-logo-icon">🗺️</span>
@@ -1965,25 +2262,32 @@ function tourismPhotoCard(a){
     </header>
 
     <div class="join-card" id="joinCard">
-      <p style="margin: 0 0 8px; font-size: 13px; color: var(--ivory-dim)">
-        เลือกโหมด แล้วสร้าง/เข้าร่วมโต๊ะ
-      </p>
-      <input id="nameInput" placeholder="ชื่อผู้เล่น" maxlength="20" />
-      <div style="display:flex;gap:8px;margin:8px 0;flex-wrap:wrap">
-        <button type="button" id="modeAiBtn" class="mode-choice active">🤖 เล่นกับ AI</button>
-        <button type="button" id="modeHumanBtn" class="mode-choice">👥 เล่นกับคน</button>
+      <div class="lobby-card-head">
+        <h2>เริ่มการผจญภัย</h2>
+        <p>ตั้งค่าโต๊ะของคุณ แล้วออกเดินทางทั่วร้อยเอ็ด</p>
       </div>
-      <div id="roomControls">
-        <input id="roomInput" placeholder="รหัสห้อง เช่น 101ABC" maxlength="12" />
-        <button type="button" id="newRoomBtn" class="secondary-btn">🎲 สร้างรหัสห้อง</button>
-        <button type="button" id="createRoomBtn" class="secondary-btn">➕ สร้างห้อง</button>
+      <div class="lobby-form">
+        <label class="lobby-label" for="nameInput">ชื่อผู้เล่น</label>
+        <input id="nameInput" placeholder="พิมพ์ชื่อที่อยากใช้ในเกม" maxlength="20" />
+        <div>
+          <span class="lobby-section-title">เลือกโหมดการเล่น</span>
+          <div class="mode-switch">
+            <button type="button" id="modeAiBtn" class="mode-choice active">🤖<br>เล่นกับ AI</button>
+            <button type="button" id="modeHumanBtn" class="mode-choice">👥<br>เล่นกับเพื่อน</button>
+          </div>
+        </div>
+        <div id="roomControls">
+          <input id="roomInput" placeholder="รหัสห้อง เช่น 101ABC" maxlength="12" />
+          <button type="button" id="newRoomBtn" class="secondary-btn">🎲 สุ่มรหัส</button>
+          <button type="button" id="createRoomBtn" class="secondary-btn">➕ สร้างห้อง</button>
+        </div>
+        <div id="aiControls" class="lobby-ai-controls">
+          <label for="aiCount">จำนวนคู่แข่ง AI</label>
+          <select id="aiCount"><option value="1">1 คน</option><option value="2">2 คน</option><option value="3" selected>3 คน</option></select>
+        </div>
+        <button id="joinBtn">เริ่มเกม</button>
+        <div id="joinHint">โหมด AI: สร้างโต๊ะใหม่ให้คุณและ AI</div>
       </div>
-      <div id="aiControls" style="display:flex;align-items:center;gap:8px;margin:8px 0">
-        <label for="aiCount">จำนวน AI</label>
-        <select id="aiCount"><option value="1">1 คน</option><option value="2">2 คน</option><option value="3" selected>3 คน</option></select>
-      </div>
-      <button id="joinBtn">สร้างเกม</button>
-      <div id="joinHint" style="font-size:11px;color:var(--ivory-dim);margin-top:7px">โหมด AI: สร้างโต๊ะใหม่ให้คุณและ AI</div>
     </div>
 
     <div class="game-topbar" id="gameTopbar">
@@ -2021,9 +2325,10 @@ function tourismPhotoCard(a){
         <div class="board-frame">
           <div class="board" id="board">
             <div class="gm-panel">
-              <div class="gm-avatar">🎙️</div>
-              <div class="dice" id="dice"></div>
-              <div class="gm-bubble" id="gmBubble">รอผู้เล่นทอยลูกเต๋า...</div>
+              <div class="dice-pair" aria-label="ลูกเต๋า 2 ลูก">
+                <div class="dice game-dice" id="dice"></div>
+                <div class="dice game-dice" id="diceSecond"></div>
+              </div>
             </div>
             <div class="center-card-decks" id="centerCardDecks" aria-label="กองการ์ดกลางกระดาน">
               <div class="card-deck quiz-deck" id="quizDeck" aria-label="กองการ์ดทำโทษ">
@@ -2191,6 +2496,24 @@ function tourismPhotoCard(a){
         <button id="gameOverClose">ปิดหน้าต่าง</button>
       </div>
     </div>
+    <div class="modal-backdrop" id="rulesBackdrop" aria-hidden="true">
+      <section class="rules-modal" role="dialog" aria-modal="true" aria-labelledby="rulesTitle">
+        <div class="rules-modal-head">
+          <div><h2 id="rulesTitle">📜 กติกาการเล่น</h2><p class="rules-sub">เศรษฐีสาเกตถิ่น 101 — เที่ยวร้อยเอ็ด 20 อำเภอ</p></div>
+          <button type="button" class="rules-close" id="rulesClose">✕ ปิด</button>
+        </div>
+        <div class="rules-highlight">
+          <div><b>฿20,000</b><span>เงินเริ่มต้นต่อคน</span></div>
+          <div><b>2 ลูก</b><span>เดินตามผลรวม 2–12</span></div>
+          <div><b>16 รอบ</b><span>จบและนับคะแนนรวม</span></div>
+        </div>
+        <div class="rules-section"><h3>1. เริ่มและลำดับการเล่น</h3><ul><li>โหมดผู้เล่นจริงต้องมีอย่างน้อย 2 คนก่อนทอยได้; โหมด AI เริ่มได้ตั้งแต่ 1 คน</li><li>ผู้เล่นผลัดกันทอยลูกเต๋า 2 ลูก ระบบนำผลรวมไปเดินหมากตามเข็มนาฬิกา</li><li>เมื่อผ่านจุด START จะรับโบนัส ฿3,000 ทันที</li></ul></div>
+        <div class="rules-section"><h3>2. ช่องทรัพย์สิน</h3><ul><li>ตกช่องที่ยังไม่มีเจ้าของและมีเงินพอ: เลือกซื้อได้ตามราคาที่แสดง หรือไม่ซื้อก็ได้</li><li>มีเวลา 10 วินาทีในการเลือกซื้อ; หมดเวลา ระบบจะถือว่าไม่ซื้อ และไม่มีการประมูล</li><li>ตกช่องของผู้เล่นอื่น: จ่ายค่าเช่าตามที่แสดงให้เจ้าของทันที</li><li>อัปเกรดได้ 1 ระดับต่อทรัพย์สิน: ค่าอัปเกรด 50% ของราคาซื้อ และค่าเช่าเพิ่มเป็น 150%</li><li>ขายคืนธนาคารได้ 50% ของราคาซื้อ; ระดับอัปเกรดจะหายไปพร้อมทรัพย์สิน</li></ul></div>
+        <div class="rules-section"><h3>3. การ์ดและช่องพิเศษ</h3><ul><li>ช่องเหตุการณ์สุ่มการ์ดนางฟ้าหรือการ์ดคำถามอย่างละครึ่ง</li><li>การ์ดนางฟ้าอาจให้เงิน ฿400–฿800 หรือให้เดินหน้าเพิ่ม 1–2 ช่อง</li><li>การ์ดคำถามร้อยเอ็ด: ตอบถูก +฿300, ตอบผิด -฿500</li><li>ภาษี/บทลงโทษ/โบนัส ใช้จำนวนเงินที่ระบุบนช่อง; ช่องธนาคาร ลงทุน เยี่ยมชมคุก และพัก เป็นช่องบันทึกเหตุการณ์ตามข้อความบนกระดาน</li><li>ช่องวาร์ปจะย้ายไปช่องอื่นแบบสุ่ม; ช่องเดินหน้า/ถอยหลังจะทำตามจำนวนช่องที่ระบุ แล้วตรวจผลของช่องปลายทางต่อ</li></ul></div>
+        <div class="rules-section"><h3>4. การล้มละลายและการชนะ</h3><ul><li>ถ้าเงินเหลือ ฿0 หรือน้อยกว่า ผู้เล่นล้มละลายและออกจากเกม</li><li>ล้มละลายจากค่าเช่า: ทรัพย์สินทั้งหมดโอนไปยังเจ้าของที่เก็บค่าเช่า</li><li>ล้มละลายจากภาษี การ์ด หรือเหตุการณ์ทั่วไป: ทรัพย์สินกลับธนาคาร</li><li>เกมจบทันทีเมื่อเหลือผู้เล่นที่ไม่ล้มละลายเพียงคนเดียว หรือเมื่อครบ 16 รอบ</li><li>เมื่อครบ 16 รอบ ผู้มีคะแนนรวมสูงสุดชนะ: เงินคงเหลือ + ราคาซื้อของทรัพย์สินที่ถือครอง (ค่าอัปเกรดไม่ถูกนับเพิ่มในคะแนน)</li></ul></div>
+        <div class="rules-note">เคล็ดลับ: อย่าซื้อจนเงินสดหมด เพราะยังต้องเผื่อภาษี ค่าเช่า และผลจากการ์ดระหว่างทาง</div>
+      </section>
+    </div>
     <div class="modal-backdrop" id="propertyActionBackdrop" aria-hidden="true">
       <div class="property-action-modal" role="dialog" aria-modal="true" aria-labelledby="propertyActionTitle">
         <div class="property-action-icon" id="propertyActionIcon">🏗️</div>
@@ -2199,6 +2522,17 @@ function tourismPhotoCard(a){
         <p id="propertyActionText"></p>
         <div class="property-action-summary" id="propertyActionSummary"></div>
         <div class="property-action-buttons"><button type="button" class="property-cancel" id="propertyActionCancel">← ย้อนกลับ</button><button type="button" id="propertyActionConfirm">ยืนยัน</button></div>
+      </div>
+    </div>
+    <div class="modal-backdrop" id="exitConfirmBackdrop" aria-hidden="true">
+      <div class="exit-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="exitConfirmTitle">
+        <div class="exit-confirm-icon">🚪</div>
+        <h2 id="exitConfirmTitle">ออกจากเกม?</h2>
+        <p>ความคืบหน้าของรอบนี้จะไม่ถูกบันทึก<br>ต้องการกลับไปหน้าแรกหรือไม่</p>
+        <div class="exit-confirm-actions">
+          <button type="button" class="exit-stay-btn" id="exitStayBtn">อยู่เล่นต่อ</button>
+          <button type="button" class="exit-leave-btn" id="exitLeaveBtn">ออกจากเกม</button>
+        </div>
       </div>
     </div>
     <div class="event-toast" id="eventToast" role="status" aria-live="polite">
@@ -2483,15 +2817,17 @@ function tourismPhotoCard(a){
         5: [0, 2, 4, 6, 8],
         6: [0, 2, 3, 5, 6, 8],
       };
-      function renderDice(value) {
-        const el = document.getElementById("dice");
-        el.innerHTML = "";
-        const active = PIP_LAYOUTS[value] || [];
-        for (let i = 0; i < 9; i++) {
-          const p = document.createElement("div");
-          p.className = "pip" + (active.includes(i) ? " active" : "");
-          el.appendChild(p);
-        }
+      function renderDice(values) {
+        const faces = Array.isArray(values) ? values : [values, values];
+        document.querySelectorAll(".game-dice").forEach((el, index) => {
+          el.innerHTML = "";
+          const active = PIP_LAYOUTS[faces[index] || 1] || [];
+          for (let i = 0; i < 9; i++) {
+            const p = document.createElement("div");
+            p.className = "pip" + (active.includes(i) ? " active" : "");
+            el.appendChild(p);
+          }
+        });
       }
       renderDice(1);
 
@@ -2509,8 +2845,14 @@ function tourismPhotoCard(a){
           );
           if (!cellEl || !prop.ownerName) return;
           const badge = cellEl.querySelector(".owner-badge");
-          badge.textContent = "🏠 " + prop.ownerName;
-          badge.style.display = "block";
+          const owner = (state.players || []).find((player) => player.id === prop.ownerId);
+          const ownerColor = owner?.color || "#f5cd5e";
+          badge.textContent = "⚑";
+          badge.title = `เจ้าของ: ${prop.ownerName}`;
+          badge.setAttribute("aria-label", `เจ้าของ: ${prop.ownerName}`);
+          badge.style.setProperty("--owner-color", ownerColor);
+          cellEl.style.setProperty("--owner-color", ownerColor);
+          badge.style.display = "grid";
           cellEl.classList.add("property-owned");
         });
       }
@@ -2624,21 +2966,32 @@ function tourismPhotoCard(a){
 
       function renderTokens(players) {
         document.querySelectorAll(".player-token").forEach((t) => t.remove());
+        document.querySelectorAll(".cell.has-player-token").forEach((cell) => cell.classList.remove("has-player-token"));
         const byCell = {};
         players.forEach((p, playerIndex) => {
           if (!p.connected) return;
           (byCell[p.pos] ||= []).push({ p, playerIndex });
         });
-        const slots = [
-          { left: "5%", top: "58%" },
-          { left: "52%", top: "58%" },
-          { left: "5%", top: "79%" },
-          { left: "52%", top: "79%" },
-        ];
+        // Full-screen uses upright tourist figures, whose feet must stay inside
+        // the same tile rather than using the old small-pawn coordinates.
+        const slots = window.matchMedia("(min-width:1200px)").matches
+          ? [
+              { left: "-5%", top: "-12%" },
+              { left: "48%", top: "-12%" },
+              { left: "-5%", top: "35%" },
+              { left: "48%", top: "35%" },
+            ]
+          : [
+              { left: "5%", top: "58%" },
+              { left: "52%", top: "58%" },
+              { left: "5%", top: "79%" },
+              { left: "52%", top: "79%" },
+            ];
 
         Object.entries(byCell).forEach(([pos, list]) => {
           const cellEl = document.getElementById("cell-" + pos);
           if (!cellEl) return;
+          cellEl.classList.add("has-player-token");
           list.forEach(({ p, playerIndex }, i) => {
             const tok = document.createElement("div");
             const style = TOKEN_STYLES[playerIndex % TOKEN_STYLES.length];
@@ -3030,6 +3383,22 @@ function tourismPhotoCard(a){
         const isOpen = audioControls.classList.toggle("open");
         settingsToggle.setAttribute("aria-expanded", String(isOpen));
       });
+      const rulesToggle = document.getElementById("rulesToggle");
+      const rulesBackdrop = document.getElementById("rulesBackdrop");
+      const closeRules = () => {
+        rulesBackdrop.classList.remove("on");
+        rulesBackdrop.setAttribute("aria-hidden", "true");
+        rulesToggle.setAttribute("aria-expanded", "false");
+      };
+      rulesToggle.addEventListener("click", () => {
+        const isOpen = rulesBackdrop.classList.toggle("on");
+        rulesBackdrop.setAttribute("aria-hidden", String(!isOpen));
+        rulesToggle.setAttribute("aria-expanded", String(isOpen));
+      });
+      document.getElementById("rulesClose").addEventListener("click", closeRules);
+      rulesBackdrop.addEventListener("click", (event) => {
+        if (event.target === rulesBackdrop) closeRules();
+      });
 
       // ระบบประกาศเกม: ใช้เสียงพูดของเบราว์เซอร์ ไม่ต้องติดตั้งไฟล์เสียงเพิ่ม
       function cleanAnnouncement(text) {
@@ -3045,13 +3414,14 @@ function tourismPhotoCard(a){
       }
 
       function speakAnnouncement(text) {
-        if (!announceEnabled || !("speechSynthesis" in window)) return;
+        if (!announceEnabled) return;
         const message = cleanAnnouncement(text);
         if (!message) return;
         const now = Date.now();
         if (message === lastAnnouncementKey && now - lastAnnouncementAt < 1800) return;
         lastAnnouncementKey = message;
         lastAnnouncementAt = now;
+        if (!("speechSynthesis" in window)) return;
         try {
           gameAnnounce(message, {ai:false});
         } catch (_) {}
@@ -3066,7 +3436,7 @@ function tourismPhotoCard(a){
       function startBoardMusic() {
         if (!musicEnabled) return;
         boardMusic.volume = 0.16;
-        boardMusic.playbackRate = 1.07;
+        boardMusic.playbackRate = 1;
         boardMusic.currentTime = 0;
         boardMusic.play().catch(() => {
           // เบราว์เซอร์บางตัวจะอนุญาตหลังจากผู้เล่นกดปุ่มเท่านั้น
@@ -3244,9 +3614,20 @@ function tourismPhotoCard(a){
         syncTourismImagesToBoard();
       })();
 
-      // ปุ่มออกจากเกม — กลับหน้าแรก (โหลดหน้าใหม่เพื่อตัดการเชื่อมต่อจากโต๊ะ)
+      // ปุ่มออกจากเกม — ใช้ป๊อปอัปในธีมเกมแทน confirm ของเบราว์เซอร์
+      const exitConfirmBackdrop = document.getElementById("exitConfirmBackdrop");
+      const closeExitConfirm = () => {
+        exitConfirmBackdrop.classList.remove("on");
+        exitConfirmBackdrop.setAttribute("aria-hidden", "true");
+      };
       document.getElementById("exitGameBtn").addEventListener("click", () => {
-        if (confirm("ออกจากเกมแล้วกลับหน้าแรกใช่ไหม?")) location.reload();
+        exitConfirmBackdrop.classList.add("on");
+        exitConfirmBackdrop.setAttribute("aria-hidden", "false");
+      });
+      document.getElementById("exitStayBtn").addEventListener("click", closeExitConfirm);
+      document.getElementById("exitLeaveBtn").addEventListener("click", () => location.reload());
+      exitConfirmBackdrop.addEventListener("click", (event) => {
+        if (event.target === exitConfirmBackdrop) closeExitConfirm();
       });
 
       setPlayMode("ai");
@@ -3322,17 +3703,18 @@ function tourismPhotoCard(a){
           // อัปเดตตำแหน่ง token แบบ optimistic เพื่อความลื่นไหล (state_update จะยืนยันอีกครั้ง)
         });
 
-        socket.on("dice_result", ({ value }) => {
+        socket.on("dice_result", ({ value, diceValues }) => {
           const diceHero = document.getElementById("diceHero");
-          document.getElementById("dice").classList.add("rolling");
+          document.querySelectorAll(".game-dice").forEach((el) => el.classList.add("rolling"));
           setTimeout(() => {
-            document.getElementById("dice").classList.remove("rolling");
-            renderDice(value);
+            document.querySelectorAll(".game-dice").forEach((el) => el.classList.remove("rolling"));
+            const rolledDice = Array.isArray(diceValues) ? diceValues : [value, value];
+            renderDice(rolledDice);
             if (diceHero) {
               diceHero.classList.remove("rolling");
               const faces = ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
               diceHero.querySelectorAll(".dice-face").forEach((face, index) => {
-                face.textContent = faces[(Number(value) - 1 + index) % faces.length];
+                face.textContent = faces[(Number(rolledDice[index]) - 1) % faces.length];
               });
             }
           }, 480);
@@ -3355,7 +3737,8 @@ function tourismPhotoCard(a){
           renderAuction(null);
           const cell = CELLS.find((c) => c.id === cellId);
           const name = cell ? cell.name : "ทรัพย์สิน";
-          document.getElementById("gmBubble").textContent = winnerName
+          const gmBubble = document.getElementById("gmBubble");
+          if (gmBubble) gmBubble.textContent = winnerName
             ? `🔨 ${winnerName} ชนะประมูล "${name}" ที่ ฿${Number(amount || 0).toLocaleString()}`
             : `📦 ไม่มีผู้เสนอราคาซื้อ "${name}"`;
         });
@@ -3374,7 +3757,8 @@ function tourismPhotoCard(a){
 
         socket.on("gm_log", (entry) => {
           if (!entry) return;
-          document.getElementById("gmBubble").textContent = entry.text;
+          const gmBubble = document.getElementById("gmBubble");
+          if (gmBubble) gmBubble.textContent = entry.text;
           const feed = document.getElementById("logFeed");
           const div = document.createElement("div");
           div.textContent = entry.text;
@@ -3384,8 +3768,8 @@ function tourismPhotoCard(a){
         });
 
         socket.on("bankruptcy", ({ playerName }) => {
-          document.getElementById("gmBubble").textContent =
-            `💥 ${playerName} ล้มละลาย!`;
+          const gmBubble = document.getElementById("gmBubble");
+          if (gmBubble) gmBubble.textContent = `💥 ${playerName} ล้มละลาย!`;
         });
 
         socket.on("game_over", ({ winnerName }) => {
