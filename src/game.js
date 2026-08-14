@@ -6,12 +6,12 @@ const START_MONEY = 20000;
 // เดิมโบนัสผ่าน START เท่ากับทุนตั้งต้นพอดี (20,000) ทำให้ผ่าน START ทุก ~7 ตาก็ได้ทุนคืนเกือบเต็ม
 // แทบไม่มีใครล้มละลาย เศรษฐกิจในเกมจึงไม่มีความหมาย — ลดสัดส่วนลงเหลือ ~15% ของทุนเริ่มเกม
 const START_BONUS = 3000;
-const STEP_DELAY_MS = 300;
+const STEP_DELAY_MS = 200;
 const MAX_CELL_CHAIN = 24;
 // จำกัดจำนวนตาทอยรวมทั้งโต๊ะ กันเกมค้างไม่จบเมื่อไม่มีใครล้มละลาย — ครบแล้วให้ผู้เล่นที่มีทรัพย์สินรวมมากที่สุดชนะ
-const MAX_TOTAL_TURNS = 150;
+const MAX_ROUNDS = 16;
 // ระยะเวลาการประมูลทรัพย์สินที่ถูกปฏิเสธซื้อ (มิลลิวินาที)
-const AUCTION_DURATION_MS = 20000;
+const AUCTION_DURATION_MS = 5000;
 
 // sessionId -> session state (ทั้งหมดอยู่ใน memory — เหมาะกับโต๊ะเกมสั้นๆ)
 const sessions = new Map();
@@ -78,7 +78,15 @@ function publicState(session) {
         .filter(([, ownerKey]) => ownerKey === p.playerKey)
         .map(([cellId]) => cellId),
     })),
+    scoreboard: session.players.map(p => {
+      const total = netWorth(session, p);
+      const money = Number(p.money) || 0;
+      return { id: p.socketId, name: p.name, color: p.color, money, propertyValue: Math.max(0, total - money), total };
+    }).sort((a, b) => b.total - a.total),
     turnPlayerId: turn ? turn.socketId : null,
+    turnCount: session.turnCount,
+    round: Math.min(MAX_ROUNDS, Math.floor(session.turnCount / Math.max(session.players.filter(p => p.connected && !p.bankrupt).length, 1)) + 1),
+    maxRounds: MAX_ROUNDS,
     isMoving: session.isMoving,
     gameOver: session.gameOver,
     winnerId: session.winnerKey ? (session.players.find(p => p.playerKey === session.winnerKey)?.socketId || null) : null,
@@ -112,9 +120,9 @@ function publicState(session) {
     properties: Object.entries(session.properties).map(([cellId, ownerKey]) => {
       const owner = session.players.find(p => p.playerKey === ownerKey);
       const cell = getCells(session.boardId).find(c => c.id === cellId);
-      const level = Math.max(0, Math.min(3, Number(session.propertyUpgrades[cellId]) || 0));
+      const level = Math.max(0, Math.min(1, Number(session.propertyUpgrades[cellId]) || 0));
       const baseRent = cell ? Math.max(0, Number(cell.rent_base) || 0) : 0;
-      const rentMultiplier = [1, 1.5, 2.25, 3][level];
+      const rentMultiplier = [1, 1.5][level];
       return {
         cellId,
         position: cell ? cell.position : null,
@@ -123,8 +131,8 @@ function publicState(session) {
         baseRent,
         rent: Math.round(baseRent * rentMultiplier),
         level,
-        maxLevel: 3,
-        upgradeCost: level < 3 && cell ? Math.floor((Number(cell.price) || 0) * [0.5, 0.75, 1][level]) : 0,
+        maxLevel: 1,
+        upgradeCost: level < 1 && cell ? Math.floor((Number(cell.price) || 0) * 0.5) : 0,
         ownerId: owner ? owner.socketId : null,
         ownerName: owner ? owner.name : null
       };
@@ -325,7 +333,9 @@ function checkWinCondition(io, session) {
 // (เช่น เศรษฐกิจสมดุลเกินไป) ให้ผู้เล่นที่มีทรัพย์สินรวม (เงิน + ราคาที่ดิน) มากที่สุดชนะแทน
 function checkTurnLimit(io, session) {
   if (session.gameOver) return false;
-  if ((session.turnCount || 0) < MAX_TOTAL_TURNS) return false;
+  const activeCount = Math.max(getActivePlayers(session).length, 1);
+  const maxTurns = MAX_ROUNDS * activeCount;
+  if ((session.turnCount || 0) < maxTurns) return false;
 
   const active = getActivePlayers(session);
   if (!active.length) return false;
@@ -335,7 +345,7 @@ function checkTurnLimit(io, session) {
   session.winnerKey = winner.playerKey;
   session.winnerName = winner.name;
   session.pendingPurchase = null;
-  addLog(session, `🏆 ครบ ${MAX_TOTAL_TURNS} ตาแล้ว — ${winner.name} ชนะเกมด้วยทรัพย์สินรวมมากที่สุด (฿${netWorth(session, winner).toLocaleString()})`);
+  addLog(session, `🏆 ครบ ${MAX_ROUNDS} รอบแล้ว — ${winner.name} ชนะเกมด้วยคะแนนรวม ฿${netWorth(session, winner).toLocaleString()}`);
   io.to(session.id).emit('game_over', {
     winnerId: winner.socketId,
     winnerName: winner.name,
@@ -430,18 +440,18 @@ function upgradeProperty(io, session, socketId, cellId) {
   if (!cell) return { error: 'ไม่พบทรัพย์สินนี้' };
   if (session.properties[cell.id] !== player.playerKey) return { error: 'ทรัพย์สินนี้ไม่ใช่ของคุณ' };
 
-  const currentLevel = Math.max(0, Math.min(3, Number(session.propertyUpgrades[cell.id]) || 0));
-  if (currentLevel >= 3) return { error: 'ทรัพย์สินนี้อัปเกรดถึงระดับสูงสุดแล้ว' };
+  const currentLevel = Math.max(0, Math.min(1, Number(session.propertyUpgrades[cell.id]) || 0));
+  if (currentLevel >= 1) return { error: 'ทรัพย์สินนี้อัปเกรดถึงระดับสูงสุดแล้ว' };
 
   const basePrice = Math.max(0, Number(cell.price) || 0);
-  const cost = Math.floor(basePrice * [0.5, 0.75, 1][currentLevel]);
+  const cost = Math.floor(basePrice * 0.5);
   if (player.money < cost) return { error: `เงินไม่พออัปเกรด ต้องใช้ ${cost.toLocaleString()} บาท` };
 
   const nextLevel = currentLevel + 1;
   player.money -= cost;
   session.propertyUpgrades[cell.id] = nextLevel;
   const baseRent = Math.max(0, Number(cell.rent_base) || 0);
-  const rent = Math.round(baseRent * [1, 1.5, 2.25, 3][nextLevel]);
+  const rent = Math.round(baseRent * 1.5);
 
   addLog(session, `🏗️ ${player.name} อัปเกรด "${cell.name}" เป็น Lv.${nextLevel} ค่าใช้จ่าย ${cost.toLocaleString()} บาท — ค่าเช่าใหม่ ${rent.toLocaleString()} บาท`);
   io.to(session.id).emit('property_upgraded', {
@@ -514,8 +524,7 @@ function handlePropertyLanding(io, session, player, cell) {
   }
 
   if (player.money < price) {
-    addLog(session, `💰 ${player.name} มีเงินไม่พอซื้อ "${cell.name}" (ต้องใช้ ${price.toLocaleString()} บาท) — เปิดประมูลให้ผู้เล่นคนอื่นแทน`);
-    startAuction(io, session, cell.id);
+    addLog(session, `💰 ${player.name} มีเงินไม่พอซื้อ "${cell.name}" (ต้องใช้ ${price.toLocaleString()} บาท) — จบตา`);
     return { action: 'end' };
   }
 
@@ -573,8 +582,7 @@ function skipPropertyPurchase(io, session, socketId) {
 
   const player = session.players.find(p => p.socketId === socketId);
   session.pendingPurchase = null;
-  addLog(session, `➡️ ${player.name} เลือกไม่ซื้อทรัพย์สิน — เปิดประมูลให้ผู้เล่นคนอื่นแทน`);
-  startAuction(io, session, pending.cellId);
+  addLog(session, `➡️ ${player.name} เลือกไม่ซื้อทรัพย์สิน — จบตา`);
   advanceTurnOrConsumeBonus(session, player);
   io.to(session.id).emit('gm_log', session.logs[0]);
   io.to(session.id).emit('state_update', publicState(session));
@@ -998,7 +1006,7 @@ async function handleRollDice(io, session, socketId) {
     // จำกัดไว้ไม่เกิน 3 ตาติดกันกันเทิร์นค้างนาน (เกมนี้ใช้ลูกเต๋าเดียว จึงไม่ใช่กฎ doubles แท้)
     const isRepeatRoll = previousRoll !== null && previousRoll === result;
     player.comboRolls = isRepeatRoll ? (player.comboRolls || 0) + 1 : 0;
-    const grantsBonusTurn = isRepeatRoll && player.comboRolls < 3;
+    const grantsBonusTurn = false;
     // เก็บสถานะ "ตาพิเศษ" ไว้ที่ตัวผู้เล่นเอง เพราะจุดที่จบเทิร์นจริงๆ อาจไม่ใช่ตรงนี้
     // (เช่น ยังรอซื้อที่ดินหรือตอบการ์ดคำถามอยู่ ต้องรอ buyProperty/skipPropertyPurchase/
     // answerQuestion เป็นผู้ตัดสินใจสลับตาแทน — ดู advanceTurnOrConsumeBonus)

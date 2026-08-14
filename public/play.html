@@ -1690,6 +1690,124 @@
       .tourism-contact-section{margin-top:16px}.tourism-contact-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:10px}.tourism-contact-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(245,205,96,.15);text-decoration:none;color:inherit;transition:.15s}.tourism-contact-item:hover{background:rgba(245,205,96,.12);border-color:rgba(245,205,96,.4)}.tourism-contact-item .contact-icon{font-size:22px;flex-shrink:0}.tourism-contact-item .contact-body{min-width:0}.tourism-contact-item .contact-label{font-size:10px;color:#a09070;margin-bottom:2px}.tourism-contact-item .contact-value{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       .tourism-open-btn{position:fixed;right:16px;bottom:74px;z-index:900;border:1px solid rgba(163,230,200,.45);background:#0b241a;color:#a3e6c8;border-radius:999px;padding:10px 14px;font-weight:800;box-shadow:0 8px 30px rgba(0,0,0,.3);cursor:pointer}
       @media(max-width:700px){.tourism-grid{grid-template-columns:1fr}.tourism-district{grid-template-columns:96px 1fr}.tourism-district img{width:96px;min-height:110px}.tourism-tools{grid-template-columns:1fr}.tourism-hub{padding:8px}.tourism-hub-panel{padding:13px;border-radius:16px}}
+
+      /* 3D tourism game art */
+      body:not(.game-active){background:linear-gradient(180deg,rgba(4,22,15,.18),rgba(4,22,15,.65)),url("/assets/roiet-journey-hero-3d.png") center/cover fixed,#0b2e20}
+      body:not(.game-active)::before{display:none}body:not(.game-active) header{position:relative;z-index:1;text-shadow:0 2px 12px rgba(0,0,0,.6)}
+      body:not(.game-active) .join-card{position:relative;overflow:hidden;background:rgba(255,255,255,.93);box-shadow:0 24px 70px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.34)}
+      body:not(.game-active) .join-card::after{content:"";position:absolute;inset:0;opacity:.12;pointer-events:none;background:url("/assets/roiet-game-lobby-3d.png") center/cover}
+      body:not(.game-active) .join-card>*{position:relative;z-index:1}
+      body.game-active .gm-panel{overflow:hidden;background:linear-gradient(rgba(6,29,19,.58),rgba(6,29,19,.78)),url("/assets/roiet-board-3d.png") center/cover;border-color:rgba(245,205,96,.42)}
+      body.game-active .gm-bubble{background:rgba(5,21,14,.76);backdrop-filter:blur(5px)}
+      @media(max-width:600px){body:not(.game-active){background-attachment:scroll}}
+
+      /* ===== Compact player rail / board-first game screen ===== */
+      body.game-active { padding: 14px 20px 48px; }
+      .game-topbar {
+        width:min(590px,calc(100vw - 520px)); min-height:68px; padding:9px 76px 9px 16px;
+        border-radius:18px; background:rgba(7,29,20,.92); border-color:rgba(245,205,96,.36);
+        box-shadow:0 12px 32px rgba(0,0,0,.46);
+      }
+      .turn-status { min-width:260px; }.turn-label { color:#d9d3bf; font-size:10px; letter-spacing:.1em; }
+      .turn-player { font-size:clamp(17px,2vw,23px); }.turn-message { color:rgba(245,255,250,.68); }
+      .top-dice { width:46px; height:46px; border-radius:14px; font-size:32px; }
+      .money-hud { min-width:170px; min-height:76px; padding:8px 11px 8px 8px; border-radius:15px; }
+      .money-icon { width:52px; height:52px; flex-basis:52px; }.money-hud-label { font-size:10px; }.money-hud-value { font-size:23px; }
+      .stage { max-width:1640px; grid-template-columns:170px minmax(560px,1fr) 300px; gap:20px; padding-top:82px; }
+
+      /* Minimal player rail: colour is a cue, not the whole component. */
+      .player-rail { align-self:start; gap:0; padding:12px; border:1px solid rgba(245,205,96,.45); border-radius:18px; background:rgba(6,29,20,.82); box-shadow:0 16px 34px rgba(0,0,0,.32); }
+      .player-rail::before { display:none; }.rail-title { display:none; }
+      .player-rail .money-hud { position:relative; inset:auto; min-width:0; min-height:0; width:100%; margin:0 0 9px; padding:0 0 10px; border:0; border-bottom:1px solid rgba(255,255,255,.13); border-radius:0; background:transparent; box-shadow:none; backdrop-filter:none; }
+      .player-rail .money-hud.on { display:flex; }.player-rail .money-icon { width:40px; height:40px; flex-basis:40px; }.player-rail .money-hud-value { font-size:18px; }
+      .player-card { min-height:60px; gap:7px; padding:8px 2px; border:0; border-bottom:1px solid rgba(255,255,255,.13); border-radius:0; background:transparent; box-shadow:none; overflow:visible; }
+      .player-card:last-child { border-bottom:0; }.player-card::before { width:5px; left:-12px; border-radius:0 5px 5px 0; }
+      .player-card.me { box-shadow:none; }.player-card.turn { transform:none; }
+      .player-token-icon { width:29px; height:34px; flex-basis:29px; transform:scale(.78); transform-origin:left center; margin-right:-6px; }
+      .player-card-name { font-size:12px; color:#f4f1e8; }.player-card-money { margin-top:1px; color:rgba(255,232,143,.92); font-size:11px; }
+      .you-tag { font-size:8px; }.turn-dot { font-size:11px; }
+
+      .board-frame { padding:12px; border-radius:26px; box-shadow:0 24px 60px rgba(0,0,0,.55); }
+      .board { gap:4px; padding:4px; border-radius:19px; }.cell { border-radius:8px; }
+      .gm-panel { background:linear-gradient(rgba(4,28,18,.2),rgba(4,28,18,.32)),url("/assets/roiet-board-3d.png") center/cover !important; border-color:rgba(245,205,96,.52) !important; }
+      .gm-bubble { background:rgba(5,24,15,.75); border:1px solid rgba(255,255,255,.12); }.center-card-decks { gap:14px; }.card-deck { width:102px; height:144px; }
+
+      /* Action rail: dice first, then ownership and game updates. */
+      .side { gap:12px; }.side .panel { padding:14px; border-radius:18px; background:rgba(6,29,20,.84); border-color:rgba(245,205,96,.36); }
+      .side .panel h2 { margin:0 0 10px; font-size:14px; color:#f6df85; }.side .panel:first-child h2 { font-size:15px; }
+      .roll-btn { min-height:64px; margin-top:8px; border-radius:14px; background:linear-gradient(135deg,#3bbb83,#166f51); box-shadow:0 10px 22px rgba(23,135,87,.34); }
+      .property-panel { max-height:230px; overflow:auto; }.log-feed { max-height:210px; }.log-feed div { font-size:12px; }
+      .tourism-open-btn { right:18px; bottom:74px; }
+      @media(max-width:1180px){.stage{grid-template-columns:154px minmax(470px,1fr) 250px;gap:12px}.game-topbar{width:min(530px,calc(100vw - 400px))}}
+      @media(max-width:900px){body.game-active{padding:10px 8px 32px}.stage{padding-top:118px}.game-topbar{width:calc(100vw - 24px)}.player-rail{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0}.player-card{padding-left:7px}.money-hud{min-width:185px;min-height:66px}.money-icon{width:44px;height:44px;flex-basis:44px}.card-deck{width:84px;height:120px}}
+
+      /* Layout matching the approved game-screen concept. */
+      .stage { grid-template-columns:190px minmax(620px, 1fr) 315px; max-width:1720px; gap:24px; }
+      .game-topbar { z-index:60; width:min(600px,calc(100vw - 600px)); border:1px solid rgba(224,184,74,.58); }
+      .player-rail { padding:14px 13px 16px; border-color:rgba(224,184,74,.55); background:linear-gradient(160deg,rgba(5,35,24,.95),rgba(3,22,15,.9)); }
+      .player-rail .money-hud { padding-bottom:13px; margin-bottom:5px; }
+      .player-rail .money-icon { width:42px; height:42px; flex-basis:42px; }
+      .player-rail .money-hud-label { color:#ded9c8; font-size:11px; }.player-rail .money-hud-value { color:#ffd45a; font-size:21px; }
+      .player-card { min-height:54px; padding:7px 1px; gap:5px; }
+      .player-token-icon { transform:scale(.7); margin-right:-10px; }.player-card-name { font-size:12px; }.player-card-money { font-size:11px; }.player-card::before { width:4px; left:-13px; }
+      .board-frame { padding:13px; border-radius:28px; border-color:rgba(121,225,172,.45); }.board { gap:5px; padding:5px; }
+      .gm-panel { background:linear-gradient(rgba(2,31,20,.1),rgba(2,31,20,.2)),url("/assets/roiet-board-3d.png") center/cover !important; }
+      .side .panel { border-color:rgba(224,184,74,.48); background:linear-gradient(160deg,rgba(5,35,24,.94),rgba(3,22,15,.88)); }
+      .side .panel h2 { text-align:center; color:#f9d879; font-size:18px; letter-spacing:.02em; }
+      .action-panel { padding:18px !important; text-align:center; }
+      .dice-hero { height:155px; display:flex; align-items:center; justify-content:center; gap:2px; margin:2px 0 10px; border-radius:16px; background:radial-gradient(circle,rgba(42,205,121,.32),transparent 65%); filter:drop-shadow(0 0 18px rgba(42,205,121,.18)); }
+      .dice-hero span { display:grid; place-items:center; width:78px; height:78px; border-radius:18px; background:linear-gradient(145deg,#fffdf4,#c7ddd0); color:#16372b; font-family:Georgia,serif; font-size:57px; line-height:1; box-shadow:inset 0 2px 0 #fff,0 12px 22px rgba(0,0,0,.42); }
+      .dice-hero span:first-child { transform:rotate(-10deg) translateY(-5px); }.dice-hero span:last-child { transform:rotate(12deg) translateY(7px); }
+      .dice-hero.rolling { animation:diceGlow .5s ease-in-out infinite alternate; }
+      .dice-hero.rolling .dice-face { animation:diceTumble .48s cubic-bezier(.2,.8,.25,1) infinite; }
+      .dice-hero.rolling .dice-face:last-child { animation-delay:.1s; }
+      @keyframes diceTumble { 0%{transform:translateY(0) rotate(0) scale(1)} 45%{transform:translateY(-18px) rotate(190deg) scale(1.12)} 100%{transform:translateY(3px) rotate(360deg) scale(.96)} }
+      @keyframes diceGlow { from{filter:drop-shadow(0 0 8px rgba(64,220,128,.18))} to{filter:drop-shadow(0 0 24px rgba(90,255,155,.7))} }
+      .roll-btn { margin-top:0; min-height:54px; font-size:15px; color:#d6ffb6; border:1px solid rgba(224,184,74,.55); background:linear-gradient(135deg,#0d4c35,#0a3023); box-shadow:inset 0 0 0 1px rgba(123,255,171,.12),0 8px 18px rgba(0,0,0,.28); }
+      .property-panel h2::after { content:""; }.property-panel { max-height:none; }.log-feed { max-height:230px; }
+      @media(max-width:1250px){.stage{grid-template-columns:170px minmax(500px,1fr) 270px;gap:15px}.dice-hero{height:130px}.dice-hero span{width:62px;height:62px;font-size:46px}}
+
+      /* Three-part status bar. */
+      .game-topbar { width:min(560px,calc(100vw - 620px)); padding:9px 54px 9px 14px; gap:0; justify-content:stretch; }
+      .game-status-segment,.turn-status { min-width:0; flex:1; padding:0 16px; text-align:center; }
+      .game-status-segment { border-right:1px solid rgba(224,184,74,.55); }
+      .game-status-label { color:#e6e2d3; font-size:10px; font-weight:700; line-height:1.15; }
+      .game-status-value { color:#fff6d5; font-family:"IBM Plex Mono",monospace; font-size:17px; font-weight:800; line-height:1.2; }
+      .game-time .game-status-value { color:#ffd35a; }
+      .turn-status { border-right:1px solid rgba(224,184,74,.55); line-height:1; }
+      .turn-label { font-size:10px; color:#e6e2d3; }.turn-player { margin-top:2px; font-size:16px; }.turn-message { display:none; }
+      .top-dice { display:none; }.exit-game-btn { right:10px; padding:6px 7px; font-size:0; border:0; background:transparent; color:#f4dec0; }
+      .exit-game-btn::before { content:"↪"; font-size:20px; }
+      @media(max-width:900px){.game-topbar{width:calc(100vw - 24px);padding-right:42px}.game-status-segment,.turn-status{padding:0 8px}.game-status-value{font-size:14px}.turn-player{font-size:14px}}
+      .transfer-btn { display:none !important; }
+      .center-card-decks { display:none !important; }
+      #auctionBackdrop { display:none !important; }
+      .scoreboard { margin:16px 0; display:grid; gap:6px; text-align:left; font-size:12px; }
+      .scoreboard-head,.scoreboard-row { display:grid; grid-template-columns:24px minmax(90px,1.4fr) 1fr 1fr 1.15fr; gap:6px; align-items:center; }
+      .scoreboard-head { color:var(--brass-light); font-weight:700; padding:0 8px 4px; font-size:10px; }
+      .scoreboard-row { padding:9px 8px; border-radius:10px; background:rgba(0,0,0,.22); color:var(--ivory-dim); }
+      .scoreboard-row.winner { background:rgba(245,205,96,.18); border:1px solid rgba(245,205,96,.4); color:#fff7d8; }
+      .scoreboard-row strong { color:#ffd45a; }.score-player { display:flex; align-items:center; gap:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+      .score-player i { width:9px; height:9px; border-radius:50%; flex:0 0 9px; }
+      .property-action-modal { width:min(420px,92vw); padding:26px; border:1px solid rgba(245,205,96,.55); border-radius:22px; background:linear-gradient(155deg,#123c2b,#071d14); color:#f7f2df; text-align:center; box-shadow:0 26px 80px rgba(0,0,0,.58); }
+      .property-action-icon { width:64px; height:64px; display:grid; place-items:center; margin:0 auto 10px; border-radius:18px; background:linear-gradient(145deg,#f5d36e,#9a6810); font-size:31px; box-shadow:inset 0 1px 0 rgba(255,255,255,.5); }
+      .property-action-kicker { color:#f4d56e; font-size:11px; font-weight:800; letter-spacing:.08em; }.property-action-modal h2 { margin:5px 0 8px; font-size:23px; }.property-action-modal p { margin:0; color:#d4e6dc; line-height:1.55; }
+      .property-action-summary { margin:16px 0; padding:12px; border:1px solid rgba(255,255,255,.1); border-radius:13px; background:rgba(0,0,0,.22); color:#fff2b5; font-weight:700; }
+      .property-action-buttons { display:grid; grid-template-columns:1fr 1fr; gap:10px; }.property-action-buttons button { min-height:45px; border-radius:12px; font:700 14px "IBM Plex Sans Thai",sans-serif; cursor:pointer; }.property-cancel { border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.08); color:#e7efe9; }.property-action-buttons #propertyActionConfirm { border:0; background:linear-gradient(135deg,#45be87,#177151); color:#fff; }.property-action-modal.sell-mode .property-action-icon { background:linear-gradient(145deg,#f19576,#a43228); }.property-action-modal.sell-mode #propertyActionConfirm { background:linear-gradient(135deg,#d85c48,#963126); }
+      .event-toast { position:fixed; left:50%; bottom:28px; z-index:1100; display:flex; align-items:center; gap:12px; width:min(460px,calc(100vw - 32px)); padding:14px 16px; border:1px solid rgba(245,205,96,.52); border-radius:18px; background:linear-gradient(145deg,rgba(14,58,40,.97),rgba(5,25,17,.97)); box-shadow:0 18px 45px rgba(0,0,0,.48); color:#fff7df; transform:translate(-50%,30px); opacity:0; pointer-events:none; transition:opacity .22s,transform .22s; }
+      .event-toast.show { opacity:1; transform:translate(-50%,0); }.event-toast.gain { border-color:rgba(100,232,151,.7); }.event-toast.loss { border-color:rgba(243,113,91,.74); }
+      .event-toast-icon { width:42px; height:42px; display:grid; place-items:center; flex:0 0 42px; border-radius:13px; background:rgba(245,205,96,.18); font-size:23px; }.event-toast.gain .event-toast-icon{background:rgba(74,203,123,.18)}.event-toast.loss .event-toast-icon{background:rgba(215,78,61,.2)}
+      .event-toast-label { color:#f3d36e; font-size:10px; font-weight:800; letter-spacing:.08em; }.event-toast-text { margin-top:2px; font-size:14px; font-weight:700; line-height:1.35; }
+      .settings-toggle { position:fixed; right:18px; top:18px; z-index:950; display:none; border:1px solid rgba(245,205,96,.5); border-radius:999px; padding:10px 15px; background:rgba(5,29,20,.92); color:#f6e4af; font:700 13px "IBM Plex Sans Thai",sans-serif; cursor:pointer; box-shadow:0 8px 24px rgba(0,0,0,.32); }
+      body.game-active .settings-toggle { display:block; }
+      .audio-controls.on { display:none; }
+      .audio-controls.open { display:flex; flex-direction:column; align-items:stretch; width:220px; right:18px; top:66px; bottom:auto; padding:12px; border:1px solid rgba(245,205,96,.38); border-radius:16px; background:rgba(5,29,20,.96); box-shadow:0 16px 36px rgba(0,0,0,.45); }
+      .audio-settings-title { color:#f6d879; font-size:13px; font-weight:800; margin:0 0 4px; }
+      .audio-controls.open button { width:100%; text-align:left; }
+      .audio-controls.open .announcer-status { font-size:10px; line-height:1.35; color:#c8d9cf; }
+      @media(max-width:600px){.settings-toggle{right:10px;top:10px}.audio-controls.open{right:10px;top:58px;bottom:auto;width:min(250px,calc(100vw - 20px))}}
+
+
 </style>
   
 <style id="tourism-photos-v26">
@@ -1776,6 +1894,8 @@ function tourismPhotoCard(a){
   function pickVoice(forAI){
     const thai = voices.filter(isThaiVoice);
     if (!thai.length) return null;
+    const natural = thai.find(v => /google|microsoft|siri|female|woman|kanya|narisa|premwadee/i.test(v.name));
+    if (natural) return natural;
     // Prefer a different Thai voice for AI. If only one exists, keep it.
     if (forAI && thai.length > 1) {
       const ai = thai.find(v => /female|woman|siri|kanya|narisa|premwadee/i.test(v.name));
@@ -1798,8 +1918,8 @@ function tourismPhotoCard(a){
 
     const u = new SpeechSynthesisUtterance(job.text);
     u.lang = 'th-TH';
-    u.rate = forAI ? 1.02 : 0.96;
-    u.pitch = forAI ? 1.12 : 0.92;
+    u.rate = forAI ? 1.04 : 0.92;
+    u.pitch = forAI ? 1.06 : 1.0;
     u.volume = 1;
     const voice = pickVoice(job.forAI);
     if (voice) u.voice = voice;
@@ -1827,11 +1947,13 @@ function tourismPhotoCard(a){
 </head>
   <body>
     <div class="audio-controls" id="audioControls" aria-label="ควบคุมเสียง">
+      <div class="audio-settings-title">การตั้งค่าเสียง</div>
       <button type="button" id="musicToggle" title="เปิด/ปิดเพลง">🎵 เพลง: เปิด</button>
       <button type="button" id="soundToggle" title="เปิด/ปิดเสียงเดินหมาก">🔊 เสียงหมาก: เปิด</button>
       <button type="button" id="announceToggle" title="เปิด/ปิดเสียงประกาศเกม">📢 ประกาศ: เปิด</button>
       <div class="announcer-status" id="announcerStatus"></div>
     </div>
+    <button type="button" class="settings-toggle" id="settingsToggle" aria-expanded="false" title="ตั้งค่า">⚙️ ตั้งค่า</button>
     <audio id="stepSound" src="/assets/token-step.wav" preload="auto"></audio>
     <audio id="boardMusic" src="/assets/board-music.wav" preload="auto" loop></audio>
     <header>
@@ -1865,10 +1987,18 @@ function tourismPhotoCard(a){
     </div>
 
     <div class="game-topbar" id="gameTopbar">
+      <div class="game-status-segment">
+        <div class="game-status-label">รอบที่</div>
+        <div class="game-status-value" id="roundValue">1 / 1</div>
+      </div>
       <div class="turn-status">
-        <div class="turn-label">เทิร์นของ</div>
+        <div class="turn-label">ผู้เล่นปัจจุบัน</div>
         <div class="turn-player" id="turnPlayerName">รอผู้เล่น</div>
         <div class="turn-message" id="turnMessage">เข้าร่วมเกมแล้วทอยลูกเต๋าได้เลย!</div>
+      </div>
+      <div class="game-status-segment game-time">
+        <div class="game-status-label">เวลาที่เหลือ</div>
+        <div class="game-status-value" id="turnTimer">00:45</div>
       </div>
       <div class="top-dice" id="topDice" aria-hidden="true">⚄</div>
       <button type="button" id="exitGameBtn" class="exit-game-btn" title="ออกจากเกม กลับหน้าแรก">🚪 ออก</button>
@@ -1911,10 +2041,11 @@ function tourismPhotoCard(a){
         </div>
       </div>
       <div class="side">
-        <div class="panel">
-          <h2>ผู้เล่นบนโต๊ะ</h2>
+        <div class="panel action-panel">
+          <h2>✦ ทอยลูกเต๋า ✦</h2>
+          <div class="dice-hero" id="diceHero" aria-hidden="true"><span class="dice-face">⚄</span><span class="dice-face">⚂</span></div>
           <div id="playerList"></div>
-          <button class="roll-btn" id="rollBtn">🎲 ทอยลูกเต๋า</button>
+          <button class="roll-btn" id="rollBtn">คลิกเพื่อทอยลูกเต๋า</button>
           <div class="err" id="errMsg"></div>
         </div>
         <div class="panel property-panel">
@@ -2056,8 +2187,23 @@ function tourismPhotoCard(a){
         <div style="font-size: 44px">🏆</div>
         <h2>จบเกม!</h2>
         <div id="gameOverText">กำลังสรุปผล...</div>
+        <div class="scoreboard" id="scoreboard"></div>
         <button id="gameOverClose">ปิดหน้าต่าง</button>
       </div>
+    </div>
+    <div class="modal-backdrop" id="propertyActionBackdrop" aria-hidden="true">
+      <div class="property-action-modal" role="dialog" aria-modal="true" aria-labelledby="propertyActionTitle">
+        <div class="property-action-icon" id="propertyActionIcon">🏗️</div>
+        <div class="property-action-kicker" id="propertyActionKicker">จัดการทรัพย์สิน</div>
+        <h2 id="propertyActionTitle">ยืนยันรายการ</h2>
+        <p id="propertyActionText"></p>
+        <div class="property-action-summary" id="propertyActionSummary"></div>
+        <div class="property-action-buttons"><button type="button" class="property-cancel" id="propertyActionCancel">← ย้อนกลับ</button><button type="button" id="propertyActionConfirm">ยืนยัน</button></div>
+      </div>
+    </div>
+    <div class="event-toast" id="eventToast" role="status" aria-live="polite">
+      <div class="event-toast-icon" id="eventToastIcon">✨</div>
+      <div><div class="event-toast-label" id="eventToastLabel">เหตุการณ์สำคัญ</div><div class="event-toast-text" id="eventToastText"></div></div>
     </div>
 
     <script>
@@ -2369,9 +2515,12 @@ function tourismPhotoCard(a){
         });
       }
 
+      let purchaseTimer = null;
       function renderPurchaseOffer(offer) {
         const backdrop = document.getElementById("purchaseBackdrop");
         if (!offer) {
+          clearInterval(purchaseTimer);
+          purchaseTimer = null;
           backdrop.classList.remove("on");
           return;
         }
@@ -2383,9 +2532,22 @@ function tourismPhotoCard(a){
         const mine = offer.playerId === MY_ID;
         document.getElementById("buyBtn").disabled = !mine;
         document.getElementById("skipBtn").disabled = !mine;
+        let secondsLeft = 10;
+        clearInterval(purchaseTimer);
         document.getElementById("purchaseWait").textContent = mine
-          ? "เลือกซื้อหรือไม่ซื้อเพื่อจบตาของคุณ"
+          ? `เลือกซื้อหรือไม่ซื้อภายใน ${secondsLeft} วินาที`
           : "กำลังรอเจ้าของตาตัดสินใจ...";
+        if (mine) {
+          purchaseTimer = setInterval(() => {
+            secondsLeft -= 1;
+            document.getElementById("purchaseWait").textContent = `เลือกซื้อหรือไม่ซื้อภายใน ${secondsLeft} วินาที`;
+            if (secondsLeft <= 0) {
+              clearInterval(purchaseTimer);
+              purchaseTimer = null;
+              socket?.emit("skip_property");
+            }
+          }, 1000);
+        }
         backdrop.classList.add("on");
       }
 
@@ -2540,6 +2702,9 @@ function tourismPhotoCard(a){
         lastMyMoney = money;
       }
 
+      let activeTurnId = null;
+      let turnSecondsLeft = 45;
+      let turnTimerHandle = null;
       function renderTurnBar(state) {
         const turn = (state.players || []).find((p) => p.id === state.turnPlayerId);
         const name = turn ? turn.name : "รอผู้เล่น";
@@ -2562,6 +2727,20 @@ function tourismPhotoCard(a){
           topDice.textContent = state.isMoving ? "🎲" : "⚄";
           topDice.classList.toggle("spinning", !!state.isMoving);
         }
+        const roundValue = document.getElementById("roundValue");
+        if (roundValue) roundValue.textContent = `${state.round || 1} / ${state.maxRounds || 1}`;
+        if (activeTurnId !== state.turnPlayerId) {
+          activeTurnId = state.turnPlayerId;
+          turnSecondsLeft = 45;
+          if (turnTimerHandle) clearInterval(turnTimerHandle);
+          turnTimerHandle = setInterval(() => {
+            if (turnSecondsLeft > 0) turnSecondsLeft -= 1;
+            const timer = document.getElementById("turnTimer");
+            if (timer) timer.textContent = `00:${String(turnSecondsLeft).padStart(2, "0")}`;
+          }, 1000);
+        }
+        const timer = document.getElementById("turnTimer");
+        if (timer) timer.textContent = `00:${String(turnSecondsLeft).padStart(2, "0")}`;
       }
 
       function renderPlayerRail(state) {
@@ -2601,6 +2780,24 @@ function tourismPhotoCard(a){
           state.turnPlayerId === MY_ID
             ? "🎲 ทอยลูกเต๋า (ตาคุณ)"
             : "🎲 รอตาผู้เล่นอื่น...";
+      }
+
+      function openPropertyAction(options) {
+        const backdrop = document.getElementById("propertyActionBackdrop");
+        const modal = backdrop.querySelector(".property-action-modal");
+        modal.classList.toggle("sell-mode", options.kind === "sell");
+        document.getElementById("propertyActionIcon").textContent = options.kind === "sell" ? "🏷️" : "🏗️";
+        document.getElementById("propertyActionKicker").textContent = options.kind === "sell" ? "ขายคืนธนาคาร" : "อัปเกรดทรัพย์สิน";
+        document.getElementById("propertyActionTitle").textContent = options.title;
+        document.getElementById("propertyActionText").textContent = options.text;
+        document.getElementById("propertyActionSummary").textContent = options.summary;
+        const confirmButton = document.getElementById("propertyActionConfirm");
+        confirmButton.textContent = options.confirmLabel;
+        const close = () => { backdrop.classList.remove("on"); backdrop.setAttribute("aria-hidden", "true"); };
+        document.getElementById("propertyActionCancel").onclick = close;
+        confirmButton.onclick = () => { close(); options.onConfirm(); };
+        backdrop.classList.add("on");
+        backdrop.setAttribute("aria-hidden", "false");
       }
 
       function renderMyProperties(state) {
@@ -2644,17 +2841,15 @@ function tourismPhotoCard(a){
             const prop = mine.find((p) => p.cellId === btn.dataset.upgrade);
             if (!prop || Number(prop.level || 0) >= Number(prop.maxLevel || 3)) return;
             const cost = Number(prop.upgradeCost || 0);
-            if (confirm(`อัปเกรด ${prop.name} เป็น Lv.${Number(prop.level || 0) + 1} ใช้เงิน ฿${cost.toLocaleString()} ?\nค่าเช่าปัจจุบัน ฿${Number(prop.rent || 0).toLocaleString()}`)) {
-              socket?.emit("upgrade_property", { cellId: btn.dataset.upgrade });
-            }
+            openPropertyAction({ kind:"upgrade", title:`อัปเกรด ${prop.name}`, text:`ยกระดับเป็น Lv.${Number(prop.level || 0) + 1}`, summary:`ใช้เงิน ฿${cost.toLocaleString()} · ค่าเช่าใหม่จะเพิ่มขึ้น`, confirmLabel:"ยืนยันอัปเกรด", onConfirm:()=>socket?.emit("upgrade_property", { cellId: btn.dataset.upgrade }) });
           }),
         );
         box.querySelectorAll("[data-sell]").forEach((btn) =>
           btn.addEventListener("click", () => {
-            if (
-              confirm("ยืนยันขายทรัพย์สินนี้คืนธนาคารในราคา 50% ของราคาซื้อ?")
-            )
-              socket?.emit("sell_property", { cellId: btn.dataset.sell });
+            const prop = mine.find((p) => p.cellId === btn.dataset.sell);
+            if (!prop) return;
+            const returnValue = Math.floor(Number(prop.price || 0) * .5);
+            openPropertyAction({ kind:"sell", title:`ขาย ${prop.name}`, text:"ขายทรัพย์สินคืนให้ธนาคาร", summary:`ได้รับเงินคืน ฿${returnValue.toLocaleString()} (50% ของราคาซื้อ)`, confirmLabel:"ยืนยันขาย", onConfirm:()=>socket?.emit("sell_property", { cellId: btn.dataset.sell }) });
           }),
         );
         box.querySelectorAll("[data-transfer]").forEach((btn) =>
@@ -2770,7 +2965,18 @@ function tourismPhotoCard(a){
 
       function showGameOver(state) {
         document.getElementById("gameOverText").innerHTML =
-          `<strong>${escapeHtml(state.winnerName || "ผู้ชนะ")}</strong><br><span style="color:var(--ivory-dim)">เป็นผู้ชนะจากเงื่อนไขผู้เล่นคนสุดท้ายที่ยังไม่ล้มละลาย</span>`;
+          `<strong>${escapeHtml(state.winnerName || "ผู้ชนะ")}</strong><br><span style="color:var(--ivory-dim)">ชนะด้วยคะแนนรวมสูงสุด</span>`;
+        const rows = (state.scoreboard || []).map((p, index) => `
+          <div class="scoreboard-row ${p.id === state.winnerId ? "winner" : ""}">
+            <span class="score-rank">${index + 1}</span>
+            <span class="score-player"><i style="background:${p.color || "#e9cd6a"}"></i>${escapeHtml(p.name)}</span>
+            <span>฿${Number(p.money || 0).toLocaleString()}</span>
+            <span>฿${Number(p.propertyValue || 0).toLocaleString()}</span>
+            <strong>฿${Number(p.total || 0).toLocaleString()}</strong>
+          </div>`).join("");
+        document.getElementById("scoreboard").innerHTML = rows
+          ? `<div class="scoreboard-head"><span>#</span><span>ผู้เล่น</span><span>เงิน</span><span>ที่ดิน</span><span>รวม</span></div>${rows}`
+          : "";
         document.getElementById("gameOverBackdrop").classList.add("on");
       }
       function showError(msg) {
@@ -2818,13 +3024,24 @@ function tourismPhotoCard(a){
       let lastAnnouncementKey = "";
       let lastAnnouncementAt = 0;
       const announceToggle = document.getElementById("announceToggle");
+      const settingsToggle = document.getElementById("settingsToggle");
+
+      settingsToggle.addEventListener("click", () => {
+        const isOpen = audioControls.classList.toggle("open");
+        settingsToggle.setAttribute("aria-expanded", String(isOpen));
+      });
 
       // ระบบประกาศเกม: ใช้เสียงพูดของเบราว์เซอร์ ไม่ต้องติดตั้งไฟล์เสียงเพิ่ม
       function cleanAnnouncement(text) {
-        return String(text || "")
+        const message = String(text || "")
           .replace(/[🏆💥🏷️🤝🏠💸🏘️🛒➡️🎉⚠️❓🎁🏦📈🔒🅿️🌀🎲]/gu, " ")
           .replace(/\s+/g, " ")
           .trim();
+        if (/ทอยได้/.test(message)) return `ลุ้นกันหน่อย... ${message}`;
+        if (/ผ่านจุด START/.test(message)) return `เยี่ยมมาก! ${message}`;
+        if (/ชนะเกม/.test(message)) return `และผู้ชนะคือ... ${message}`;
+        if (/ล้มละลาย/.test(message)) return `โอ๊ะโอ... ${message}`;
+        return message;
       }
 
       function speakAnnouncement(text) {
@@ -2848,7 +3065,8 @@ function tourismPhotoCard(a){
 
       function startBoardMusic() {
         if (!musicEnabled) return;
-        boardMusic.volume = 0.22;
+        boardMusic.volume = 0.16;
+        boardMusic.playbackRate = 1.07;
         boardMusic.currentTime = 0;
         boardMusic.play().catch(() => {
           // เบราว์เซอร์บางตัวจะอนุญาตหลังจากผู้เล่นกดปุ่มเท่านั้น
@@ -2913,6 +3131,35 @@ function tourismPhotoCard(a){
 
       /* ---------- tourism information system ---------- */
       let tourismData = [];
+      function syncTourismImagesToBoard() {
+        if (!CELLS.length || !tourismData.length) return false;
+        let changed = false;
+        tourismData.forEach(district => {
+          const cell = CELLS.find(c => c.id === district.cellId || Number(c.position) === Number(district.position));
+          if (!cell) return;
+          if (!district.image_url && cell.image_url) { district.image_url = cell.image_url; changed = true; }
+          if (!cell.image_url && district.image_url) { cell.image_url = district.image_url; changed = true; }
+        });
+        return changed;
+      }
+
+      let eventToastTimer = null;
+      function showImportantEvent(text) {
+        const message = String(text || "");
+        if (!/(ได้|เสีย|รับเงิน|จ่ายค่าเช่า|ชนะประมูล|ขาย|อัปเกรด|ล้มละลาย|วาร์ป|เดินหน้า|ถอยหลัง|โบนัส|ตกที่)/.test(message)) return;
+        if (/จั่วการ์ดทำโทษ|ได้การ์ดนางฟ้า/.test(message)) return;
+        const toast = document.getElementById("eventToast");
+        const isLoss = /(เสีย|จ่าย|ล้มละลาย|ถอยหลัง)/.test(message);
+        const isGain = /(ได้|รับเงิน|โบนัส|ชนะประมูล|เดินหน้า)/.test(message) && !isLoss;
+        toast.classList.toggle("loss", isLoss);
+        toast.classList.toggle("gain", isGain);
+        document.getElementById("eventToastIcon").textContent = isLoss ? "💸" : isGain ? "✨" : "📍";
+        document.getElementById("eventToastLabel").textContent = isLoss ? "มีการเปลี่ยนแปลง" : "เหตุการณ์สำคัญ";
+        document.getElementById("eventToastText").textContent = message.replace(/^[^ก-๙]*/u, "");
+        toast.classList.add("show");
+        clearTimeout(eventToastTimer);
+        eventToastTimer = setTimeout(() => toast.classList.remove("show"), 3200);
+      }
       async function loadTourismData() {
         try {
           let data = null;
@@ -2930,6 +3177,7 @@ function tourismPhotoCard(a){
             data = await res.json();
           }
           tourismData = data.districts || [];
+          if (syncTourismImagesToBoard()) renderBoard();
           const cats = [...new Set(tourismData.map(d => d.category))].sort();
           const select = document.getElementById('tourismCategory');
           select.innerHTML = '<option value="">ทุกหมวด</option>' + cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
@@ -2990,7 +3238,11 @@ function tourismPhotoCard(a){
       document.getElementById('tourismDetailClose').addEventListener('click',closeTourismDetail);
       document.getElementById('tourismSearch').addEventListener('input',renderTourismHub);
       document.getElementById('tourismCategory').addEventListener('change',renderTourismHub);
-      loadTourismData();
+      (async function initializeTourismImages() {
+        await loadBoardData();
+        await loadTourismData();
+        syncTourismImagesToBoard();
+      })();
 
       // ปุ่มออกจากเกม — กลับหน้าแรก (โหลดหน้าใหม่เพื่อตัดการเชื่อมต่อจากโต๊ะ)
       document.getElementById("exitGameBtn").addEventListener("click", () => {
@@ -3001,6 +3253,7 @@ function tourismPhotoCard(a){
 
       async function connectAndEmit(eventName, payload) {
         await loadBoardData();
+        syncTourismImagesToBoard();
         renderBoard();
         if (socket) { try { socket.disconnect(); } catch (_) {} }
         socket = io();
@@ -3070,10 +3323,18 @@ function tourismPhotoCard(a){
         });
 
         socket.on("dice_result", ({ value }) => {
+          const diceHero = document.getElementById("diceHero");
           document.getElementById("dice").classList.add("rolling");
           setTimeout(() => {
             document.getElementById("dice").classList.remove("rolling");
             renderDice(value);
+            if (diceHero) {
+              diceHero.classList.remove("rolling");
+              const faces = ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
+              diceHero.querySelectorAll(".dice-face").forEach((face, index) => {
+                face.textContent = faces[(Number(value) - 1 + index) % faces.length];
+              });
+            }
           }, 480);
         });
 
@@ -3119,6 +3380,7 @@ function tourismPhotoCard(a){
           div.textContent = entry.text;
           feed.prepend(div);
           speakAnnouncement(entry.text);
+          showImportantEvent(entry.text);
         });
 
         socket.on("bankruptcy", ({ playerName }) => {
@@ -3127,8 +3389,7 @@ function tourismPhotoCard(a){
         });
 
         socket.on("game_over", ({ winnerName }) => {
-          document.getElementById("gameOverText").innerHTML =
-            `<strong>${escapeHtml(winnerName)}</strong><br><span style="color:var(--ivory-dim)">เป็นผู้ชนะ! เกมจบลงแล้ว</span>`;
+          document.getElementById("gameOverText").innerHTML = `<strong>${escapeHtml(winnerName)}</strong><br><span style="color:var(--ivory-dim)">กำลังสรุปคะแนน...</span>`;
           document.getElementById("gameOverBackdrop").classList.add("on");
           document.getElementById("rollBtn").disabled = true;
         });
@@ -3142,15 +3403,24 @@ function tourismPhotoCard(a){
         document.getElementById("joinCard").style.display = "none";
         document.getElementById("stage").classList.add("on");
         document.body.classList.add("game-active");
+        const playerRail = document.querySelector(".player-rail");
+        const moneyHud = document.getElementById("moneyHud");
+        if (playerRail && moneyHud && moneyHud.parentElement !== playerRail) {
+          playerRail.insertBefore(moneyHud, playerRail.firstChild);
+        }
         audioControls.classList.add("on");
         startBoardMusic();
       });
 
       document.getElementById("buyBtn").addEventListener("click", () => {
+        clearInterval(purchaseTimer);
+        purchaseTimer = null;
         if (socket) socket.emit("buy_property");
       });
 
       document.getElementById("skipBtn").addEventListener("click", () => {
+        clearInterval(purchaseTimer);
+        purchaseTimer = null;
         if (socket) socket.emit("skip_property");
       });
 
@@ -3166,6 +3436,8 @@ function tourismPhotoCard(a){
       });
 
       document.getElementById("rollBtn").addEventListener("click", () => {
+        const diceHero = document.getElementById("diceHero");
+        if (diceHero) diceHero.classList.add("rolling");
         if (socket) socket.emit("roll_dice");
       });
       document.getElementById("gameOverClose").addEventListener("click", () => {
